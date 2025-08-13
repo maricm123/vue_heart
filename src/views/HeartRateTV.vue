@@ -1,86 +1,34 @@
 <template>
-  <v-container>
-    <!-- Dodaj novog korisnika -->
-    <v-btn color="primary" class="mb-4" @click="showUserModal = true">
-      ➕ Add New User
-    </v-btn>
+  <div class="p-4">
+    <!-- Add New User -->
+    <Button label="➕ Add New User" icon="pi pi-plus" class="mb-3" @click="showUserModal = true" />
 
-    <!-- Modal za izbor korisnika -->
-    <v-dialog v-model="showUserModal" max-width="500">
-      <v-card>
-        <v-card-title>Select a User</v-card-title>
-        <v-card-text>
-          <v-list>
-            <v-list-item
-              v-for="user in availableUsers"
-              :key="user.id"
-              @click="selectUser(user)"
-              class="cursor-pointer"
-            >
-              <v-list-item-title>{{ user.first_name }} {{ user.last_name }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="showUserModal = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Modal -->
+    <Dialog v-model:visible="showUserModal" header="Select a User" :modal="true" :closable="true">
+      <Listbox :options="availableUsers" optionLabel="first_name" optionValue="id" @change="selectUserFromList" />
+    </Dialog>
 
-    <!-- Prikaz aktivnih korisnika -->
-    <v-row>
-      <v-col
-        v-for="(user, index) in users"
-        :key="user.id"
-        cols="12"
-        sm="6"
-        md="4"
-      >
-        <v-card class="pa-3">
-          <v-card-title>
-            {{ user.first_name }} {{ user.last_name }}
-          </v-card-title>
-          <v-card-subtitle>
-            {{ user.device?.name || 'No device connected' }}
-            <div v-if="user.battery !== undefined">
-              🔋 Battery: {{ user.battery }}%
-            </div>
-          </v-card-subtitle>
-          <v-card-text>
-            <div v-if="user.bpm !== null">
-              ❤️ <strong>{{ user.bpm }}</strong> bpm
-            </div>
-            <div v-if="user.bpm !== null">
-              🔥 <strong>{{ user.calories || 0 }}</strong> kcal
-            </div>
-            <div v-if="user.sessionActive">
-              ⏱️ Time: {{ formatTime(user.timer) }}
-            </div>
-            <div v-else>
-              <i>Waiting for data...</i>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="success" @click="connectDevice(user)" v-if="!user.device">
-              🔗 Connect Device
-            </v-btn>
-
-            <v-btn color="primary" v-if="user.device && !user.sessionActive" @click="createSession(user)">
-              ▶️ Start Session
-            </v-btn>
-
-            <v-btn color="orange" v-if="user.device && user.sessionActive" @click="finishSession(user)">
-              ⏹ End Session
-            </v-btn>
-
-            <v-btn color="error" @click="removeUser(index)">❌ Remove</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+    <!-- Users Cards -->
+    <div class="grid">
+      <div class="col-12 md:col-4" v-for="(user, index) in users" :key="user.id">
+        <Card :title="user.first_name + ' ' + user.last_name">
+          <p>{{ user.device?.name || 'No device connected' }}</p>
+          <p v-if="user.battery !== undefined">🔋 Battery: {{ user.battery }}%</p>
+          <p v-if="user.bpm !== null">❤️ {{ user.bpm }} bpm</p>
+          <p v-if="user.calories !== null">🔥 {{ user.calories }} kcal</p>
+          <p v-if="user.sessionActive">⏱️ Time: {{ formatTime(user.timer) }}</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <Button label="Connect" icon="pi pi-link" @click="connectDevice(user)" v-if="!user.device" />
+            <Button label="Start" icon="pi pi-play" @click="createSession(user)" v-if="user.device && !user.sessionActive" />
+            <Button label="End" icon="pi pi-stop" @click="finishSession(user)" v-if="user.device && user.sessionActive" />
+            <Button label="Remove" icon="pi pi-trash" class="p-button-danger" @click="removeUser(index)" />
+          </div>
+        </Card>
+      </div>
+    </div>
+  </div>
 </template>
+
 
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
