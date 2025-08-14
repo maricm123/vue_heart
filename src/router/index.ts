@@ -2,12 +2,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import About from '../views/About.vue'
-import HeartRateTV from '../views/HeartRateTV.vue'
+import PreviewCoachTVNew from '../views/PreviewCoachTVNew.vue'
+import LiveTV from '../views/LiveTV.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/about', name: 'About', component: About },
-  { path: '/tv', name: 'HeartRateTV', component: HeartRateTV },
+  { path: '/coachtv', name: 'PreviewCoachTVNew', component: PreviewCoachTVNew },
+  { path: '/livetv', name: 'LiveTV', component: LiveTV },
 ]
 
 const router = createRouter({

@@ -5,7 +5,8 @@
   <nav>
     <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link> |
-    <router-link to="/tv">TV</router-link>
+    <router-link to="/coachtv">CoachTV</router-link> |
+    <router-link to="/livetv">LiveTV</router-link>
   </nav>
   <router-view />
 </template>

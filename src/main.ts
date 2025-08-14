@@ -1,5 +1,6 @@
 // src/main.ts
 import { createApp } from 'vue'
+import "./assets/styles/main.css";
 import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
@@ -12,7 +13,7 @@ import Card from 'primevue/card'
 import Badge from 'primevue/badge'
 import ProgressBar from 'primevue/progressbar'
 // @ts-ignore:next-line
-import { PilatesPreset } from "../preset.config.js";
+import { HeartPreset } from "../preset.config.js";
 
 // Kreiranje Vue aplikacije
 const app = createApp(App)
@@ -25,7 +26,7 @@ app.use(router)
 
 app.use(PrimeVue, {
   theme: {
-    preset: PilatesPreset,
+    preset: HeartPreset,
     options: {
       darkModeSelector: ".my-app-dark",
       order: "tailwind-base, primevue, tailwind-utilities",

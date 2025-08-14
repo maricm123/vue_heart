@@ -1,11 +1,22 @@
 <template>
   <div class="p-4">
-    <!-- Add New User -->
-    <Button label="➕ Add New User" icon="pi pi-plus" class="mb-3" @click="showUserModal = true" />
+    <!-- Add New User button centriran gore -->
+    <div class="flex justify-center mb-4">
+      <Button label="➕ Add New User" icon="pi pi-plus" @click="showUserModal = true" />
+    </div>
 
     <!-- Modal -->
     <Dialog v-model:visible="showUserModal" header="Select a User" :modal="true" :closable="true">
-      <Listbox :options="availableUsers" optionLabel="first_name" optionValue="id" @change="selectUserFromList" />
+      <Listbox
+        v-model="selectedUserId"
+        :options="availableUsers"
+        optionLabel="first_name"
+        optionValue="id"
+        style="width: 100%"
+      />
+      <div class="flex justify-end mt-3">
+        <Button label="Confirm" icon="pi pi-check" @click="confirmUserSelection" :disabled="!selectedUserId" />
+      </div>
     </Dialog>
 
     <!-- Users Cards -->
@@ -64,7 +75,7 @@ interface User extends BackendUser {
 const users = ref<User[]>([]);
 const availableUsers = ref<BackendUser[]>([]);
 const showUserModal = ref(false);
-
+const selectedUserId = ref<number | null>(null);
 /** --- Helper functions --- **/
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -111,6 +122,17 @@ const finishSession = async (user: User) => {
     console.log("⏹ Sesija završena za korisnika:", user.id);
   } catch (err: any) {
     console.error("❌ Greška pri završetku sesije:", err.response?.data || err.message);
+  }
+};
+
+const confirmUserSelection = () => {
+  if (selectedUserId.value) {
+    const userData = availableUsers.value.find(u => u.id === selectedUserId.value);
+    if (userData) {
+      selectUser(userData);
+    }
+    selectedUserId.value = null;
+    showUserModal.value = false;
   }
 };
 
