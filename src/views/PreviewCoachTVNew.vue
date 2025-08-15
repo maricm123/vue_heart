@@ -79,6 +79,7 @@ import Dialog from "primevue/dialog";
 import Listbox from "primevue/listbox";
 import Card from "primevue/card";
 import axios from "axios";
+import { useUserStore } from '../stores/main';
 
 /** --- Tipovi --- **/
 interface BackendClient {
@@ -104,6 +105,10 @@ interface Client extends BackendClient {
 const clients = ref<Client[]>([]);
 const availableClients = ref<BackendClient[]>([]);
 const showClientModal = ref(false);
+
+
+const store = useUserStore()
+
 
 /** --- Helper --- **/
 const formatTime = (seconds: number) => {
@@ -172,6 +177,12 @@ const selectClient = (clientData: BackendClient) => {
   };
   clients.value.push(newClient);
   showClientModal.value = false;
+
+  store.addUser(newClient)                       // ✅ add (do NOT setUsers)
+  store.updateUser(newClient.id, { sessionActive: true })  // ✅ mark active
+
+  console.log("Selected client:", clientData);
+  console.log("Updated store with client:", newClient.id);
 };
 
 const removeClient = async (index: number) => {
@@ -224,7 +235,7 @@ onMounted(() => {
     .then(res => res.json())
     .then(data => availableClients.value = data)
     .catch(console.error);
-
+  
   // WebSocket
   const socket = new WebSocket('ws://localhost:8000/ws/bpm/');
   socket.onmessage = (event) => {

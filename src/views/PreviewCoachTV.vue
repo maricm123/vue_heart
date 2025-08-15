@@ -1,24 +1,5 @@
 <template>
   <div class="p-4">
-    <!-- Add New User button centriran gore -->
-    <div class="flex justify-center mb-4">
-      <Button label="➕ Add New User" icon="pi pi-plus" @click="showUserModal = true" />
-    </div>
-
-    <!-- Modal -->
-    <Dialog v-model:visible="showUserModal" header="Select a User" :modal="true" :closable="true">
-      <Listbox
-        v-model="selectedUserId"
-        :options="availableUsers"
-        optionLabel="first_name"
-        optionValue="id"
-        style="width: 100%"
-      />
-      <div class="flex justify-end mt-3">
-        <Button label="Confirm" icon="pi pi-check" @click="confirmUserSelection" :disabled="!selectedUserId" />
-      </div>
-    </Dialog>
-
     <!-- Users Cards -->
     <div class="grid">
       <div class="col-12 md:col-4" v-for="(user, index) in users" :key="user.id">
@@ -44,6 +25,12 @@
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import axios from 'axios';
+
+import { computed } from 'vue'
+import { useUserStore } from '../stores/main';
+
+const store = useUserStore()
+const activeUsers = computed(() => store.activeUsers)
 
 /** --- Tipovi --- **/
 

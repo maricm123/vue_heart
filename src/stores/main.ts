@@ -1,22 +1,45 @@
 // src/stores/main.ts
 import { defineStore } from 'pinia'
+import axios from "axios";
 
-export interface User {
+export interface Client {
   id: number
-  name: string
+  first_name: string
+  last_name: string
+  bpm: number | null
+  calories: number | null
+  device: any | null
+  server: any | null
+  characteristic: any | null
+  sessionActive: boolean
+  sessionId: number | null
+  timer: number
+  timerInterval: any | null
+  battery: number | null
 }
 
-export const useMainStore = defineStore('main', {
+export const useUserStore = defineStore('user', {
   state: () => ({
-    count: 0 as number,
-    user: null as User | null,
+    users: [] as Client[],
   }),
+  getters: {
+    activeUsers: (state) => state.users.filter(u => u.sessionActive),
+  },
   actions: {
-    increment() {
-      this.count++
+    setUsers(users: Client[]) {
+      this.users = Array.isArray(users) ? users : []
     },
-    setUser(userData: User) {
-      this.user = userData
-    }
-  }
+    addUser(user: Client) {
+      const i = this.users.findIndex(u => u.id === user.id)
+      if (i === -1) this.users.push(user)
+      else this.users[i] = { ...this.users[i], ...user }
+    },
+    updateUser(id: number, data: Partial<Client>) {
+      const i = this.users.findIndex(u => u.id === id)
+      if (i !== -1) this.users[i] = { ...this.users[i], ...data }
+    },
+    removeUser(id: number) {
+      this.users = this.users.filter(u => u.id !== id)
+    },
+  },
 })
