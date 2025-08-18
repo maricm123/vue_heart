@@ -45,6 +45,11 @@ const router = createRouter({
                     component: () => import('@/views/uikit/ListDoc.vue')
                 },
                 {
+                    path: '/uikit/clientListOfCoach',
+                    name: 'clientListOfCoach',
+                    component: () => import('@/views/uikit/ClientListOfCoach.vue')
+                },
+                {
                     path: '/uikit/tree',
                     name: 'tree',
                     component: () => import('@/views/uikit/TreeDoc.vue')

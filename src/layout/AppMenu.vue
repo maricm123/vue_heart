@@ -13,6 +13,7 @@ const model = ref([
         items: [
             { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
             { label: 'Coach TV preview', icon: 'pi pi-fw pi-id-card', to: '/uikit/coachTvPreview' },
+            { label: 'Client list', icon: 'pi pi-fw pi-id-card', to: '/uikit/ClientListOfCoach' },
             { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
             { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
             { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
