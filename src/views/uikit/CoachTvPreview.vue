@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import axios from 'axios'
 
+const loadingClients = ref(false)          // for modal
+const connectingDevices = ref({})  
 const display = ref(false)
 const clients = ref([])
 const layout = ref('list')
@@ -17,6 +19,7 @@ const characteristics = ref({})
 
 async function open() {
   display.value = true
+  loadingClients.value = true
   try {
     const response = await axios.get(
       'http://mygym.localhost:8000/api_coach/get-all-clients-based-on-coach',
@@ -29,6 +32,8 @@ async function open() {
     clients.value = response.data
   } catch (err) {
     console.error('Error loading clients', err)
+  } finally {
+    loadingClients.value = false
   }
 }
 // Remove client & disconnect if needed
@@ -40,13 +45,14 @@ function removeClient(client) {
 
 // Connect device
 async function connectDevice(client) {
+  connectingDevices.value[client.id] = true
   try {
     const device = await navigator.bluetooth.requestDevice({
       filters: [{ services: ['heart_rate'] }]
     })
 
     if (!device.gatt.connected) {
-        await device.gatt.connect();
+      await device.gatt.connect()
     }
 
     const server = await device.gatt.connect()
@@ -56,17 +62,17 @@ async function connectDevice(client) {
     characteristic.startNotifications()
     characteristic.addEventListener('characteristicvaluechanged', event => {
       const value = event.target.value
-      const bpm = value.getUint8(1) // simple parsing
+      const bpm = value.getUint8(1) 
       bpms.value[client.id] = bpm
     })
 
-    // Store references
     devices.value[client.id] = device
     servers.value[client.id] = server
     characteristics.value[client.id] = characteristic
-
   } catch (err) {
     console.error('Bluetooth error', err)
+  } finally {
+    connectingDevices.value[client.id] = false
   }
 }
 
@@ -118,7 +124,11 @@ function isSelected(client) {
       :style="{ width: '50vw' }"
       :modal="true"
     >
-      <DataView :value="clients" :layout="layout">
+
+      <div v-if="loadingClients" class="flex justify-center p-8">
+        <ProgressSpinner />
+      </div>
+      <DataView v-else :value="clients" :layout="layout">
 
         <!-- List layout -->
         <template #list="slotProps">
@@ -223,9 +233,11 @@ function isSelected(client) {
         <div>
         <!-- Connect / Disconnect device -->
         <Button 
-            v-if="!devices[client.id]" 
-            label="Connect Device" 
-            @click="connectDevice(client)" 
+          v-if="!devices[client.id]" 
+          :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'" 
+          :loading="connectingDevices[client.id]"
+          :disabled="connectingDevices[client.id]"
+          @click="connectDevice(client)" 
         />
         <Button 
             v-else 
