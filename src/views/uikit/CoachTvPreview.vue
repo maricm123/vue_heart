@@ -43,6 +43,35 @@ function removeClient(client) {
   if (index !== -1) selectedClients.value.splice(index, 1)
 }
 
+import { BleClient } from '@capacitor-community/bluetooth-le';
+
+async function scanAndConnect() {
+  try {
+    await BleClient.initialize();
+
+    // Tražimo uređaj koji podržava HR servis
+    const device = await BleClient.requestDevice({
+      services: ['0000180d-0000-1000-8000-00805f9b34fb'], // Heart Rate Service
+    });
+
+    await BleClient.connect(device.deviceId);
+
+    // Subscribujemo se na Heart Rate Measurement karakteristiku
+    await BleClient.startNotifications(
+      device.deviceId,
+      '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+      '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+      (value) => {
+        const data = new Uint8Array(value.buffer);
+        const bpm = data[1]; // drugi bajt je BPM
+        console.log('Heart rate:', bpm);
+      }
+    );
+  } catch (err) {
+    console.error('BLE error:', err);
+  }
+}
+
 // Connect device
 async function connectDevice(client) {
   connectingDevices.value[client.id] = true
@@ -240,11 +269,14 @@ function isSelected(client) {
           @click="connectDevice(client)" 
         />
         <Button 
-            v-else 
-            label="Disconnect Device" 
-            severity="danger" 
-            @click="disconnectDevice(client)" 
+        v-else 
+        label="Disconnect Device" 
+        severity="danger" 
+        @click="disconnectDevice(client)" 
         />
+        <Button @click="scanAndConnect">
+          Connect to HR Strap
+        </Button>
         </div>
 
         <!-- Show BPM and Start Session only when connected -->
