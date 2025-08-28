@@ -156,7 +156,7 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('access') // check if token exists
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'Login' }) // redirect to login if not authenticated
+    next({ name: 'coach-login' }) // redirect to login if not authenticated
   } else {
     next() // continue to route
   }
