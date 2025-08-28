@@ -9,6 +9,9 @@ const options = ref(['list', 'grid']);
 const layout = ref('list');
 const clients = ref([])
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 onMounted(async () => {
     try {
@@ -27,6 +30,11 @@ onMounted(async () => {
 function getSeverity(client) {
     return 'success' // You can customize based on client status if needed
 }
+
+function goToClientDetail(clientId) {
+    router.push({ name: 'clientDetail', params: { id: clientId } })
+}
+
 </script>
 
 <template>
@@ -65,7 +73,7 @@ function getSeverity(client) {
 
                         <!-- Actions -->
                         <div class="flex gap-2 mt-2 sm:mt-0">
-                        <Button label="Edit" icon="pi pi-pencil"></Button>
+                        <Button label="Detail" icon="pi pi-pencil" @click="goToClientDetail(client.id)"></Button>
                         <Tag :value="'Active'" :severity="getSeverity(client)"></Tag>
                         </div>
                     </div>
@@ -85,7 +93,7 @@ function getSeverity(client) {
                             <span>Gender: {{ client.gender }}</span>
                         </div>
                         <div class="flex gap-2 mt-2">
-                            <Button label="Edit" icon="pi pi-pencil"></Button>
+                            <Button label="Detail" icon="pi pi-pencil"></Button>
                             <Tag :value="'Active'" :severity="getSeverity(client)"></Tag>
                         </div>
                         </div>
