@@ -27,7 +27,7 @@ const defaultAvatar = 'https://i.pravatar.cc/150?img=3'
 const trainingSessions = ref([])
 const filters = ref()
 const options = ref(['Female', 'Male'])
-const value3 = ref('') // will hold selected gender
+const gender = ref('') // will hold selected gender
 
 // ✅ initialize filters for PrimeVue DataTable
 const initFilters = () => {
@@ -55,7 +55,7 @@ const clearFilter = () => {
 }
 
 // Keep client.gender in sync with SelectButton
-watch(value3, (newVal) => {
+watch(gender, (newVal) => {
     client.value.gender = newVal
 })
 
@@ -67,19 +67,16 @@ onMounted(async () => {
       `http://mygym.localhost:8000/api_coach/client-detail/${clientId}`,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
-    console.log('Client data:', clientResponse.data)
     client.value = clientResponse.data
-    value3.value = client.value.gender
-    // Convert birth_date string to Date object
-    console.log('Raw birth_date:', client.value.user.birth_date)
-    // client.value.user.birth_date = client.value.user.birth_date ? new Date(client.value.user.birth_date) : null
-    console.log('Converted birth_date:', client.value.user.birth_date)
+    gender.value = client.value.gender
+
     // fetch training sessions
     // const sessionsResponse = await axios.get(
     //   `http://mygym.localhost:8000/api_coach/get-training-session/?client=${clientId}`,
     //   { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     // )
     // trainingSessions.value = sessionsResponse.data
+
   } catch (err) {
     console.error('Failed to fetch client or sessions:', err)
   } finally {
@@ -104,8 +101,6 @@ const updateClient = async () => {
         birth_date: formatDateToYMD(client.value.user.birth_date)
       }
     }
-
-    console.log('Updating client with payload:', payload)
     
     await axios.patch(
       `http://mygym.localhost:8000/api_coach/client-detail/${clientId}`,
@@ -123,58 +118,66 @@ const updateClient = async () => {
 <template>
 <Fluid>
         <div class="flex flex-col md:flex-row gap-8 mb-8">
-        <div class="md:w-1/2">
-            <div v-if="client">
-                <div class="max-w-md mx-auto bg-white shadow-md rounded-xl p-6">
+            <div class="md:w-1/2">
+                <div v-if="client">
+                    <div class="max-w-md mx-auto shadow-md rounded-xl p-6 bg-white dark:bg-gray-800 dark:text-gray-100">
                     <h2 class="text-xl font-bold mb-4">Client Information</h2>
 
                     <div class="flex flex-col gap-2 field">
-                        <label for="first_name" class="mb-1 text-gray-700 font-medium">First Name</label>
+                        <label class="mb-1 font-medium">First Name</label>
                         <input
-                            v-model="client.user.first_name"
-                            type="text"
-                            placeholder="First Name"
-                            class="border rounded-lg p-2"
+                        v-model="client.user.first_name"
+                        type="text"
+                        placeholder="First Name"
+                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
                         />
-                        <label for="first_name" class="mb-1 text-gray-700 font-medium">First Name</label>
+
+                        <label class="mb-1 font-medium">Last Name</label>
                         <input
-                            v-model="client.user.last_name"
-                            type="text"
-                            placeholder="Last Name"
-                            class="border rounded-lg p-2"
+                        v-model="client.user.last_name"
+                        type="text"
+                        placeholder="Last Name"
+                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
                         />
-                        <label for="first_name" class="mb-1 text-gray-700 font-medium">Email (cannot update)</label>
+
+                        <label class="mb-1 font-medium">Email (cannot update)</label>
                         <input
-                            v-model="client.user.email"
-                            type="email"
-                            placeholder="Email"
-                            readonly
-                            class="border rounded-lg p-2"
+                        v-model="client.user.email"
+                        type="email"
+                        placeholder="Email"
+                        readonly
+                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
                         />
-                        <label for="first_name" class="mb-1 text-gray-700 font-medium">Gender</label>
-                        <!-- <input
-                            v-model="client.gender"
-                            type="text"
-                            placeholder="Phone"
-                            class="border rounded-lg p-2"
-                        /> -->
-                        <SelectButton v-model="value3" :options="options" size="large" />
-                        <label for="first_name" class="mb-1 text-gray-700 font-medium">Height</label>
+
+                        <label class="mb-1 font-medium">Gender</label>
+                        <SelectButton
+                        v-model="gender"
+                        :options="options"
+                        size="large"
+                        class="dark:bg-gray-700  dark:text-gray-100"
+                        />
+
+                        <label class="mb-1 font-medium">Height</label>
                         <input
-                            v-model="client.height"
-                            type="text"
-                            placeholder="Phone"
-                            class="border rounded-lg p-2"
+                        v-model="client.height"
+                        type="text"
+                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
                         />
-                        <label for="first_name" class="mb-1 text-gray-700 font-medium">Weight</label>
+
+                        <label class="mb-1 font-medium">Weight</label>
                         <input
-                            v-model="client.weight"
-                            type="text"
-                            placeholder="Phone"
-                            class="border rounded-lg p-2"
+                        v-model="client.weight"
+                        type="text"
+                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
                         />
-                        <label>Birth Date</label>
-                        <Calendar v-model="client.user.birth_date" dateFormat="yy-mm-dd" showIcon />
+
+                        <label class="mb-1 font-medium">Birth Date</label>
+                        <Calendar
+                        v-model="client.user.birth_date"
+                        dateFormat="yy-mm-dd"
+                        showIcon
+                        class="dark:bg-gray-700 dark:text-gray-100"
+                        />
                     </div>
 
                     <button
@@ -183,8 +186,8 @@ const updateClient = async () => {
                     >
                         Update
                     </button>
+                    </div>
                 </div>
-            </div>
             <div v-else>
                 Loading client data...
             </div>
