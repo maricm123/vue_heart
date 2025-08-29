@@ -1,8 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
-
-const loadingClients = ref(false)          // for modal
+const loadingClients = ref(false)
 const connectingDevices = ref({})  
 const display = ref(false)
 const clients = ref([])
@@ -11,7 +10,6 @@ const options = ['list', 'grid']
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
 const devices = ref({}) // store device per client { clientId: device }
 const bpms = ref({}) // store bpm per client { clientId: bpm }
-const sessionsStarted = ref({}) // track started sessions
 // selected clients (array instead of single)
 const selectedClients = ref([])
 const servers = ref({}) 
@@ -121,10 +119,47 @@ function disconnectDevice(client) {
   if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
 }
 
+const sessionsStarted = ref({}) // { clientId: sessionId }
+
 // Start session
-function startSession(client) {
-  sessionsStarted.value[client.id] = true
-  console.log(`Session started for client ${client.user.first_name}`)
+async function createSession(client) {
+  try {
+    const response = await axios.post(
+      `http://mygym.localhost:8000/api_heart/create-session`,
+      { client_id: client.id,
+        start: new Date().toISOString(),
+        title: "New session",
+
+       }, 
+      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
+    )
+
+    // Save the session id returned from backend
+    sessionsStarted.value[client.id] = response.data.id
+    console.log(`✅ Session started for client ${client.user.first_name}`, response.data)
+  } catch (err) {
+    console.error('Failed to start session', err.response?.data || err)
+  }
+}
+
+
+// Finish session
+async function finishSession(client) {
+  try {
+    const sessionId = sessionsStarted.value[client.id]
+    if (!sessionId) return
+
+    await axios.patch(
+      `http://mygym.localhost:8000/api_heart/finish-session/${sessionId}`,
+      {}, 
+      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
+    )
+
+    delete sessionsStarted.value[client.id] // remove session tracking
+    console.log(`✅ Session finished for client ${client.user.first_name}`)
+  } catch (err) {
+    console.error('Failed to finish session', err.response?.data || err)
+  }
 }
 
 
@@ -281,16 +316,42 @@ function isSelected(client) {
 
         <!-- Show BPM and Start Session only when connected -->
         <div v-if="devices[client.id]">
-        <p>BPM: {{ bpms[client.id] || '-' }}</p>
-        <Button 
+          <p>BPM: {{ bpms[client.id] || '-' }}</p>
+
+          <!-- Show Start or Finish based on session -->
+          <Button 
+            v-if="!sessionsStarted[client.id]"
             label="Start Session" 
-            :disabled="sessionsStarted[client.id]" 
-            @click="startSession(client)" 
-        />
+            @click="createSession(client)" 
+          />
+          <Button 
+            v-else
+            label="Finish Session" 
+            severity="danger"
+            @click="finishSession(client)" 
+          />
         </div>
       </div>
     </template>
   </Card>
 </div>
+</div>
+<div class="card">
+      <div class="font-semibold text-xl mb-4">Active training sessions</div>
+      <Splitter style="height: 300px" class="mb-8">
+          <SplitterPanel :size="30" :minSize="10">
+              <div className="h-full flex items-center justify-center">Panel 1</div>
+          </SplitterPanel>
+          <SplitterPanel :size="70">
+              <Splitter layout="vertical">
+                  <SplitterPanel :size="15">
+                      <div className="h-full flex items-center justify-center">Panel 2</div>
+                  </SplitterPanel>
+                  <SplitterPanel :size="50">
+                      <div className="h-full flex items-center justify-center">Panel 3</div>
+                  </SplitterPanel>
+              </Splitter>
+          </SplitterPanel>
+      </Splitter>
   </div>
 </template>
