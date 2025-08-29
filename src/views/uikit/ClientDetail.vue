@@ -123,6 +123,34 @@ const updateClient = async () => {
                     <div class="card flex flex-col gap-4">
                     <h2 class="text-xl font-bold mb-4">Client Information</h2>
                     <div class="flex flex-col gap-2 field">
+                        <div class="card flex justify-center">
+                          <Image alt="Profile Image" preview>
+                            <template #previewicon>
+                              <i class="pi pi-search"></i>
+                            </template>
+
+                            <!-- Thumbnail -->
+                            <template #image>
+                              <img
+                                src="https://primefaces.org/cdn/primevue/images/galleria/galleria11.jpg"
+                                width="200"
+                                alt="avatar"
+                                class="rounded-full object-cover ring-4 ring-green-700"
+                              />
+                            </template>
+
+                            <!-- Fullscreen Preview -->
+                            <template #preview="slotProps">
+                              <img
+                                src="https://primefaces.org/cdn/primevue/images/galleria/galleria11.jpg"
+                                alt="profile-preview"
+                                :style="slotProps.style"
+                                @click="slotProps.onClick"
+                                class="rounded-full"
+                              />
+                            </template>
+                          </Image>
+                        </div>
                         <label class="mb-1 font-medium">First Name</label>
                         <input
                         v-model="client.user.first_name"
