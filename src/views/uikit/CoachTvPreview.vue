@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import axios from 'axios'
 const loadingClients = ref(false)
 const connectingDevices = ref({})  
@@ -14,6 +14,8 @@ const bpms = ref({}) // store bpm per client { clientId: bpm }
 const selectedClients = ref([])
 const servers = ref({}) 
 const characteristics = ref({})
+
+const activeSessions = ref([])
 
 async function open() {
   display.value = true
@@ -133,10 +135,12 @@ async function createSession(client) {
        }, 
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
-
+      
     // Save the session id returned from backend
     sessionsStarted.value[client.id] = response.data.id
     console.log(`✅ Session started for client ${client.user.first_name}`, response.data)
+    // Add new active session to list
+    activeSessions.value.push(response.data)
   } catch (err) {
     console.error('Failed to start session', err.response?.data || err)
   }
@@ -157,8 +161,25 @@ async function finishSession(client) {
 
     delete sessionsStarted.value[client.id] // remove session tracking
     console.log(`✅ Session finished for client ${client.user.first_name}`)
+    // Remove finished session from list
+    activeSessions.value = activeSessions.value.filter(s => s.id !== session.id)
   } catch (err) {
     console.error('Failed to finish session', err.response?.data || err)
+  }
+}
+
+
+// ✅ Load active sessions from backend
+async function fetchActiveSessions() {
+  try {
+    const response = await axios.get(
+      'http://mygym.localhost:8000/api_coach/active-training-sessions',
+      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
+    )
+    activeSessions.value = response.data
+    console.log('✅ Active sessions loaded', activeSessions.value)
+  } catch (err) {
+    console.error('Failed to fetch active sessions', err.response?.data || err)
   }
 }
 
@@ -174,6 +195,12 @@ function selectClient(client) {
 function isSelected(client) {
   return selectedClients.value.some(c => c.id === client.id)
 }
+
+
+onMounted(() => {
+  fetchActiveSessions()
+})
+
 </script>
 
 <template>
@@ -337,21 +364,44 @@ function isSelected(client) {
 </div>
 </div>
 <div class="card">
-      <div class="font-semibold text-xl mb-4">Active training sessions</div>
-      <Splitter style="height: 300px" class="mb-8">
-          <SplitterPanel :size="30" :minSize="10">
-              <div className="h-full flex items-center justify-center">Panel 1</div>
-          </SplitterPanel>
-          <SplitterPanel :size="70">
-              <Splitter layout="vertical">
-                  <SplitterPanel :size="15">
-                      <div className="h-full flex items-center justify-center">Panel 2</div>
-                  </SplitterPanel>
-                  <SplitterPanel :size="50">
-                      <div className="h-full flex items-center justify-center">Panel 3</div>
-                  </SplitterPanel>
-              </Splitter>
-          </SplitterPanel>
-      </Splitter>
+  <div class="font-semibold text-xl mb-4">Active training sessions</div>
+
+  <!-- If no active sessions -->
+  <div v-if="activeSessions.length === 0" class="p-4 text-gray-500">
+    No active sessions
   </div>
+
+  <!-- Each session has its own splitter -->
+  <Splitter
+    v-for="session in activeSessions"
+    :key="session.id"
+    style="height: 300px"
+    class="mb-8"
+  >
+    <!-- Left panel: client info + finish button -->
+    <SplitterPanel :size="30" :minSize="10">
+      <div class="p-4 flex flex-col justify-between h-full">
+        <div>
+          <p class="font-medium">
+            {{ session.client.user.first_name }} {{ session.client.user.last_name }}
+          </p>
+          <p class="text-sm text-gray-500">Started: {{ session.start }}</p>
+        </div>
+        <Button 
+          label="Finish" 
+          severity="danger" 
+          size="small"
+          @click="finishSession(session.client)" 
+        />
+      </div>
+    </SplitterPanel>
+
+    <!-- Right panel: session details -->
+    <SplitterPanel :size="70">
+      <div class="h-full flex items-center justify-center text-gray-500">
+        Session details for {{ session.client.user.first_name }}
+      </div>
+    </SplitterPanel>
+  </Splitter>
+</div>
 </template>
