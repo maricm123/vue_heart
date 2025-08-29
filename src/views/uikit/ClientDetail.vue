@@ -120,9 +120,8 @@ const updateClient = async () => {
         <div class="flex flex-col md:flex-row gap-8 mb-8">
             <div class="md:w-1/2">
                 <div v-if="client">
-                    <div class="max-w-md mx-auto shadow-md rounded-xl p-6 bg-white dark:bg-gray-800 dark:text-gray-100">
+                    <div class="card flex flex-col gap-4">
                     <h2 class="text-xl font-bold mb-4">Client Information</h2>
-
                     <div class="flex flex-col gap-2 field">
                         <label class="mb-1 font-medium">First Name</label>
                         <input
