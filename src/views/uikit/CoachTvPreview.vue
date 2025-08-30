@@ -131,16 +131,25 @@ async function createSession(client) {
       { client_id: client.id,
         start: new Date().toISOString(),
         title: "New session",
-
        }, 
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
-      
+
     // Save the session id returned from backend
     sessionsStarted.value[client.id] = response.data.id
     console.log(`✅ Session started for client ${client.user.first_name}`, response.data)
     // Add new active session to list
-    activeSessions.value.push(response.data)
+    // activeSessions.value.push(response.data)
+
+    // 👉 Attach the client object locally so it renders immediately
+    const newSession = {
+      ...response.data,
+      client: client
+    }
+
+    // Add new active session to list
+    activeSessions.value.push(newSession)
+    removeClient(client) // remove client from selected list
   } catch (err) {
     console.error('Failed to start session', err.response?.data || err)
   }
