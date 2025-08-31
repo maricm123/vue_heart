@@ -64,7 +64,7 @@ onMounted(async () => {
   try {
     // fetch client
     const clientResponse = await axios.get(
-      `http://mygym.localhost:8000/api_coach/client-detail/${clientId}`,
+      `http://mygym.192.168.0.4:8000/api_coach/client-detail/${clientId}`,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
     client.value = clientResponse.data
@@ -103,7 +103,7 @@ const updateClient = async () => {
     }
     
     await axios.patch(
-      `http://mygym.localhost:8000/api_coach/client-detail/${clientId}`,
+      `http://mygym.192.168.0.4:8000/api_coach/client-detail/${clientId}`,
       payload,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )

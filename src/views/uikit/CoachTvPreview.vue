@@ -22,7 +22,7 @@ async function open() {
   loadingClients.value = true
   try {
     const response = await axios.get(
-      'http://mygym.localhost:8000/api_coach/get-all-clients-based-on-coach',
+      'http://mygym.192.168.0.4:8000/api_coach/get-all-clients-based-on-coach',
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access')}`,
