@@ -2,6 +2,7 @@
 import { ProductService } from '@/service/ProductService';
 import { onMounted, ref } from 'vue';
 import axios from 'axios'
+import { api_coach, api_heart } from '@/api';
 const products = ref(null);
 const picklistProducts = ref(null);
 const orderlistProducts = ref(null);
@@ -15,7 +16,7 @@ const router = useRouter()
 
 onMounted(async () => {
     try {
-        const response = await axios.get('http://mygym.localhost:8000/api_coach/get-all-clients-based-on-coach', {
+        const response = await api_coach.get('/get-all-clients-based-on-coach', {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('access')}`
             }

@@ -13,3 +13,6 @@ dist
 api-generator/typedoc.json
 **/.DS_Store
 package-lock.json
+.env.production
+.env.development
+.env.android

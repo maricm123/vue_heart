@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import axios from 'axios'
+import { api_coach, api_heart } from '@/api';
 const loadingClients = ref(false)
 const connectingDevices = ref({})  
 const display = ref(false)
@@ -21,8 +22,8 @@ async function open() {
   display.value = true
   loadingClients.value = true
   try {
-    const response = await axios.get(
-      'http://mygym.192.168.0.4:8000/api_coach/get-all-clients-based-on-coach',
+    const response = await api_coach.get(
+      '/get-all-clients-based-on-coach',
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access')}`,
@@ -126,8 +127,8 @@ const sessionsStarted = ref({}) // { clientId: sessionId }
 // Start session
 async function createSession(client) {
   try {
-    const response = await axios.post(
-      `http://mygym.localhost:8000/api_heart/create-session`,
+    const response = await api_heart.post(
+      `/api_heart/create-session`,
       { client_id: client.id,
         start: new Date().toISOString(),
         title: "New session",
@@ -162,8 +163,8 @@ async function finishSession(client) {
     const sessionId = sessionsStarted.value[client.id]
     if (!sessionId) return
 
-    await axios.patch(
-      `http://mygym.localhost:8000/api_heart/finish-session/${sessionId}`,
+    await api_heart.patch(
+      `/finish-session/${sessionId}`,
       {}, 
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
@@ -181,8 +182,8 @@ async function finishSession(client) {
 // ✅ Load active sessions from backend
 async function fetchActiveSessions() {
   try {
-    const response = await axios.get(
-      'http://mygym.localhost:8000/api_coach/active-training-sessions',
+    const response = await api_coach.get(
+      '/active-training-sessions',
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
     activeSessions.value = response.data

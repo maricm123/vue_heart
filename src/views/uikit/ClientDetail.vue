@@ -2,10 +2,12 @@
 import { ref, onMounted, watch  } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { api_coach, api_heart } from '@/api';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 
 const route = useRoute()
 const clientId = route.params.id
+
 // states
 const client = ref({
   user: {
@@ -63,16 +65,16 @@ watch(gender, (newVal) => {
 onMounted(async () => {
   try {
     // fetch client
-    const clientResponse = await axios.get(
-      `http://mygym.192.168.0.4:8000/api_coach/client-detail/${clientId}`,
+    const clientResponse = await api_coach.get(
+      `/client-detail/${clientId}`,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
     client.value = clientResponse.data
     gender.value = client.value.gender
 
     // fetch training sessions
-    // const sessionsResponse = await axios.get(
-    //   `http://mygym.localhost:8000/api_coach/get-training-session/?client=${clientId}`,
+    // const sessionsResponse = await api_coach.get(
+    //   `/get-training-session/?client=${clientId}`,
     //   { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     // )
     // trainingSessions.value = sessionsResponse.data
@@ -102,8 +104,8 @@ const updateClient = async () => {
       }
     }
     
-    await axios.patch(
-      `http://mygym.192.168.0.4:8000/api_coach/client-detail/${clientId}`,
+    await api_coach.patch(
+      `/client-detail/${clientId}`,
       payload,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
