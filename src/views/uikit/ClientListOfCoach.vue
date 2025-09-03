@@ -23,7 +23,12 @@ onMounted(async () => {
         })
         clients.value = response.data  // assuming API returns an array of clients
     } catch (err) {
+        
         console.error('Failed to fetch clients:', err)
+
+        if (err.config) {
+            console.log('Full request URL:', (err.config.baseURL || '') + err.config.url)
+        }
     }
 });
 

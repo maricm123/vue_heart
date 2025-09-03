@@ -7,6 +7,11 @@ import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    server: {
+        https: false,  // gasi HTTPS
+        host: true,    // da bude dostupan na LAN IP
+        port: 5173
+    },
     optimizeDeps: {
         noDiscovery: true
     },
