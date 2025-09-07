@@ -250,7 +250,7 @@ const updateClient = async () => {
             dataKey="id"
             filterDisplay="menu"
             :loading="loading"
-            :globalFilterFields="['name', 'date', 'status']"
+            :globalFilterFields="['title', 'calories_burned', 'duration_in_minutes']"
         >
         <template #header>
             <div class="flex justify-between">
