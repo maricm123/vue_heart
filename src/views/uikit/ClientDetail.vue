@@ -269,17 +269,26 @@ const updateClient = async () => {
 
         <!-- Columns -->
         <Column field="name" header="Session Name" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.name }}</template>
+            <template #body="{ data }">{{ data.title }}</template>
         </Column>
 
         <Column field="date" header="Date" style="min-width: 10rem">
-            <template #body="{ data }">{{ formatDate(data.date) }}</template>
+            <template #body="{ data }">{{ formatDate(data.start) }}</template>
         </Column>
 
         <Column field="status" header="Status" style="min-width: 10rem">
             <template #body="{ data }">
             <Tag :value="data.status" :severity="data.status === 'completed' ? 'success' : 'info'" />
             </template>
+        </Column>
+        <Column field="name" header="Cal burned" style="min-width: 12rem">
+            <template #body="{ data }">{{ data.calories_burned }}</template>
+        </Column>
+        <Column field="name" header="Duration" style="min-width: 12rem">
+            <template #body="{ data }">{{ data.duration_in_minutes }}</template>
+        </Column>
+        <Column field="name" header="Max heart rate" style="min-width: 12rem">
+            <template #body="{ data }">{{ data.duration_in_minutes }}</template>
         </Column>
         </DataTable>
 
