@@ -253,6 +253,7 @@ const updateClient = async () => {
             :globalFilterFields="['title', 'calories_burned', 'duration_in_minutes']"
         >
         <template #header>
+          <h3>Training sessions</h3>
             <div class="flex justify-between">
             <Button type="button" icon="pi pi-filter-slash" label="Clear" variant="outlined" @click="clearFilter()" />
             <IconField>
