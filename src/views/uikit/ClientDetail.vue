@@ -73,11 +73,11 @@ onMounted(async () => {
     gender.value = client.value.gender
 
     // fetch training sessions
-    // const sessionsResponse = await api_coach.get(
-    //   `/get-training-session/?client=${clientId}`,
-    //   { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    // )
-    // trainingSessions.value = sessionsResponse.data
+    const sessionsResponse = await api_coach.get(
+      `/get-training-sessions-per-client/${clientId}`,
+      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
+    )
+    trainingSessions.value = sessionsResponse.data
 
   } catch (err) {
     console.error('Failed to fetch client or sessions:', err)
