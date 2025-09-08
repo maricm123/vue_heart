@@ -14,6 +14,7 @@ const bpms = ref({}) // store bpm per client { clientId: bpm }
 // selected clients (array instead of single)
 const selectedClients = ref([])
 const servers = ref({}) 
+const ws = ref(null)
 const characteristics = ref({})
 
 const activeSessions = ref([])
@@ -128,7 +129,7 @@ const sessionsStarted = ref({}) // { clientId: sessionId }
 async function createSession(client) {
   try {
     const response = await api_heart.post(
-      `/api_heart/create-session`,
+      `/create-session`,
       { client_id: client.id,
         start: new Date().toISOString(),
         title: "New session",
@@ -207,7 +208,21 @@ function isSelected(client) {
 }
 
 
+function sendBpmToBackend(clientId, bpm) {
+  if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+    ws.value.send(JSON.stringify({
+      client_id: clientId,
+      bpm: bpm
+    }))
+  }
+}
+
+
 onMounted(() => {
+  ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
+  ws.value.onopen = () => console.log("✅ WebSocket connected")
+  ws.value.onmessage = (event) => console.log("📩", event.data)
+  ws.value.onclose = () => console.log("❌ WebSocket closed")
   fetchActiveSessions()
 })
 
