@@ -208,12 +208,38 @@ function isSelected(client) {
 }
 
 
-function sendBpmToBackend(clientId, bpm) {
-  if (ws.value && ws.value.readyState === WebSocket.OPEN) {
-    ws.value.send(JSON.stringify({
-      client_id: clientId,
-      bpm: bpm
-    }))
+// function sendBpmToBackend(clientId, bpm) {
+//   if (ws.value && ws.value.readyState === WebSocket.OPEN) {
+//     ws.value.send(JSON.stringify({
+//       client_id: clientId,
+//       bpm: bpm
+//     }))
+//   }
+// }
+
+// 📌 Funkcija za slanje BPM-a na backend REST endpoint
+async function sendBpmToBackend() {
+  if (!bpmInput.value) return;
+
+  try {
+    const response = await api_heart.post("/save-heartbeat", {
+      // bpm: bpmInput.value,
+      // training_session: trainingSessionId,
+      // timestamp: new Date().toISOString(),
+
+      user: user.id,
+      bpm: bpmInput.value,
+      device_id: devices.name,
+      training_session: trainingSessionId || null, // Ako je sesija aktivna
+      timestamp: new Date().toISOString()  // opcionalno, ako backend koristi
+    });
+
+    currentBpm.value = bpmInput.value; // odmah update lokalno
+    bpmInput.value = null;
+
+    console.log("✅ BPM sent:", response.data);
+  } catch (err) {
+    console.error("❌ Error sending BPM:", err);
   }
 }
 
@@ -221,6 +247,12 @@ function sendBpmToBackend(clientId, bpm) {
 onMounted(() => {
   ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
   ws.value.onopen = () => console.log("✅ WebSocket connected")
+  ws.value.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    currentCalories.value = data.current_calories;
+    currentBpm.value = data.bpm ?? currentBpm.value; // ako backend šalje i bpm
+    console.log("WS data:", data);
+  };
   ws.value.onmessage = (event) => console.log("📩", event.data)
   ws.value.onclose = () => console.log("❌ WebSocket closed")
   fetchActiveSessions()
@@ -420,7 +452,11 @@ onMounted(() => {
         />
       </div>
     </SplitterPanel>
-
+    <div>
+      <h2>Active Session</h2>
+      <p>Calories burned: {{ currentCalories }}</p>
+      <p>Client ID: {{ currentClientId }}</p>
+    </div>
     <!-- Right panel: session details -->
     <SplitterPanel :size="70">
       <div class="h-full flex items-center justify-center text-gray-500">
