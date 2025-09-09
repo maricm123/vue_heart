@@ -47,7 +47,8 @@ function removeClient(client) {
 
 import { BleClient } from '@capacitor-community/bluetooth-le';
 
-async function scanAndConnect() {
+async function scanAndConnect(client) {
+  connectingDevices.value[client.id] = true
   try {
     await BleClient.initialize();
 
@@ -57,6 +58,10 @@ async function scanAndConnect() {
     });
 
     await BleClient.connect(device.deviceId);
+
+    devices.value[client.id] = device
+    servers.value[client.id] = server
+    characteristics.value[client.id] = characteristic
 
     // Subscribujemo se na Heart Rate Measurement karakteristiku
     await BleClient.startNotifications(
@@ -74,34 +79,40 @@ async function scanAndConnect() {
   }
 }
 
-// Connect device
 async function connectDevice(client) {
   connectingDevices.value[client.id] = true
   try {
-    const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: ['heart_rate'] }]
-    })
+    await BleClient.initialize();
 
-    if (!device.gatt.connected) {
-      await device.gatt.connect()
-    }
+    // Tražimo uređaj koji podržava Heart Rate Service
+    const device = await BleClient.requestDevice({
+      services: ['0000180d-0000-1000-8000-00805f9b34fb'], // Heart Rate Service
+    });
 
-    const server = await device.gatt.connect()
-    const service = await server.getPrimaryService('heart_rate')
-    const characteristic = await service.getCharacteristic('heart_rate_measurement')
-
-    characteristic.startNotifications()
-    characteristic.addEventListener('characteristicvaluechanged', event => {
-      const value = event.target.value
-      const bpm = value.getUint8(1) 
-      bpms.value[client.id] = bpm
-    })
+    await BleClient.connect(device.deviceId);
 
     devices.value[client.id] = device
-    servers.value[client.id] = server
-    characteristics.value[client.id] = characteristic
+
+    // Subscribujemo se na Heart Rate Measurement
+    await BleClient.startNotifications(
+      device.deviceId,
+      '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+      '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+      (value) => {
+        const data = new Uint8Array(value.buffer);
+        const bpm = data[1]; // drugi bajt = BPM
+        bpms.value[client.id] = bpm;
+        console.log(`❤️ Heart rate [${client.user.first_name}]:`, bpm);
+
+        // Ako je sesija aktivna – šaljemo na backend
+        if (sessionsStarted.value[client.id]) {
+          sendBpmToBackend(client, bpm, device);
+        }
+      }
+    );
+
   } catch (err) {
-    console.error('Bluetooth error', err)
+    console.error('BLE error:', err);
   } finally {
     connectingDevices.value[client.id] = false
   }
@@ -206,16 +217,6 @@ function selectClient(client) {
 function isSelected(client) {
   return selectedClients.value.some(c => c.id === client.id)
 }
-
-
-// function sendBpmToBackend(clientId, bpm) {
-//   if (ws.value && ws.value.readyState === WebSocket.OPEN) {
-//     ws.value.send(JSON.stringify({
-//       client_id: clientId,
-//       bpm: bpm
-//     }))
-//   }
-// }
 
 // 📌 Funkcija za slanje BPM-a na backend REST endpoint
 async function sendBpmToBackend() {
@@ -393,9 +394,9 @@ onMounted(() => {
         severity="danger" 
         @click="disconnectDevice(client)" 
         />
-        <Button @click="scanAndConnect">
+        <!-- <Button @click="scanAndConnect">
           Connect to HR Strap
-        </Button>
+        </Button> -->
         </div>
 
         <!-- Show BPM and Start Session only when connected -->
