@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, reactive } from 'vue'
 import axios from 'axios'
 import { api_coach, api_heart } from '@/api';
 const loadingClients = ref(false)
@@ -16,6 +16,9 @@ const selectedClients = ref([])
 const servers = ref({}) 
 const ws = ref(null)
 const characteristics = ref({})
+
+const sessionsStarted = reactive({})
+const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
 
 const activeSessions = ref([])
 
@@ -47,37 +50,6 @@ function removeClient(client) {
 
 import { BleClient } from '@capacitor-community/bluetooth-le';
 
-async function scanAndConnect(client) {
-  connectingDevices.value[client.id] = true
-  try {
-    await BleClient.initialize();
-
-    // Tražimo uređaj koji podržava HR servis
-    const device = await BleClient.requestDevice({
-      services: ['0000180d-0000-1000-8000-00805f9b34fb'], // Heart Rate Service
-    });
-
-    await BleClient.connect(device.deviceId);
-
-    devices.value[client.id] = device
-    servers.value[client.id] = server
-    characteristics.value[client.id] = characteristic
-
-    // Subscribujemo se na Heart Rate Measurement karakteristiku
-    await BleClient.startNotifications(
-      device.deviceId,
-      '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-      '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
-      (value) => {
-        const data = new Uint8Array(value.buffer);
-        const bpm = data[1]; // drugi bajt je BPM
-        console.log('Heart rate:', bpm);
-      }
-    );
-  } catch (err) {
-    console.error('BLE error:', err);
-  }
-}
 
 async function connectDevice(client) {
   connectingDevices.value[client.id] = true
@@ -102,11 +74,13 @@ async function connectDevice(client) {
         const data = new Uint8Array(value.buffer);
         const bpm = data[1]; // drugi bajt = BPM
         bpms.value[client.id] = bpm;
-        console.log(`❤️ Heart rate [${client.user.first_name}]:`, bpm);
 
         // Ako je sesija aktivna – šaljemo na backend
-        if (sessionsStarted.value[client.id]) {
-          sendBpmToBackend(client, bpm, device);
+        console.log("🔍 sessionsStarted:", sessionsStarted)
+        console.log("🔍 sessionIds:", sessionIds)
+
+        if (sessionsStarted[client.id]) {
+          sendBpmToBackend(client, bpm, device, sessionIds[client.id])
         }
       }
     );
@@ -134,7 +108,6 @@ function disconnectDevice(client) {
   if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
 }
 
-const sessionsStarted = ref({}) // { clientId: sessionId }
 
 // Start session
 async function createSession(client) {
@@ -149,8 +122,16 @@ async function createSession(client) {
     )
 
     // Save the session id returned from backend
-    sessionsStarted.value[client.id] = response.data.id
-    console.log(`✅ Session started for client ${client.user.first_name}`, response.data)
+    // Sačuvaj boolean + ID odvojeno
+    sessionsStarted[client.id] = true
+    sessionIds[client.id] = response.data.id
+
+    console.log("✅ Session started", {
+      clientId: client.id,
+      started: sessionsStarted[client.id],
+      sessionId: sessionIds[client.id],
+    })
+
     // Add new active session to list
     // activeSessions.value.push(response.data)
 
@@ -172,8 +153,10 @@ async function createSession(client) {
 // Finish session
 async function finishSession(client) {
   try {
-    const sessionId = sessionsStarted.value[client.id]
+    const sessionId = sessionIds.value[client.id]  // uzmi pravi ID
     if (!sessionId) return
+
+    console.log("Finishing session", sessionId, "for client", client.id)
 
     await api_heart.patch(
       `/finish-session/${sessionId}`,
@@ -181,10 +164,12 @@ async function finishSession(client) {
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
-    delete sessionsStarted.value[client.id] // remove session tracking
+    delete sessionsStarted.value[client.id]
+    delete sessionIds.value[client.id]
+
     console.log(`✅ Session finished for client ${client.user.first_name}`)
-    // Remove finished session from list
-    activeSessions.value = activeSessions.value.filter(s => s.id !== session.id)
+
+    activeSessions.value = activeSessions.value.filter(s => s.id !== sessionId)
   } catch (err) {
     console.error('Failed to finish session', err.response?.data || err)
   }
@@ -219,19 +204,19 @@ function isSelected(client) {
 }
 
 // 📌 Funkcija za slanje BPM-a na backend REST endpoint
-async function sendBpmToBackend() {
-  if (!bpmInput.value) return;
-
+async function sendBpmToBackend(client, bpm, device, sessionId) {
+  console.log("Sending BPM to backend:", {
+    clientId: client.id,
+    bpm: bpm,
+    device: device,
+    sessionId: sessionId
+  });
   try {
     const response = await api_heart.post("/save-heartbeat", {
-      // bpm: bpmInput.value,
-      // training_session: trainingSessionId,
-      // timestamp: new Date().toISOString(),
-
-      user: user.id,
-      bpm: bpmInput.value,
-      device_id: devices.name,
-      training_session: trainingSessionId || null, // Ako je sesija aktivna
+      client: client.id,
+      bpm: bpm,
+      device_id: device.name,
+      training_session: sessionId || null, // Ako je sesija aktivna
       timestamp: new Date().toISOString()  // opcionalno, ako backend koristi
     });
 
@@ -409,12 +394,12 @@ onMounted(() => {
             label="Start Session" 
             @click="createSession(client)" 
           />
-          <Button 
+          <!-- <Button 
             v-else
             label="Finish Session" 
             severity="danger"
             @click="finishSession(client)" 
-          />
+          /> -->
         </div>
       </div>
     </template>
