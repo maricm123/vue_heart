@@ -10,12 +10,13 @@ const layout = ref('list')
 const options = ['list', 'grid']
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
 const devices = ref({}) // store device per client { clientId: device }
-const bpms = ref({}) // store bpm per client { clientId: bpm }
 // selected clients (array instead of single)
 const selectedClients = ref([])
-const servers = ref({}) 
 const ws = ref(null)
-const characteristics = ref({})
+
+// za više klijenata – koristimo objekte umesto samo jedne vrednosti
+const calories = reactive({})
+const bpms = reactive({})
 
 const sessionsStarted = reactive({})
 const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
@@ -73,7 +74,7 @@ async function connectDevice(client) {
       (value) => {
         const data = new Uint8Array(value.buffer);
         const bpm = data[1]; // drugi bajt = BPM
-        bpms.value[client.id] = bpm;
+        bpms[client.id] = bpm;
 
         // Ako je sesija aktivna – šaljemo na backend
         console.log("🔍 sessionsStarted:", sessionsStarted)
@@ -94,18 +95,19 @@ async function connectDevice(client) {
 
 // Disconnect device
 function disconnectDevice(client) {
-  if (characteristics.value[client.id]) {
-    characteristics.value[client.id].stopNotifications().catch(() => {})
-    characteristics.value[client.id].removeEventListener('characteristicvaluechanged', () => {})
-    delete characteristics.value[client.id]
-  }
-  if (servers.value[client.id]) {
-    servers.value[client.id].disconnect()
-    delete servers.value[client.id]
-  }
-  if (devices.value[client.id]) delete devices.value[client.id]
-  if (bpms.value[client.id]) delete bpms.value[client.id]
-  if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
+  alert("Disconnecting device for client " + client.id)
+//   if (characteristics.value[client.id]) {
+//     characteristics.value[client.id].stopNotifications().catch(() => {})
+//     characteristics.value[client.id].removeEventListener('characteristicvaluechanged', () => {})
+//     delete characteristics.value[client.id]
+//   }
+//   if (servers.value[client.id]) {
+//     servers.value[client.id].disconnect()
+//     delete servers.value[client.id]
+//   }
+//   if (devices.value[client.id]) delete devices.value[client.id]
+//   if (bpms.value[client.id]) delete bpms.value[client.id]
+  // if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
 }
 
 
@@ -220,9 +222,6 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
       timestamp: new Date().toISOString()  // opcionalno, ako backend koristi
     });
 
-    currentBpm.value = bpmInput.value; // odmah update lokalno
-    bpmInput.value = null;
-
     console.log("✅ BPM sent:", response.data);
   } catch (err) {
     console.error("❌ Error sending BPM:", err);
@@ -232,15 +231,26 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 
 onMounted(() => {
   ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
+
   ws.value.onopen = () => console.log("✅ WebSocket connected")
+
   ws.value.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    currentCalories.value = data.current_calories;
-    currentBpm.value = data.bpm ?? currentBpm.value; // ako backend šalje i bpm
-    console.log("WS data:", data);
-  };
-  ws.value.onmessage = (event) => console.log("📩", event.data)
+    const data = JSON.parse(event.data)
+    console.log("WS data:", data)
+
+    // Mapiraj kalorije po client.id
+    if (data.client_id) {
+      calories[data.client_id] = data.current_calories
+    }
+
+    // Ako backend šalje i bpm, ažuriraj i to
+    if (data.bpm) {
+      bpms[data.client_id] = data.bpm
+    }
+  }
+
   ws.value.onclose = () => console.log("❌ WebSocket closed")
+
   fetchActiveSessions()
 })
 
@@ -445,10 +455,28 @@ onMounted(() => {
     </div>
     <!-- Right panel: session details -->
     <SplitterPanel :size="70">
-      <div class="h-full flex items-center justify-center text-gray-500">
-        Session details for {{ session.client.user.first_name }}
+  <div class="h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-700 mb-4">
+      🏋️ Session – {{ session.client.user.first_name }}
+    </h2>
+    
+    <div class="flex items-center gap-8">
+      <div class="flex flex-col items-center">
+        <span class="text-3xl font-bold text-red-500">
+          {{ bpms[session.client.id] ?? '-' }}
+        </span>
+        <span class="text-sm text-gray-500">BPM</span>
       </div>
-    </SplitterPanel>
+
+      <div class="flex flex-col items-center">
+        <span class="text-3xl font-bold text-orange-500">
+          {{ calories[session.client.id] ?? 0 }}
+        </span>
+        <span class="text-sm text-gray-500">kcal burned</span>
+      </div>
+    </div>
+  </div>
+</SplitterPanel>
   </Splitter>
 </div>
 </template>
