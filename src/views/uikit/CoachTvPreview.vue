@@ -44,7 +44,7 @@ async function open() {
 }
 // Remove client & disconnect if needed
 function removeClient(client) {
-  disconnectDevice(client)   // disconnect first
+  // disconnectDevice(client)   // disconnect first
   const index = selectedClients.value.findIndex(c => c.id === client.id)
   if (index !== -1) selectedClients.value.splice(index, 1)
 }
@@ -66,25 +66,32 @@ async function connectDevice(client) {
 
     devices.value[client.id] = device
 
-    // Subscribujemo se na Heart Rate Measurement
     await BleClient.startNotifications(
-      device.deviceId,
-      '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-      '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
-      (value) => {
-        const data = new Uint8Array(value.buffer);
-        const bpm = data[1]; // drugi bajt = BPM
-        bpms[client.id] = bpm;
+  device.deviceId,
+  '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+  '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+  (value) => {
+    const data = new Uint8Array(value.buffer);
 
-        // Ako je sesija aktivna – šaljemo na backend
-        console.log("🔍 sessionsStarted:", sessionsStarted)
-        console.log("🔍 sessionIds:", sessionIds)
+    // 🔍 pravilno parsiranje HRM paketa
+    const flags = data[0];
+    let bpm;
+    if (flags & 0x01) {
+      bpm = data[1] | (data[2] << 8); // 16-bit little endian
+    } else {
+      bpm = data[1]; // 8-bit
+    }
 
-        if (sessionsStarted[client.id]) {
-          sendBpmToBackend(client, bpm, device, sessionIds[client.id])
-        }
-      }
-    );
+    bpms[client.id] = bpm;
+
+    console.log("❤️ BPM parsed:", bpm, "raw:", data);
+
+    // Ako je sesija aktivna – šaljemo na backend
+    if (sessionsStarted[client.id]) {
+      sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+    }
+  }
+);
 
   } catch (err) {
     console.error('BLE error:', err);
@@ -93,9 +100,9 @@ async function connectDevice(client) {
   }
 }
 
-// Disconnect device
-function disconnectDevice(client) {
-  alert("Disconnecting device for client " + client.id)
+// // Disconnect device
+// function disconnectDevice(client) {
+//   console.log("Disconnecting device for client", client.id)
 //   if (characteristics.value[client.id]) {
 //     characteristics.value[client.id].stopNotifications().catch(() => {})
 //     characteristics.value[client.id].removeEventListener('characteristicvaluechanged', () => {})
@@ -107,7 +114,38 @@ function disconnectDevice(client) {
 //   }
 //   if (devices.value[client.id]) delete devices.value[client.id]
 //   if (bpms.value[client.id]) delete bpms.value[client.id]
-  // if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
+//   if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
+// }
+
+// Disconnect device
+async function disconnectDevice(client) {
+  console.log("Disconnecting device for client", client.id)
+
+  try {
+    // Zaustavi notifikacije
+    if (devices.value[client.id]) {
+      await BleClient.stopNotifications(
+        devices.value[client.id].deviceId,
+        '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+        '00002a37-0000-1000-8000-00805f9b34fb'  // Heart Rate Measurement
+      );
+    }
+  } catch (err) {
+    console.warn("⚠️ stopNotifications failed:", err.message);
+  }
+
+  try {
+    if (devices.value[client.id]) {
+      await BleClient.disconnect(devices.value[client.id].deviceId);
+    }
+  } catch (err) {
+    console.warn("⚠️ disconnect failed:", err.message);
+  }
+
+  // Obriši iz lokalnog state-a
+  delete devices.value[client.id];
+  delete bpms.value[client.id];
+  delete sessionsStarted.value[client.id];
 }
 
 
@@ -155,7 +193,7 @@ async function createSession(client) {
 // Finish session
 async function finishSession(client) {
   try {
-    const sessionId = sessionIds.value[client.id]  // uzmi pravi ID
+    const sessionId = sessionIds[client.id]  // uzmi pravi ID
     if (!sessionId) return
 
     console.log("Finishing session", sessionId, "for client", client.id)
@@ -166,8 +204,10 @@ async function finishSession(client) {
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
-    delete sessionsStarted.value[client.id]
-    delete sessionIds.value[client.id]
+    delete sessionsStarted[client.id]
+    delete sessionIds[client.id]
+
+    disconnectDevice(client) // disconnect device when finishing
 
     console.log(`✅ Session finished for client ${client.user.first_name}`)
 
