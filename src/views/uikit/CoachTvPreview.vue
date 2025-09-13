@@ -144,7 +144,7 @@ async function disconnectDevice(client) {
 
   // Obriši iz lokalnog state-a
   delete devices.value[client.id];
-  delete bpms.value[client.id];
+  delete bpms[client.id];
   delete sessionsStarted.value[client.id];
 }
 
