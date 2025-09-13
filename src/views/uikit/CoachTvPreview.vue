@@ -145,7 +145,7 @@ async function disconnectDevice(client) {
   // Obriši iz lokalnog state-a
   delete devices.value[client.id];
   delete bpms[client.id];
-  delete sessionsStarted.value[client.id];
+  delete sessionsStarted[client.id];
 }
 
 
@@ -200,7 +200,7 @@ async function finishSession(client) {
 
     await api_heart.patch(
       `/finish-session/${sessionId}`,
-      {}, 
+        { calories_at_end: calories[client.id] ?? 0 }, 
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
