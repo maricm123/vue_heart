@@ -200,7 +200,7 @@ async function finishSession(client) {
 
     await api_heart.patch(
       `/finish-session/${sessionId}`,
-        { calories_at_end: calories[client.id] ?? 0 }, 
+        { calories_at_end: Math.round(calories[client.id] ?? 0) }, 
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
