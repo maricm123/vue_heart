@@ -2,6 +2,7 @@
 import { onMounted, ref, reactive } from 'vue'
 import axios from 'axios'
 import { api_coach, api_heart } from '@/api';
+import { formatIsoToLocal } from '@/utils/formatDate'
 const loadingClients = ref(false)
 const connectingDevices = ref({})  
 const display = ref(false)
@@ -22,6 +23,13 @@ const sessionsStarted = reactive({})
 const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
 
 const activeSessions = ref([])
+
+function fmtStart(iso) {
+  // želiš li uvek beogradsko vreme:
+  return formatIsoToLocal(iso, { timeZone: 'Europe/Belgrade' })
+  // ili prema podešavanju uređaja:
+  // return formatIsoToLocal(iso)
+}
 
 async function open() {
   display.value = true
@@ -99,23 +107,6 @@ async function connectDevice(client) {
     connectingDevices.value[client.id] = false
   }
 }
-
-// // Disconnect device
-// function disconnectDevice(client) {
-//   console.log("Disconnecting device for client", client.id)
-//   if (characteristics.value[client.id]) {
-//     characteristics.value[client.id].stopNotifications().catch(() => {})
-//     characteristics.value[client.id].removeEventListener('characteristicvaluechanged', () => {})
-//     delete characteristics.value[client.id]
-//   }
-//   if (servers.value[client.id]) {
-//     servers.value[client.id].disconnect()
-//     delete servers.value[client.id]
-//   }
-//   if (devices.value[client.id]) delete devices.value[client.id]
-//   if (bpms.value[client.id]) delete bpms.value[client.id]
-//   if (sessionsStarted.value[client.id]) delete sessionsStarted.value[client.id]
-// }
 
 // Disconnect device
 async function disconnectDevice(client) {
@@ -478,7 +469,7 @@ onMounted(() => {
           <p class="font-medium">
             {{ session.client.user.first_name }} {{ session.client.user.last_name }}
           </p>
-          <p class="text-sm text-gray-500">Started: {{ session.start }}</p>
+          <p class="text-sm text-gray-500">Started: {{ fmtStart(session.start) }}</p>
         </div>
         <Button 
           label="Finish" 
