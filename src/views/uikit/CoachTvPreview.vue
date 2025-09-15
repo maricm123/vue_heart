@@ -3,6 +3,11 @@ import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import axios from 'axios'
 import { api_coach, api_heart } from '@/api';
 import { formatIsoToLocal } from '@/utils/formatDate'
+
+import { useSessionTimers } from '@/composables/useSessionTimers'
+
+const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
+
 const loadingClients = ref(false)
 const connectingDevices = ref({})  
 const display = ref(false)
@@ -14,12 +19,6 @@ const devices = ref({}) // store device per client { clientId: device }
 // selected clients (array instead of single)
 const selectedClients = ref([])
 const ws = ref(null)
-
-
-// ⏱️ Timers per client
-const timers = reactive({})       // { [clientId]: elapsedSeconds }
-const startTimes = reactive({})   // { [clientId]: Date }
-const _intervals = {}             // { [clientId]: intervalId }
 
 
 // za više klijenata – koristimo objekte umesto samo jedne vrednosti
@@ -147,39 +146,6 @@ async function disconnectDevice(client) {
 }
 
 
-function formatDuration(totalSec = 0) {
-  totalSec = Math.max(0, Number(totalSec) || 0)
-  const h = Math.floor(totalSec / 3600)
-  const m = Math.floor((totalSec % 3600) / 60)
-  const s = totalSec % 60
-  return h > 0
-    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
-    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
-}
-
-function startTimerFor(clientId, startIso) {
-  const start = startIso ? new Date(startIso) : new Date()
-  startTimes[clientId] = start
-  timers[clientId] = Math.floor((Date.now() - start.getTime()) / 1000)
-
-  if (_intervals[clientId]) clearInterval(_intervals[clientId])
-  _intervals[clientId] = setInterval(() => {
-    timers[clientId] = Math.floor((Date.now() - start.getTime()) / 1000)
-  }, 1000)
-}
-
-function stopTimerFor(clientId) {
-  if (_intervals[clientId]) {
-    clearInterval(_intervals[clientId])
-    delete _intervals[clientId]
-  }
-  const total = timers[clientId] ?? 0
-  delete timers[clientId]
-  delete startTimes[clientId]
-  return total
-}
-
-
 // Start session
 async function createSession(client) {
   try {
@@ -217,7 +183,7 @@ async function createSession(client) {
     removeClient(client) // remove client from selected list
 
     // ⏱️ pokreni timer (koristi start sa backenda ako ga vrati)
-    startTimerFor(client.id, response.data.start)
+    startTimerFor(client.id, response.data.start) // ⏱️
   } catch (err) {
     console.error('Failed to start session', err.response?.data || err)
   }
@@ -238,9 +204,8 @@ async function finishSession(client) {
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
-    // ⏱️ stop & log
     const sec = stopTimerFor(client.id)
-    console.log(`⏱️ Session duration for client ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
+    console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
 
     delete sessionsStarted[client.id]
     delete sessionIds[client.id]
