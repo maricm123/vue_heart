@@ -274,8 +274,9 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 
 onMounted(() => {
   // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
-  ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
-
+  // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
+  ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
+  console.log("Connecting to WS:", import.meta.env.VITE_WS_API_URL)
   ws.value.onopen = () => console.log("✅ WebSocket connected")
 
   ws.value.onmessage = (event) => {
