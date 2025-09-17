@@ -7,7 +7,7 @@ import { formatIsoToLocal } from '@/utils/formatDate'
 import { useSessionTimers } from '@/composables/useSessionTimers'
 
 const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
-
+const _intervals = {}
 const loadingClients = ref(false)
 const connectingDevices = ref({})  
 const display = ref(false)
