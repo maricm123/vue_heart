@@ -17,13 +17,13 @@ const router = createRouter({
                     path: '/uikit/coachTvPreview',
                     name: 'coachTvPreview',
                     component: () => import('@/views/uikit/CoachTvPreview.vue'),
-                    meta: { requiresAuth: true }
+                    // meta: { requiresAuth: true }
                 },
                 {
                     path: '/uikit/clientDetail/:id',
                     name: 'clientDetail',
                     component: () => import('@/views/uikit/ClientDetail.vue'),
-                    meta: { requiresAuth: true }
+                    // meta: { requiresAuth: true }
                 },
                 {
                     path: '/uikit/formlayout',

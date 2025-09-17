@@ -2,7 +2,7 @@
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
-
+import { api_coach, api_heart } from '@/api';
 const router = useRouter()
 const error = ref('')
 const email = ref('');
@@ -18,7 +18,7 @@ async function onLogin() {
     try {
         error.value = ''
         
-        const response = await axios.post('http://mygym.localhost:8000/api_coach/login-coach', {
+        const response = await api_coach.post('/login-coach', {
             email: email.value,
             password: password.value
         })
