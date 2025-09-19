@@ -30,6 +30,7 @@ const router = createRouter({
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
                 },
+                
                 {
                     path: '/uikit/input',
                     name: 'input',
@@ -148,7 +149,12 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
-        }
+        },
+        {
+                    path: '/uikit/livetv',
+                    name: 'livetv',
+                    component: () => import('@/views/uikit/LiveTV.vue')
+                },
     ]
 });
 
