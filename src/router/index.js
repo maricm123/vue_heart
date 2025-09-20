@@ -121,7 +121,12 @@ const router = createRouter({
                     path: '/documentation',
                     name: 'documentation',
                     component: () => import('@/views/pages/Documentation.vue')
-                }
+                },
+                {
+                    path: '/uikit/coachProfile',
+                    name: 'coachProfile',
+                    component: () => import('@/views/uikit/CoachProfile.vue')
+                },
             ]
         },
         {
@@ -151,10 +156,11 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Error.vue')
         },
         {
-                    path: '/uikit/livetv',
-                    name: 'livetv',
-                    component: () => import('@/views/uikit/LiveTV.vue')
-                },
+            path: '/uikit/livetv',
+            name: 'livetv',
+            component: () => import('@/views/uikit/LiveTV.vue')
+        },
+        
     ]
 });
 
