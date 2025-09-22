@@ -1,24 +1,22 @@
 <script setup>
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import axios from 'axios'
 import { api_coach, api_heart } from '@/services/api';
 import { formatIsoToLocal } from '@/utils/formatDate'
-
 import { useSessionTimers } from '@/composables/useSessionTimers'
 import { useBle } from '@/composables/useBle'
 import { fetchActiveSessions } from '@/services/trainingSessionsService.js'
 
-const { devices, connectingDevices, connect, disconnect, isNative, bpms } = useBle()
+const { connect, disconnect, isNative } = useBle()
 const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
 const _intervals = {}
 const loadingClients = ref(false)
-// const connectingDevices = ref({})  
+const connectingDevices = ref({})  
 const display = ref(false)
 const clients = ref([])
 const layout = ref('list')
 const options = ['list', 'grid']
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
-// const devices = ref({}) // store device per client { clientId: device }
+const devices = ref({}) // store device per client { clientId: device }
 // selected clients (array instead of single)
 const selectedClients = ref([])
 const ws = ref(null)
@@ -26,7 +24,7 @@ const ws = ref(null)
 
 // za više klijenata – koristimo objekte umesto samo jedne vrednosti
 const calories = reactive({})
-// const bpms = reactive({})
+const bpms = reactive({})
 
 const sessionsStarted = reactive({})
 const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
@@ -422,7 +420,7 @@ onUnmounted(() => {
           :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'" 
           :loading="connectingDevices[client.id]"
           :disabled="connectingDevices[client.id]"
-          @click="connect(client)" 
+          @click="connectDevice(client)" 
         />
         <Button 
         v-else 
