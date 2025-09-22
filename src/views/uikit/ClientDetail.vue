@@ -2,7 +2,7 @@
 import { ref, onMounted, watch  } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
-import { api_coach, api_heart } from '@/api';
+import { api_coach, api_heart } from '@/services/api';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 
 const route = useRoute()

@@ -2,7 +2,7 @@
 import { ProductService } from '@/service/ProductService';
 import { onMounted, ref } from 'vue';
 import axios from 'axios'
-import { api_coach, api_heart } from '@/api';
+import { api_coach, api_heart } from '@/services/api';
 const products = ref(null);
 const picklistProducts = ref(null);
 const orderlistProducts = ref(null);

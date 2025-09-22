@@ -1,21 +1,23 @@
 <script setup>
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import axios from 'axios'
-import { api_coach, api_heart } from '@/api';
+import { api_coach, api_heart } from '@/services/api';
 import { formatIsoToLocal } from '@/utils/formatDate'
 
 import { useSessionTimers } from '@/composables/useSessionTimers'
+import { useBle } from '@/composables/useBle'
 
+const { devices, connectingDevices, connect, disconnect, isNative, bpms } = useBle()
 const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
 const _intervals = {}
 const loadingClients = ref(false)
-const connectingDevices = ref({})  
+// const connectingDevices = ref({})  
 const display = ref(false)
 const clients = ref([])
 const layout = ref('list')
 const options = ['list', 'grid']
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
-const devices = ref({}) // store device per client { clientId: device }
+// const devices = ref({}) // store device per client { clientId: device }
 // selected clients (array instead of single)
 const selectedClients = ref([])
 const ws = ref(null)
@@ -23,17 +25,12 @@ const ws = ref(null)
 
 // za više klijenata – koristimo objekte umesto samo jedne vrednosti
 const calories = reactive({})
-const bpms = reactive({})
+// const bpms = reactive({})
 
 const sessionsStarted = reactive({})
 const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
 
 const activeSessions = ref([])
-
-import { Capacitor } from '@capacitor/core'
-
-const isNative = Capacitor.isNativePlatform() // true = iOS/Android, false = web
-console.log('Running on Native?', isNative)
 
 function fmtStart(iso) {
   // želiš li uvek beogradsko vreme:
@@ -435,17 +432,14 @@ onUnmounted(() => {
           :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'" 
           :loading="connectingDevices[client.id]"
           :disabled="connectingDevices[client.id]"
-          @click="connectDevice(client)" 
+          @click="connect(client)" 
         />
         <Button 
         v-else 
         label="Disconnect Device" 
         severity="danger" 
-        @click="disconnectDevice(client)" 
+        @click="disconnect(client)" 
         />
-        <!-- <Button @click="scanAndConnect">
-          Connect to HR Strap
-        </Button> -->
         </div>
 
         <!-- Show BPM and Start Session only when connected -->

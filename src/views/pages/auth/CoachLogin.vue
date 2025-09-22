@@ -2,7 +2,7 @@
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router'
-import { api_coach, api_heart } from '@/api';
+import { api_coach, api_heart } from '@/services/api';
 const router = useRouter()
 const error = ref('')
 const email = ref('');

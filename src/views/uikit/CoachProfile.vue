@@ -2,9 +2,9 @@
 import { ref, onMounted, watch  } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
-import { api_coach, api_heart } from '@/api';
+import { api_coach, api_heart } from '@/services/api';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
-
+import {getCurrentCoach} from '@/services/userService'
 const route = useRoute()
 const coachId = route.params.id
 
@@ -59,18 +59,12 @@ watch(gender, (newVal) => {
     coach.value.gender = newVal
 })
 
-// 🔹 Fetch coach detail + training sessions
 onMounted(async () => {
   try {
-    // fetch coach
-    const coachResponse = await api_coach.get(
-      `/current-coach`,
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
-    coach.value = coachResponse.data
-
-  } catch (err) {
-    console.error('Failed to fetch coach data', err)
+    const coachResponse = await getCurrentCoach()
+    coach.value = coachResponse
+  } catch (error) {
+    console.error('Error loading coach:', error)
   } finally {
     loading.value = false
   }
