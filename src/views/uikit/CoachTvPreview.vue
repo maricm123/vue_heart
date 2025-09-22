@@ -6,6 +6,7 @@ import { formatIsoToLocal } from '@/utils/formatDate'
 
 import { useSessionTimers } from '@/composables/useSessionTimers'
 import { useBle } from '@/composables/useBle'
+import { fetchActiveSessions } from '@/services/trainingSessionsService.js'
 
 const { devices, connectingDevices, connect, disconnect, isNative, bpms } = useBle()
 const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
@@ -222,22 +223,6 @@ async function finishSession(client) {
   }
 }
 
-
-// ✅ Load active sessions from backend
-async function fetchActiveSessions() {
-  try {
-    const response = await api_coach.get(
-      '/active-training-sessions',
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
-    activeSessions.value = response.data
-    console.log('✅ Active sessions loaded', activeSessions.value)
-  } catch (err) {
-    console.error('Failed to fetch active sessions', err.response?.data || err)
-  }
-}
-
-
 function selectClient(client) {
   // prevent duplicates
   if (!selectedClients.value.find(c => c.id === client.id)) {
@@ -274,7 +259,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 }
 
 
-onMounted(() => {
+onMounted(async () => {
   // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
   // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
   ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
@@ -298,7 +283,12 @@ onMounted(() => {
 
   ws.value.onclose = () => console.log("❌ WebSocket closed")
 
-  fetchActiveSessions()
+  try {
+    activeSessions.value = await fetchActiveSessions()
+    console.log('✅ Active sessions loaded', activeSessions.value)
+  } catch (err) {
+    // već je logovano u servisu, ovde možeš prikazati poruku korisniku
+  }
 })
 
 onUnmounted(() => {
