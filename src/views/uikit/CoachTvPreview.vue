@@ -30,6 +30,11 @@ const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
 
 const activeSessions = ref([])
 
+import { Capacitor } from '@capacitor/core'
+
+const isNative = Capacitor.isNativePlatform() // true = iOS/Android, false = web
+console.log('Running on Native?', isNative)
+
 function fmtStart(iso) {
   // želiš li uvek beogradsko vreme:
   return formatIsoToLocal(iso, { timeZone: 'Europe/Belgrade' })

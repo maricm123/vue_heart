@@ -6,10 +6,10 @@ import { api_coach, api_heart } from '@/api';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 
 const route = useRoute()
-const clientId = route.params.id
+const coachId = route.params.id
 
 // states
-const client = ref({
+const coach = ref({
   user: {
     first_name: '',
     last_name: '',
@@ -17,15 +17,13 @@ const client = ref({
     phone: '',
     birth_date: null
   },
-  height: null,
-  weight: null,
-  gender: null
+  specialty: null
 })
 const loading = ref(true)
 
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3'
 // states
-// const client = ref(null)
+// const coach = ref(null)
 const trainingSessions = ref([])
 const filters = ref()
 const options = ref(['Female', 'Male'])
@@ -56,31 +54,23 @@ const clearFilter = () => {
   initFilters()
 }
 
-// Keep client.gender in sync with SelectButton
+// Keep coach.gender in sync with SelectButton
 watch(gender, (newVal) => {
-    client.value.gender = newVal
+    coach.value.gender = newVal
 })
 
-// 🔹 Fetch client detail + training sessions
+// 🔹 Fetch coach detail + training sessions
 onMounted(async () => {
   try {
-    // fetch client
-    const clientResponse = await api_coach.get(
-      `/client-detail/${clientId}`,
+    // fetch coach
+    const coachResponse = await api_coach.get(
+      `/current-coach`,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
-    client.value = clientResponse.data
-    gender.value = client.value.gender
-
-    // fetch training sessions
-    const sessionsResponse = await api_coach.get(
-      `/get-training-sessions-per-client/${clientId}`,
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
-    trainingSessions.value = sessionsResponse.data
+    coach.value = coachResponse.data
 
   } catch (err) {
-    console.error('Failed to fetch client or sessions:', err)
+    console.error('Failed to fetch coach data', err)
   } finally {
     loading.value = false
   }
@@ -93,26 +83,26 @@ function formatDateToYMD(date) {
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }   
-// 🔹 Update client
-const updateClient = async () => {
+// 🔹 Update coach
+const updateCoach = async () => {
   try {
     const payload = {
-    ...client.value,
+    ...coach.value,
     user: {
-        ...client.value.user,
-        birth_date: formatDateToYMD(client.value.user.birth_date)
+        ...coach.value.user,
+        birth_date: formatDateToYMD(coach.value.user.birth_date)
       }
     }
     
     await api_coach.patch(
-      `/client-detail/${clientId}`,
+      `/current-coach`,
       payload,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
-    alert('✅ Client updated successfully!')
+    alert('✅ Coach updated successfully!')
   } catch (err) {
     console.error('Update failed:', err.response?.data || err)
-    alert('❌ Failed to update client')
+    alert('❌ Failed to update coach')
   }
 }
 </script>
@@ -121,7 +111,7 @@ const updateClient = async () => {
 <Fluid>
         <div class="flex flex-col md:flex-row gap-8 mb-8">
             <div class="md:w-1/2">
-                <div v-if="client">
+                <div v-if="coach">
                     <div class="card flex flex-col gap-4">
                     <h2 class="text-xl font-bold mb-4">Profile information</h2>
                     <div class="flex flex-col gap-2 field">
@@ -155,7 +145,7 @@ const updateClient = async () => {
                         </div>
                         <label class="mb-1 font-medium">First Name</label>
                         <input
-                        v-model="client.user.first_name"
+                        v-model="coach.user.first_name"
                         type="text"
                         placeholder="First Name"
                         class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
@@ -163,7 +153,7 @@ const updateClient = async () => {
 
                         <label class="mb-1 font-medium">Last Name</label>
                         <input
-                        v-model="client.user.last_name"
+                        v-model="coach.user.last_name"
                         type="text"
                         placeholder="Last Name"
                         class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
@@ -171,38 +161,16 @@ const updateClient = async () => {
 
                         <label class="mb-1 font-medium">Email (cannot update)</label>
                         <input
-                        v-model="client.user.email"
+                        v-model="coach.user.email"
                         type="email"
                         placeholder="Email"
                         readonly
                         class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
                         />
 
-                        <label class="mb-1 font-medium">Gender</label>
-                        <SelectButton
-                        v-model="gender"
-                        :options="options"
-                        size="large"
-                        class="dark:bg-gray-700  dark:text-gray-100"
-                        />
-
-                        <label class="mb-1 font-medium">Height</label>
-                        <input
-                        v-model="client.height"
-                        type="text"
-                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
-                        />
-
-                        <label class="mb-1 font-medium">Weight</label>
-                        <input
-                        v-model="client.weight"
-                        type="text"
-                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
-                        />
-
                         <label class="mb-1 font-medium">Birth Date</label>
                         <Calendar
-                        v-model="client.user.birth_date"
+                        v-model="coach.user.birth_date"
                         dateFormat="yy-mm-dd"
                         showIcon
                         class="dark:bg-gray-700 dark:text-gray-100"
@@ -210,7 +178,7 @@ const updateClient = async () => {
                     </div>
 
                     <button
-                        @click="updateClient"
+                        @click="updateCoach"
                         class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
                     >
                         Update
@@ -218,7 +186,7 @@ const updateClient = async () => {
                     </div>
                 </div>
             <div v-else>
-                Loading client data...
+                Loading data...
             </div>
         </div>
             <div class="md:w-1/2">
@@ -240,58 +208,6 @@ const updateClient = async () => {
 
             </div>
         </div>
-
-        <DataTable
-            v-model:filters="filters"
-            :value="trainingSessions"
-            paginator
-            showGridlines
-            :rows="10"
-            dataKey="id"
-            filterDisplay="menu"
-            :loading="loading"
-            :globalFilterFields="['title', 'calories_burned', 'duration_in_minutes']"
-        >
-        <template #header>
-          <h3>Training sessions</h3>
-            <div class="flex justify-between">
-            <Button type="button" icon="pi pi-filter-slash" label="Clear" variant="outlined" @click="clearFilter()" />
-            <IconField>
-                <InputIcon>
-                <i class="pi pi-search" />
-                </InputIcon>
-                <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
-            </IconField>
-            </div>
-        </template>
-
-        <template #empty>No training sessions found.</template>
-        <template #loading>Loading training sessions...</template>
-
-        <!-- Columns -->
-        <Column field="name" header="Session Name" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.title }}</template>
-        </Column>
-
-        <Column field="date" header="Date" style="min-width: 10rem">
-            <template #body="{ data }">{{ formatDate(data.start) }}</template>
-        </Column>
-
-        <Column field="status" header="Status" style="min-width: 10rem">
-            <template #body="{ data }">
-            <Tag :value="data.status" :severity="data.status === 'completed' ? 'success' : 'info'" />
-            </template>
-        </Column>
-        <Column field="name" header="Cal burned" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.calories_burned }}</template>
-        </Column>
-        <Column field="name" header="Duration" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.duration_in_minutes }}</template>
-        </Column>
-        <Column field="name" header="Max heart rate" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.duration_in_minutes }}</template>
-        </Column>
-        </DataTable>
 
     </Fluid>
 </template>
