@@ -260,7 +260,11 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 onMounted(async () => {
   // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
   // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
-  ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
+  const token = localStorage.getItem('access')
+  ws.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
+  // ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
+  // ws.value = new WebSocket(`ws://localhost:8000/ws/bpm/?token=${token}`);
+  // ws.value = new WebSocket(`ws://13.48.248.110:9000/ws/bpm/?token=${token}`);
   console.log("Connecting to WS:", import.meta.env.VITE_WS_API_URL)
   ws.value.onopen = () => console.log("✅ WebSocket connected")
 
