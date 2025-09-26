@@ -5,6 +5,8 @@ import { formatIsoToLocal } from '@/utils/formatDate'
 import { useSessionTimers } from '@/composables/useSessionTimers'
 import { useBle } from '@/composables/useBle'
 import { fetchActiveSessions } from '@/services/trainingSessionsService.js'
+import { webSocketStore } from '@/store/webSocketStore'
+import { storeToRefs } from 'pinia'
 
 const { connect, disconnect, isNative } = useBle()
 const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
@@ -19,12 +21,16 @@ const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
 const devices = ref({}) // store device per client { clientId: device }
 // selected clients (array instead of single)
 const selectedClients = ref([])
-const ws = ref(null)
+
+
+const wsStore = webSocketStore()
+
+const { calories, bpms } = storeToRefs(wsStore)
 
 
 // za više klijenata – koristimo objekte umesto samo jedne vrednosti
-const calories = reactive({})
-const bpms = reactive({})
+// const calories = reactive({})
+// const bpms = reactive({})
 
 const sessionsStarted = reactive({})
 const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
@@ -97,7 +103,8 @@ async function connectDevice(client) {
       bpm = data[1]; // 8-bit
     }
 
-    bpms[client.id] = bpm;
+    // bpms[client.id] = bpm;
+    wsStore.bpms[client.id] = bpm
 
     console.log("❤️ BPM parsed:", bpm, "raw:", data);
 
@@ -258,32 +265,33 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 
 
 onMounted(async () => {
-  // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
-  // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
-  const token = localStorage.getItem('access')
-  ws.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
-  // ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
-  // ws.value = new WebSocket(`ws://localhost:8000/ws/bpm/?token=${token}`);
-  // ws.value = new WebSocket(`ws://13.48.248.110:9000/ws/bpm/?token=${token}`);
-  console.log("Connecting to WS:", import.meta.env.VITE_WS_API_URL)
-  ws.value.onopen = () => console.log("✅ WebSocket connected")
+  // // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
+  // // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
+  // const token = localStorage.getItem('access')
+  // // ws.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
+  // // ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
+  // // ws.value = new WebSocket(`ws://localhost:8000/ws/bpm/?token=${token}`);
+  // ws.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`);
+  // // console.log("Connecting to WS:", import.meta.env.VITE_WS_API_URL)
+  // console.log("Connecting to WS:", ws.value.url)
+  // ws.value.onopen = () => console.log("✅ WebSocket connected")
 
-  ws.value.onmessage = (event) => {
-    const data = JSON.parse(event.data)
-    console.log("WS data:", data)
+  // ws.value.onmessage = (event) => {
+  //   const data = JSON.parse(event.data)
+  //   console.log("WS data:", data)
 
-    // Mapiraj kalorije po client.id
-    if (data.client_id) {
-      calories[data.client_id] = data.current_calories
-    }
+  //   // Mapiraj kalorije po client.id
+  //   if (data.client_id) {
+  //     calories[data.client_id] = data.current_calories
+  //   }
 
-    // Ako backend šalje i bpm, ažuriraj i to
-    if (data.bpm) {
-      bpms[data.client_id] = data.bpm
-    }
-  }
+  //   // Ako backend šalje i bpm, ažuriraj i to
+  //   if (data.bpm) {
+  //     bpms[data.client_id] = data.bpm
+  //   }
+  // }
 
-  ws.value.onclose = () => console.log("❌ WebSocket closed")
+  // ws.value.onclose = () => console.log("❌ WebSocket closed")
 
   try {
     activeSessions.value = await fetchActiveSessions()
@@ -354,7 +362,7 @@ onUnmounted(() => {
             </div>
           </div>
         </template>
-
+        
         <!-- Grid layout -->
         <template #grid="slotProps">
           <div class="grid grid-cols-12 gap-4">
@@ -507,7 +515,6 @@ onUnmounted(() => {
         </span>
         <span class="text-sm text-gray-500">BPM</span>
       </div>
-
       <div class="flex flex-col items-center">
         <span class="text-3xl font-bold text-orange-500">
           {{ calories[session.client.id] ?? 0 }}
