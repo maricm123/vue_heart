@@ -9,7 +9,13 @@ import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 
 const { connect, disconnect, isNative } = useBle()
-const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
+// const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
+import { useSessionTimersStore } from '@/store/sessionTimerStore'
+
+const timersStore = useSessionTimersStore()
+const { timers } = storeToRefs(timersStore)
+
+
 const _intervals = {}
 const loadingClients = ref(false)
 const connectingDevices = ref({})  
@@ -106,7 +112,7 @@ async function connectDevice(client) {
     // bpms[client.id] = bpm;
     wsStore.bpms[client.id] = bpm
 
-    console.log("❤️ BPM parsed:", bpm, "raw:", data);
+    // console.log("❤️ BPM parsed:", bpm, "raw:", data);
 
     // Ako je sesija aktivna – šaljemo na backend
     if (sessionsStarted[client.id]) {
@@ -191,7 +197,8 @@ async function createSession(client) {
     removeClient(client) // remove client from selected list
 
     // ⏱️ pokreni timer (koristi start sa backenda ako ga vrati)
-    startTimerFor(client.id, response.data.start) // ⏱️
+    // startTimerFor(client.id, response.data.start) // ⏱️
+    timersStore.startTimerFor(client.id, response.data.start)
   } catch (err) {
     console.error('Failed to start session', err.response?.data || err)
   }
@@ -524,7 +531,9 @@ onUnmounted(() => {
     </div>
     <div class="flex flex-col items-center">
     <span class="text-3xl font-bold">
-      {{ formatDuration(timers[session.client.id] ?? 0) }}
+      <p>⏱️ Time: {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}</p>
+
+      <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
     </span>
     <span class="text-sm text-gray-500">time</span>
   </div>
