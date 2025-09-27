@@ -7,6 +7,7 @@ import { useBle } from '@/composables/useBle'
 import { fetchActiveSessions } from '@/services/trainingSessionsService.js'
 import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
+import { useSessionStore } from '@/store/useSessionStore'
 
 const { connect, disconnect, isNative } = useBle()
 // const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
@@ -15,6 +16,7 @@ import { useSessionTimersStore } from '@/store/sessionTimerStore'
 const timersStore = useSessionTimersStore()
 const { timers } = storeToRefs(timersStore)
 
+const sessionStore = useSessionStore()
 
 const _intervals = {}
 const loadingClients = ref(false)
@@ -192,6 +194,9 @@ async function createSession(client) {
       client: client
     }
 
+    sessionStore.addSession(newSession)
+
+
     // Add new active session to list
     activeSessions.value.push(newSession)
     removeClient(client) // remove client from selected list
@@ -252,12 +257,12 @@ function isSelected(client) {
 
 // 📌 Funkcija za slanje BPM-a na backend REST endpoint
 async function sendBpmToBackend(client, bpm, device, sessionId) {
-  console.log("Sending BPM to backend:", {
-    clientId: client.id,
-    bpm: bpm,
-    device: device,
-    sessionId: sessionId
-  });
+  // console.log("Sending BPM to backend:", {
+  //   clientId: client.id,
+  //   bpm: bpm,
+  //   device: device,
+  //   sessionId: sessionId
+  // });
   try {
     const response = await api_heart.post("/save-heartbeat", {
       client: client.id,
@@ -267,7 +272,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
       timestamp: new Date().toISOString()  // opcionalno, ako backend koristi
     });
 
-    console.log("✅ BPM sent:", response.data);
+    // console.log("✅ BPM sent:", response.data);
   } catch (err) {
     console.error("❌ Error sending BPM:", err);
   }

@@ -136,7 +136,7 @@ watchEffect(() => {
 })
 </script> -->
 
-<style scoped>
+<!-- <style scoped>
 .livetv-container {
   width: 100vw;
   height: 100vh;
@@ -168,12 +168,13 @@ const wsStore = webSocketStore()
 const timerStore = useSessionTimersStore()
 
 // napravi computed da spoji podatke
+// Active sessions spajaju sve podatke: bpm, calories, timer
 const activeSessions = computed(() => {
   return Object.keys(wsStore.bpms).map(clientId => ({
     id: clientId,
     bpm: wsStore.bpms[clientId] ?? 0,
     calories: wsStore.calories[clientId] ?? 0,
-    timer: timerStore.formatDuration(timerStore.timers[clientId] ?? 0)
+    timer: timerStore.formatDuration(timerStore.timers[clientId] ?? 0),
   }))
 })
 
@@ -210,4 +211,86 @@ watchEffect(() => {
       <p>Calories: {{ session.calories }}</p>
     </div>
   </div>
+</template> -->
+
+
+<template>
+  <div class="livetv-container" :style="gridStyle">
+    <div
+      v-for="[clientId, bpm] in bpmsEntries"
+      :key="clientId"
+      class="session-tile"
+    >
+      <h2>Client ID: {{ clientId }}</h2>
+      <p>BPM: {{ bpm }}</p>
+    </div>
+  </div>
 </template>
+
+<script setup>
+import { computed, ref, watchEffect } from "vue"
+import { webSocketStore } from "@/store/webSocketStore"
+import { storeToRefs } from "pinia"
+import { useSessionStore } from "@/store/useSessionStore"
+
+const sessionStore = useSessionStore()
+const { activeSessions } = storeToRefs(sessionStore)
+
+const wsStore = webSocketStore()
+const { calories, bpms } = storeToRefs(wsStore)
+
+// kreiramo array iz objekta bpms da bismo mogli da iteriramo u template-u
+const bpmsEntries = computed(() => Object.entries(bpms.value))
+
+const gridStyle = ref({})
+
+
+// logovanje za debug
+watchEffect(() => {
+  console.log("🔥 Active Sessions:", activeSessions.value)
+  console.log("💓 BPMS:", bpmsEntries.value)
+})
+watchEffect(() => {
+  const count = bpmsEntries.value.length
+  // console.log("🔥 Active Sessions Debug:", bpmsEntries.value.length)
+  // console.log("BPMS OBJECT:", bpms[client.id])
+  // console.log(bpms)
+
+  console.log("🔥 Active Sessions Debug:", activeSessions)
+
+  if (count === 1) {
+    gridStyle.value = { gridTemplateColumns: "1fr", gridTemplateRows: "1fr" }
+  } else if (count === 2) {
+    gridStyle.value = { gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr" }
+  } else if (count <= 4) {
+    gridStyle.value = { gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr" }
+  } else if (count <= 6) {
+    gridStyle.value = { gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr" }
+  } else {
+    gridStyle.value = { gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "1fr 1fr 1fr" }
+  }
+})
+</script>
+
+<style scoped>
+.livetv-container {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  gap: 10px;
+  background: black;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.session-tile {
+  background: #222;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+}
+</style>
