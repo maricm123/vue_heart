@@ -207,6 +207,8 @@ async function createSession(client) {
 
 // Finish session
 async function finishSession(client) {
+  console.log("Finish clicked for client:", client.id)
+  console.log("sessionIds state:", sessionIds)
   try {
     const sessionId = sessionIds[client.id]  // uzmi pravi ID
     if (!sessionId) return
@@ -219,8 +221,9 @@ async function finishSession(client) {
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
-    const sec = stopTimerFor(client.id)
-    console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
+    // const sec = stopTimerFor(client.id)
+    const sec = timersStore.stopTimerFor(client.id)
+    // console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
 
     delete sessionsStarted[client.id]
     delete sessionIds[client.id]
@@ -501,6 +504,10 @@ onUnmounted(() => {
           size="small"
           @click="finishSession(session.client)" 
         />
+        <!-- <Button 
+  label="Finish" 
+  @click="() => console.log('Kliknuto', session.client)"
+/> -->
       </div>
     </SplitterPanel>
     <div>
