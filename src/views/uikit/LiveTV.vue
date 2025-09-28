@@ -232,6 +232,7 @@ import { computed, ref, watchEffect } from "vue"
 import { webSocketStore } from "@/store/webSocketStore"
 import { storeToRefs } from "pinia"
 import { useSessionStore } from "@/store/useSessionStore"
+import { toRaw } from 'vue'
 
 const sessionStore = useSessionStore()
 const { activeSessions } = storeToRefs(sessionStore)
@@ -241,6 +242,7 @@ const { calories, bpms } = storeToRefs(wsStore)
 
 // kreiramo array iz objekta bpms da bismo mogli da iteriramo u template-u
 const bpmsEntries = computed(() => Object.entries(bpms.value))
+console.log("🔥 Active Sessions:", activeSessions.value)
 
 const gridStyle = ref({})
 
@@ -251,12 +253,15 @@ watchEffect(() => {
   console.log("💓 BPMS:", bpmsEntries.value)
 })
 watchEffect(() => {
+
+  console.log("🔥 Active Sessions raw:", toRaw(activeSessions.value))
+console.log("🔥 Active Sessions JSON:", JSON.stringify(activeSessions.value, null, 2))
   const count = bpmsEntries.value.length
   // console.log("🔥 Active Sessions Debug:", bpmsEntries.value.length)
   // console.log("BPMS OBJECT:", bpms[client.id])
   // console.log(bpms)
 
-  console.log("🔥 Active Sessions Debug:", activeSessions)
+  console.log("🔥 Active Sessions Debug:", activeSessions.value)
 
   if (count === 1) {
     gridStyle.value = { gridTemplateColumns: "1fr", gridTemplateRows: "1fr" }
