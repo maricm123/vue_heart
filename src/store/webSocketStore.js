@@ -6,6 +6,7 @@ export const webSocketStore = defineStore('ws', () => {
   const isConnected = ref(false)
   const calories = reactive({})
   const bpms = reactive({})
+  const client = reactive({})
 
   function connect() {
     if (ws.value) return // već konektovan
@@ -44,7 +45,7 @@ export const webSocketStore = defineStore('ws', () => {
   }
 
   return {
-    ws, isConnected, calories, bpms,
+    ws, isConnected, calories, bpms, client,
     connect, disconnect
   }
 })

@@ -1,0 +1,16 @@
+// const data = new Uint8Array(value);
+// console.log("Raw HRM data:", data);
+
+// // 🔍 pravilno parsiranje HRM paketa
+// const flags = data[0];
+// let bpm;
+// // if (flags & 0x01) {
+// //   bpm = data[1] | (data[2] << 8); // 16-bit little endian
+// // } else {
+// //   bpm = data[1]; // 8-bit
+// // }
+// if ((flags & 0x01) && data.length >= 3) {
+//   bpm = data[1] | (data[2] << 8); // 16-bit
+// } else {
+//   bpm = data[1]; // 8-bit
+// }

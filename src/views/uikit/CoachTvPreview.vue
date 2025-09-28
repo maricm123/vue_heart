@@ -95,29 +95,40 @@ async function connectDevice(client) {
 
     devices.value[client.id] = device
 
+    console.log("Connected to device:", device)
+
     await BleClient.startNotifications(
   device.deviceId,
   '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
   '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
   (value) => {
+    // const data = new Uint8Array(value);
+    // console.log("Raw HRM data:", data);
+
+    // // 🔍 pravilno parsiranje HRM paketa
+    // const flags = data[0];
+    // let bpm;
+    // // if (flags & 0x01) {
+    // //   bpm = data[1] | (data[2] << 8); // 16-bit little endian
+    // // } else {
+    // //   bpm = data[1]; // 8-bit
+    // // }
+    // if ((flags & 0x01) && data.length >= 3) {
+    //   bpm = data[1] | (data[2] << 8); // 16-bit
+    // } else {
+    //   bpm = data[1]; // 8-bit
+    // }
     const data = new Uint8Array(value.buffer);
 
-    // 🔍 pravilno parsiranje HRM paketa
-    const flags = data[0];
-    let bpm;
-    if (flags & 0x01) {
-      bpm = data[1] | (data[2] << 8); // 16-bit little endian
-    } else {
-      bpm = data[1]; // 8-bit
-    }
+    // Probaj jednostavno ovako:
+    let bpm = data[1]; // 8-bit BPM
 
     // bpms[client.id] = bpm;
     wsStore.bpms[client.id] = bpm
 
-    // console.log("❤️ BPM parsed:", bpm, "raw:", data);
-
     // Ako je sesija aktivna – šaljemo na backend
     if (sessionsStarted[client.id]) {
+      wsStore.client[client.id] = client.id
       sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
     }
   }
