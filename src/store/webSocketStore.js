@@ -20,10 +20,11 @@ export const webSocketStore = defineStore('ws', () => {
 
     ws.value.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      // console.log("WS data:", data)
+      console.log("WS data:", data)
 
       if (data.client_id) {
         calories[data.client_id] = data.current_calories
+        client[data.client_id] = data.client_id
       }
       if (data.bpm) {
         bpms[data.client_id] = data.bpm
