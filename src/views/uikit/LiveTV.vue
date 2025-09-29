@@ -25,7 +25,7 @@ const bpmsEntries = computed(() => Object.entries(bpms.value))
 const gridStyle = ref({})
 
 watchEffect(() => {
-  const count = 1
+  const count = 3
 
   if (count === 1) {
     gridStyle.value = {
