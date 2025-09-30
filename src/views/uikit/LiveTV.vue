@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watchEffect } from "vue";
+import { computed, onMounted, ref, watchEffect } from "vue";
 import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 
@@ -24,8 +24,12 @@ const bpmsEntries = computed(() => Object.entries(bpms.value))
 
 const gridStyle = ref({})
 
+// onMounted(() => {
+//   wsStore.connectGym()
+// })
+
 watchEffect(() => {
-  const count = 3
+  const count = 1
 
   if (count === 1) {
     gridStyle.value = {
