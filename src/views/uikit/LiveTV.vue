@@ -1,13 +1,14 @@
 <template>
   <div class="livetv-container" :style="gridStyle">
     <div
-      v-for="[clientId, bpm] in bpmsEntries"
+      v-for="[clientId, bpmsForGym] in bpmsEntries"
       :key="clientId"
       class="session-tile"
     >
       <h2>Client {{ clientId }}</h2>
       <p>BPM: {{ bpmsForGym[clientId] }}</p>
       <p>Calories: {{ caloriesForGym[clientId] }}</p>
+      <p>Coach: {{ coach[clientId] }}</p>
     </div>
   </div>
 </template>
@@ -18,14 +19,14 @@ import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 
 const wsStore = webSocketStore()
-const { bpmsForGym, caloriesForGym } = storeToRefs(wsStore)
+const { bpmsForGym, caloriesForGym, coach } = storeToRefs(wsStore)
 
 const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
 
 const gridStyle = ref({})
 
 watchEffect(() => {
-  const count = 1
+  const count = 2
 
   if (count === 1) {
     gridStyle.value = {
