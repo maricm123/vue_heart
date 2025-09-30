@@ -6,8 +6,8 @@
       class="session-tile"
     >
       <h2>Client {{ clientId }}</h2>
-      <p>BPM: {{ bpm }}</p>
-      <p>Calories: {{ calories[clientId] }}</p>
+      <p>BPM: {{ bpmsForGym[clientId] }}</p>
+      <p>Calories: {{ caloriesForGym[clientId] }}</p>
     </div>
   </div>
 </template>
@@ -18,15 +18,11 @@ import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 
 const wsStore = webSocketStore()
-const { bpms, calories } = storeToRefs(wsStore)
+const { bpmsForGym, caloriesForGym } = storeToRefs(wsStore)
 
-const bpmsEntries = computed(() => Object.entries(bpms.value))
+const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
 
 const gridStyle = ref({})
-
-// onMounted(() => {
-//   wsStore.connectGym()
-// })
 
 watchEffect(() => {
   const count = 1

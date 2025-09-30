@@ -2,79 +2,111 @@ import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 
 export const webSocketStore = defineStore('ws', () => {
-  const ws = ref(null)
-  const isConnected = ref(false)
-  const calories = reactive({})
-  const bpms = reactive({})
+  // dva različita ws objekta
+  const wsUser = ref(null)
+  const wsGym = ref(null)
+
+  const isUserConnected = ref(false)
+  const isGymConnected = ref(false)
+
+  const caloriesFromWsCoach = reactive({})
+  const bpmsFromWsCoach = reactive({})
+
+  const caloriesForGym = reactive({})
+  const bpmsForGym = reactive({})
+
   const client = reactive({})
 
-  function connect() {
-    if (ws.value) return // već konektovan
+  // konekcija za user bpm
+  function connectCoach() {
+    if (wsUser.value) return // već konektovan
     const token = localStorage.getItem('access')
-    ws.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
+    wsUser.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
 
-    ws.value.onopen = () => {
-      console.log("✅ WebSocket connected")
-      isConnected.value = true
+    wsUser.value.onopen = () => {
+      console.log("✅ User WebSocket connected")
+      isUserConnected.value = true
     }
 
-    ws.value.onmessage = (event) => {
+    wsUser.value.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      console.log("WS data:", data)
+      console.log("User WS data:", data)
 
       if (data.client_id) {
-        calories[data.client_id] = data.current_calories
+        caloriesFromWsCoach[data.client_id] = data.current_calories
         client[data.client_id] = data.client_id
       }
       if (data.bpm) {
-        bpms[data.client_id] = data.bpm
+        bpmsFromWsCoach[data.client_id] = data.bpm
       }
     }
 
-    ws.value.onclose = () => {
-      console.log("❌ WebSocket closed")
-      isConnected.value = false
-      ws.value = null
+    wsUser.value.onclose = () => {
+      console.log("❌ User WebSocket closed")
+      isUserConnected.value = false
+      wsUser.value = null
     }
   }
 
-  function disconnect() {
-    if (ws.value) {
-      ws.value.close()
-      ws.value = null
+  function disconnectCoach() {
+    if (wsUser.value) {
+      wsUser.value.close()
+      wsUser.value = null
+      isUserConnected.value = false
     }
   }
 
-  function connectGym(gymId) {
-    if (ws.value) return
+  // konekcija za gym
+  function connectWholeGym() {
+    if (wsGym.value) return
     const token = localStorage.getItem('access')
-    ws.value = new WebSocket(`ws://13.48.248.110:8000/ws/gym/?token=${token}`)
+    wsGym.value = new WebSocket(`ws://13.48.248.110:8000/ws/gym/?token=${token}`)
+    console.log("Connecting to Gym WebSocket...")
 
-    ws.value.onopen = () => {
+    wsGym.value.onopen = () => {
       console.log("✅ Gym WebSocket connected")
-      isConnected.value = true
+      isGymConnected.value = true
     }
 
-    ws.value.onmessage = (event) => {
+    wsGym.value.onmessage = (event) => {
       const data = JSON.parse(event.data)
       console.log("Gym WS data:", data)
 
       if (data.client_id) {
-        calories[data.client_id] = data.calories
-        bpms[data.client_id] = data.bpm
-        client[data.client_id] = data.client_name
+        caloriesForGym[data.client_id] = data.current_calories
+        bpmsForGym[data.client_id] = data.bpm
+        client[data.client_id] = data.client_id
       }
     }
 
-    ws.value.onclose = () => {
+    wsGym.value.onclose = () => {
       console.log("❌ Gym WebSocket closed")
-      isConnected.value = false
-      ws.value = null
+      isGymConnected.value = false
+      wsGym.value = null
+    }
+  }
+
+  function disconnectWholeGym() {
+    if (wsGym.value) {
+      wsGym.value.close()
+      wsGym.value = null
+      isGymConnected.value = false
     }
   }
 
   return {
-    ws, isConnected, calories, bpms, client,
-    connect, disconnect, connectGym
+    wsUser,
+    wsGym,
+    isUserConnected,
+    isGymConnected,
+    caloriesFromWsCoach,
+    bpmsFromWsCoach,
+    caloriesForGym,
+    bpmsForGym,
+    client,
+    connectCoach,
+    disconnectCoach,
+    connectWholeGym,
+    disconnectWholeGym,
   }
 })

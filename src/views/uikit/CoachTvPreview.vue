@@ -33,7 +33,7 @@ const selectedClients = ref([])
 
 const wsStore = webSocketStore()
 
-const { calories, bpms } = storeToRefs(wsStore)
+const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore)
 
 
 // za više klijenata – koristimo objekte umesto samo jedne vrednosti
@@ -124,7 +124,7 @@ async function connectDevice(client) {
     let bpm = data[1]; // 8-bit BPM
 
     // bpms[client.id] = bpm;
-    wsStore.bpms[client.id] = bpm
+    wsStore.bpmsFromWsCoach[client.id] = bpm
 
     // Ako je sesija aktivna – šaljemo na backend
     if (sessionsStarted[client.id]) {
@@ -233,7 +233,7 @@ async function finishSession(client) {
 
     await api_heart.patch(
       `/finish-session/${sessionId}`,
-        { calories_at_end: Math.round(calories[client.id] ?? 0) }, 
+        { calories_at_end: Math.round(caloriesFromWsCoach[client.id] ?? 0) }, 
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
 
@@ -470,7 +470,7 @@ onUnmounted(() => {
 
         <!-- Show BPM and Start Session only when connected -->
         <div v-if="devices[client.id]">
-          <p>BPM: {{ bpms[client.id] || '-' }}</p>
+          <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
 
           <!-- Show Start or Finish based on session -->
           <Button 
@@ -541,13 +541,13 @@ onUnmounted(() => {
     <div class="flex items-center gap-8">
       <div class="flex flex-col items-center">
         <span class="text-3xl font-bold text-red-500">
-          {{ bpms[session.client.id] ?? '-' }}
+          {{ bpmsFromWsCoach[session.client.id] ?? '-' }}
         </span>
         <span class="text-sm text-gray-500">BPM</span>
       </div>
       <div class="flex flex-col items-center">
         <span class="text-3xl font-bold text-orange-500">
-          {{ calories[session.client.id] ?? 0 }}
+          {{ caloriesFromWsCoach[session.client.id] ?? 0 }}
         </span>
         <span class="text-sm text-gray-500">kcal burned</span>
       </div>

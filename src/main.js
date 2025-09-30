@@ -32,5 +32,5 @@ app.mount('#app');
 
 // odmah konektuj socket kada se app pokrene
 const wsStore = webSocketStore()
-wsStore.connect()
-wsStore.connectGym()
+wsStore.connectWholeGym()
+wsStore.connectCoach()
