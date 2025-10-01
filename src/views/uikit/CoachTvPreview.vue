@@ -174,16 +174,11 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
 
 
   console.log(deviceId, clientId);
-  console.log(`Trying to reconnect ${clientId}... (${retries} left)`);
+  console.log(`Trying to reconnect ${clientId}... (${retries} left) ${deviceId.deviceId}`);
   try {
 
     // const device = await BleClient.connect(deviceId, onDeviceDisconnected);
-    const device = await BleClient.connect(deviceId, (deviceId) => {
-      // const clientId = deviceClientMap[deviceId];
-      console.log(`⚠️ Device for client ${client} disconnected:`, deviceId);
-      reconnectDevice(client.id, deviceId);
-
-    });
+    const device = await BleClient.connect(deviceId.deviceId, onDeviceDisconnected);
     console.log(`Reconnecting to device for client ${clientId}:`, device);
 
     // devices[clientId] = device;
@@ -192,14 +187,14 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
     console.log(devices.value, "DEVICESSSS");
     // Restart notifications after reconnect
     await BleClient.startNotifications(
-      
+
       device.deviceId,
         '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
         '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
         (value) => {
         const bpm = parseHeartRate(value);
         wsStore.bpmsFromWsCoach[clientId] = bpm;
-
+        
         if (sessionsStarted[clientId]) {
           sendBpmToBackend({ id: clientId }, bpm, device, sessionIds[clientId]);
         }
