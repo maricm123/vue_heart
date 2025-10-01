@@ -78,7 +78,19 @@ function removeClient(client) {
   if (index !== -1) selectedClients.value.splice(index, 1)
 }
 
-import { BleClient } from '@capacitor-community/bluetooth-le';
+import { BleClient, BluetoothLe  } from '@capacitor-community/bluetooth-le';
+
+function onDeviceDisconnected(deviceId) {
+  // const clientId = deviceClientMap[deviceId];
+  console.warn(`⚠️ Device for client ${client} disconnected:`, deviceId);
+
+  // Cleanup
+  // delete devices[clientId];
+  // delete deviceClientMap[deviceId];
+
+  // Optional: auto-reconnect
+  reconnectDevice(clientId, deviceId);
+}
 
 
 async function connectDevice(client) {
@@ -91,7 +103,23 @@ async function connectDevice(client) {
       services: ['0000180d-0000-1000-8000-00805f9b34fb'], // Heart Rate Service
     });
 
-    await BleClient.connect(device.deviceId);
+    console.log("Requested device:", device, device.deviceId)
+
+    // await BleClient.connect(device.deviceId);
+    // Connect and attach disconnect callback
+    await BleClient.connect(device.deviceId, (deviceId) => {
+      // const clientId = deviceClientMap[deviceId];
+      console.log(`⚠️ Device for client ${client} disconnected:`, deviceId);
+      
+      // Optional: auto-reconnect
+      reconnectDevice(client.id, device);
+      // Cleanup
+      // delete devices[clientId];
+      // delete deviceClientMap[deviceId];
+
+      // Optional: notify UI or attempt auto-reconnect
+    });
+
 
     devices.value[client.id] = device
 
@@ -138,6 +166,50 @@ async function connectDevice(client) {
     console.error('BLE error:', err);
   } finally {
     connectingDevices.value[client.id] = false
+  }
+}
+
+async function reconnectDevice(clientId, deviceId, retries = 50) {
+  if (retries <= 0) return;
+
+
+  console.log(deviceId, clientId);
+  console.log(`Trying to reconnect ${clientId}... (${retries} left)`);
+  try {
+
+    // const device = await BleClient.connect(deviceId, onDeviceDisconnected);
+    const device = await BleClient.connect(deviceId, (deviceId) => {
+      // const clientId = deviceClientMap[deviceId];
+      console.log(`⚠️ Device for client ${client} disconnected:`, deviceId);
+      reconnectDevice(client.id, deviceId);
+
+    });
+    console.log(`Reconnecting to device for client ${clientId}:`, device);
+
+    // devices[clientId] = device;
+    devices.value[clientId] = device
+
+    console.log(devices.value, "DEVICESSSS");
+    // Restart notifications after reconnect
+    await BleClient.startNotifications(
+      
+      device.deviceId,
+        '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+        '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+        (value) => {
+        const bpm = parseHeartRate(value);
+        wsStore.bpmsFromWsCoach[clientId] = bpm;
+
+        if (sessionsStarted[clientId]) {
+          sendBpmToBackend({ id: clientId }, bpm, device, sessionIds[clientId]);
+        }
+      }
+    );
+
+    console.log(`Reconnected and restarted notifications for client ${clientId}`);    
+    console.log(`Reconnected ${clientId}`);
+  } catch (err) {
+    setTimeout(() => reconnectDevice(clientId, deviceId, retries - 1), 2000);
   }
 }
 

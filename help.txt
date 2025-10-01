@@ -14,3 +14,132 @@
 // } else {
 //   bpm = data[1]; // 8-bit
 // }
+
+
+
+
+
+
+
+<script setup lang="ts">
+import { reactive, ref } from 'vue';
+import { BleClient, numbersToDataView } from '@capacitor-community/bluetooth-le';
+import wsStore from '@/stores/wsStore'; // your websocket store
+
+// ---------------------------
+// Reactive state
+// ---------------------------
+const connectingDevices = reactive({});
+const devices = reactive({});          // clientId -> device object
+const deviceClientMap = reactive({});  // deviceId -> clientId
+const sessionsStarted = reactive({});  // track active sessions
+const sessionIds = reactive({});       // track session IDs
+
+// ---------------------------
+// Constants
+// ---------------------------
+const HEART_RATE_SERVICE = '0000180d-0000-1000-8000-00805f9b34fb';
+const HEART_RATE_MEASUREMENT_CHARACTERISTIC = '00002a37-0000-1000-8000-00805f9b34fb';
+const BATTERY_SERVICE = '180f'; // optional
+
+// ---------------------------
+// Utility
+// ---------------------------
+function parseHeartRate(value: DataView): number {
+  const flags = value.getUint8(0);
+  const rate16Bits = flags & 0x1;
+  return rate16Bits ? value.getUint16(1, true) : value.getUint8(1);
+}
+
+// ---------------------------
+// Disconnect callback
+// ---------------------------
+function onDeviceDisconnected(deviceId: string) {
+  const clientId = deviceClientMap[deviceId];
+  console.warn(`⚠️ Device for client ${clientId} disconnected:`, deviceId);
+
+  // Cleanup
+  delete devices[clientId];
+  delete deviceClientMap[deviceId];
+
+  // Optional: auto-reconnect
+  reconnectDevice(clientId, deviceId, 3);
+}
+
+// ---------------------------
+// Connect to a device
+// ---------------------------
+export async function connectDevice(client: any) {
+  if (connectingDevices[client.id]) return;
+
+  connectingDevices[client.id] = true;
+
+  try {
+    await BleClient.initialize();
+
+    const device = await BleClient.requestDevice({
+      services: [HEART_RATE_SERVICE],
+      optionalServices: [BATTERY_SERVICE],
+    });
+
+    // Connect with per-device disconnect callback
+    await BleClient.connect(device.deviceId, onDeviceDisconnected);
+
+    // Save mappings
+    devices[client.id] = device;
+    deviceClientMap[device.deviceId] = client.id;
+
+    // Start HR notifications
+    await BleClient.startNotifications(
+      device.deviceId,
+      HEART_RATE_SERVICE,
+      HEART_RATE_MEASUREMENT_CHARACTERISTIC,
+      (value) => {
+        const bpm = parseHeartRate(value);
+
+        // Update reactive store for UI
+        wsStore.bpmsFromWsCoach[client.id] = bpm;
+
+        // Send to backend if session active
+        if (sessionsStarted[client.id]) {
+          wsStore.client[client.id] = client.id;
+          sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+        }
+      }
+    );
+
+    console.log(`Connected to device for client ${client.id}`, device);
+
+  } catch (err) {
+    console.error('BLE error:', err);
+  } finally {
+    connectingDevices[client.id] = false;
+  }
+}
+
+// ---------------------------
+// Optional: Auto-reconnect
+// ---------------------------
+async function reconnectDevice(clientId: string, deviceId: string, retries = 3) {
+  if (retries <= 0) {
+    console.error(`Failed to reconnect device for client ${clientId}`);
+    return;
+  }
+
+  console.log(`Attempting reconnect for client ${clientId} (${retries} retries left)`);
+  try {
+    await BleClient.connect(deviceId, onDeviceDisconnected);
+    console.log(`Reconnected device for client ${clientId}`);
+  } catch (err) {
+    setTimeout(() => reconnectDevice(clientId, deviceId, retries - 1), 2000);
+  }
+}
+
+// ---------------------------
+// Example: send BPM to backend
+// ---------------------------
+function sendBpmToBackend(client, bpm, device, sessionId) {
+  // implement your API call here
+  console.log(`Sending BPM=${bpm} for client ${client.id} session ${sessionId}`);
+}
+</script>
