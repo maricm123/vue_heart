@@ -1,7 +1,7 @@
 <template>
   <div class="livetv-container" :style="gridStyle">
     <div
-      v-for="[clientId, bpmsForGym] in bpmsEntries"
+      v-for="[clientId] in bpmsEntries"
       :key="clientId"
       class="session-tile"
     >
@@ -26,7 +26,7 @@ const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
 const gridStyle = ref({})
 
 watchEffect(() => {
-  const count = 2
+  const count = 1
 
   if (count === 1) {
     gridStyle.value = {

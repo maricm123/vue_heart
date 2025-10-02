@@ -111,8 +111,11 @@ async function connectDevice(client) {
       // const clientId = deviceClientMap[deviceId];
       console.log(`⚠️ Device for client ${client} disconnected:`, deviceId);
       
+      // HERE WE NEED TO SEE WHAT TO DO ON CALLBACK
+
       // Optional: auto-reconnect
-      reconnectDevice(client.id, device);
+      // console.log("DOSAO DO RECONNECTA IZ CONNECT DEVICEA")
+      // reconnectDevice(client.id, device);
       // Cleanup
       // delete devices[clientId];
       // delete deviceClientMap[deviceId];
@@ -171,7 +174,6 @@ async function connectDevice(client) {
 
 async function reconnectDevice(clientId, deviceId, retries = 50) {
   if (retries <= 0) return;
-
 
   console.log(deviceId, clientId);
   console.log(`Trying to reconnect ${clientId}... (${retries} left) ${deviceId.deviceId}`);
