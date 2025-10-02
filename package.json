@@ -12,6 +12,7 @@
         "@capacitor/android": "^7.4.3",
         "@capacitor/core": "^7.4.3",
         "@primeuix/themes": "^1.0.0",
+        "axios": "^1.12.2",
         "chart.js": "3.3.2",
         "pinia": "^3.0.3",
         "primeicons": "^7.0.0",
