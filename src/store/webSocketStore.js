@@ -22,7 +22,8 @@ export const webSocketStore = defineStore('ws', () => {
   function connectCoach() {
     if (wsUser.value) return // već konektovan
     const token = localStorage.getItem('access')
-    wsUser.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
+    // wsUser.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
+    wsUser.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
 
     wsUser.value.onopen = () => {
       console.log("✅ User WebSocket connected")
@@ -61,7 +62,8 @@ export const webSocketStore = defineStore('ws', () => {
   function connectWholeGym() {
     if (wsGym.value) return
     const token = localStorage.getItem('access')
-    wsGym.value = new WebSocket(`ws://13.48.248.110:8000/ws/gym/?token=${token}`)
+    // wsGym.value = new WebSocket(`ws://13.48.248.110:8000/ws/gym/?token=${token}`)
+    wsGym.value = new WebSocket(`wss://heartapp.dev/ws/gym/?token=${token}`);
     console.log("Connecting to Gym WebSocket...")
 
     wsGym.value.onopen = () => {
