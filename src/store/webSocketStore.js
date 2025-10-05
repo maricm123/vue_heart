@@ -75,7 +75,7 @@ export const webSocketStore = defineStore('ws', () => {
 
     wsGym.value.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      console.log("Gym WS data:", data)
+      // console.log("Gym WS data:", data)
 
       if (data.client_id) {
         caloriesForGym[data.client_id] = data.current_calories

@@ -16,10 +16,11 @@ export async function fetchActiveSessions() {
 
 
 export async function finishSession(sessionId, calories) {
+  console.log("Finishing session with ID:", sessionId, "and calories:", typeof calories, calories)
   try {
     const response = await api_heart.patch(
       `/finish-session/${sessionId}`,
-      { calories_at_end: Math.round(calories ?? 0) },
+      { calories_at_end: calories || 0 },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access')}`,

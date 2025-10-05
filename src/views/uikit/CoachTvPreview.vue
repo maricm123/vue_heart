@@ -237,7 +237,7 @@ async function disconnectDevice(client) {
 
   // Obriši iz lokalnog state-a
   delete devices.value[client.id];
-  delete bpms[client.id];
+  delete bpmsFromWsCoach[client.id];
   delete sessionsStarted[client.id];
 }
 
@@ -291,7 +291,8 @@ async function createSession(client) {
 
 
 // Finish session
-async function onFinishSession(client) {
+async function onFinishSession(client, calories) {
+  console.log("Calories for client", calories)
   console.log("Finish clicked for client:", client.id)
   console.log("sessionIds state:", sessionIds)
   try {
@@ -300,7 +301,8 @@ async function onFinishSession(client) {
 
     console.log("Finishing session", sessionId, "for client", client.id)
 
-    await finishSession(sessionIds[client.id], caloriesFromWsCoach[client.id])
+    console.log("Calories from WS for client:", caloriesFromWsCoach[client.id])
+    await finishSession(sessionIds[client.id], calories)
 
     // const sec = stopTimerFor(client.id)
     const sec = timersStore.stopTimerFor(client.id)
@@ -515,12 +517,6 @@ onUnmounted(() => {
             label="Start Session" 
             @click="createSession(client)" 
           />
-          <!-- <Button 
-            v-else
-            label="Finish Session" 
-            severity="danger"
-            @click="finishSession(client)" 
-          /> -->
         </div>
       </div>
     </template>
@@ -555,20 +551,11 @@ onUnmounted(() => {
           label="Finish" 
           severity="danger" 
           size="small"
-          @click="onFinishSession(session.client)" 
+          @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id])" 
         />
-        <!-- <Button 
-  label="Finish" 
-  @click="() => console.log('Kliknuto', session.client)"
-/> -->
       </div>
     </SplitterPanel>
-    <div>
-      <h2>Active Session</h2>
-      <p>Calories burned: {{ currentCalories }}</p>
-      <p>Client ID: {{ currentClientId }}</p>
-    </div>
-    <!-- Right panel: session details -->
+      <!-- Right panel: session details -->
     <SplitterPanel :size="70">
   <div class="h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl shadow-md p-6">
     <h2 class="text-xl font-semibold text-gray-700 mb-4">
