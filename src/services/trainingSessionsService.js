@@ -13,3 +13,22 @@ export async function fetchActiveSessions() {
     throw err
   }
 }
+
+
+export async function finishSession(sessionId, calories) {
+  try {
+    const response = await api_heart.patch(
+      `/finish-session/${sessionId}`,
+      { calories_at_end: Math.round(calories ?? 0) },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access')}`,
+        },
+      }
+    )
+    return response.data
+  } catch (err) {
+    console.error('❌ Failed to finish session', err.response?.data || err)
+    throw err
+  }
+}

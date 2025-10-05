@@ -5,7 +5,7 @@
       :key="clientId"
       class="session-tile"
     >
-      <h2>Client {{ clientId }}</h2>
+      <h2>{{ client_name[1] }}</h2>
       <p>BPM: {{ bpmsForGym[clientId] }}</p>
       <p>Calories: {{ caloriesForGym[clientId] }}</p>
       <p>Coach: {{ coach[clientId] }}</p>
@@ -19,7 +19,7 @@ import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 
 const wsStore = webSocketStore()
-const { bpmsForGym, caloriesForGym, coach } = storeToRefs(wsStore)
+const { bpmsForGym, caloriesForGym, coach, client_name } = storeToRefs(wsStore)
 
 const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
 

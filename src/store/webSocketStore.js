@@ -16,7 +16,9 @@ export const webSocketStore = defineStore('ws', () => {
   const bpmsForGym = reactive({})
 
   const client = reactive({})
+  const client_name = reactive({})
   const coach = reactive({})
+
 
   // konekcija za user bpm
   function connectCoach() {
@@ -73,13 +75,14 @@ export const webSocketStore = defineStore('ws', () => {
 
     wsGym.value.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      // console.log("Gym WS data:", data)
+      console.log("Gym WS data:", data)
 
       if (data.client_id) {
         caloriesForGym[data.client_id] = data.current_calories
         bpmsForGym[data.client_id] = data.bpm
         client[data.client_id] = data.client_id
         coach[data.client_id] = data.coach_id
+        client_name[data.client_id] = data.client_name
       }
     }
 
@@ -109,6 +112,7 @@ export const webSocketStore = defineStore('ws', () => {
     bpmsForGym,
     client,
     coach,
+    client_name,
     connectCoach,
     disconnectCoach,
     connectWholeGym,

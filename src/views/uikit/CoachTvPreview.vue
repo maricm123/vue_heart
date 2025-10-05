@@ -4,7 +4,7 @@ import { api_coach, api_heart } from '@/services/api';
 import { formatIsoToLocal } from '@/utils/formatDate'
 import { useSessionTimers } from '@/composables/useSessionTimers'
 import { useBle } from '@/composables/useBle'
-import { fetchActiveSessions } from '@/services/trainingSessionsService.js'
+import { fetchActiveSessions, finishSession } from '@/services/trainingSessionsService.js'
 import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/store/useSessionStore'
@@ -291,7 +291,7 @@ async function createSession(client) {
 
 
 // Finish session
-async function finishSession(client) {
+async function onFinishSession(client) {
   console.log("Finish clicked for client:", client.id)
   console.log("sessionIds state:", sessionIds)
   try {
@@ -300,11 +300,7 @@ async function finishSession(client) {
 
     console.log("Finishing session", sessionId, "for client", client.id)
 
-    await api_heart.patch(
-      `/finish-session/${sessionId}`,
-        { calories_at_end: Math.round(caloriesFromWsCoach[client.id] ?? 0) }, 
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
+    await finishSession(sessionIds[client.id], caloriesFromWsCoach[client.id])
 
     // const sec = stopTimerFor(client.id)
     const sec = timersStore.stopTimerFor(client.id)
@@ -360,34 +356,6 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 
 
 onMounted(async () => {
-  // // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
-  // // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
-  // const token = localStorage.getItem('access')
-  // // ws.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
-  // // ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
-  // // ws.value = new WebSocket(`ws://localhost:8000/ws/bpm/?token=${token}`);
-  // ws.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`);
-  // // console.log("Connecting to WS:", import.meta.env.VITE_WS_API_URL)
-  // console.log("Connecting to WS:", ws.value.url)
-  // ws.value.onopen = () => console.log("✅ WebSocket connected")
-
-  // ws.value.onmessage = (event) => {
-  //   const data = JSON.parse(event.data)
-  //   console.log("WS data:", data)
-
-  //   // Mapiraj kalorije po client.id
-  //   if (data.client_id) {
-  //     calories[data.client_id] = data.current_calories
-  //   }
-
-  //   // Ako backend šalje i bpm, ažuriraj i to
-  //   if (data.bpm) {
-  //     bpms[data.client_id] = data.bpm
-  //   }
-  // }
-
-  // ws.value.onclose = () => console.log("❌ WebSocket closed")
-
   try {
     activeSessions.value = await fetchActiveSessions()
     console.log('✅ Active sessions loaded', activeSessions.value)
@@ -587,7 +555,7 @@ onUnmounted(() => {
           label="Finish" 
           severity="danger" 
           size="small"
-          @click="finishSession(session.client)" 
+          @click="onFinishSession(session.client)" 
         />
         <!-- <Button 
   label="Finish" 

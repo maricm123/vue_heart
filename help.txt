@@ -143,3 +143,19 @@ function sendBpmToBackend(client, bpm, device, sessionId) {
   console.log(`Sending BPM=${bpm} for client ${client.id} session ${sessionId}`);
 }
 </script>
+
+
+
+
+
+
+  // // ws.value = new WebSocket("ws://localhost:8000/ws/bpm/")
+  // // ws.value = new WebSocket(import.meta.env.VITE_WS_API_URL)
+  // const token = localStorage.getItem('access')
+  // // ws.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
+  // // ws.value = new WebSocket("wss://heartapp.dev/ws/bpm/");
+  // // ws.value = new WebSocket(`ws://localhost:8000/ws/bpm/?token=${token}`);
+  // ws.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`);
+  // // console.log("Connecting to WS:", import.meta.env.VITE_WS_API_URL)
+  // console.log("Connecting to WS:", ws.value.url)
+  // ws.value.onopen = () => console.log("✅ WebSocket connected")
