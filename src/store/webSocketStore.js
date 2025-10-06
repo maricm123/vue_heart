@@ -19,7 +19,6 @@ export const webSocketStore = defineStore('ws', () => {
   const client_name = reactive({})
   const coach = reactive({})
 
-
   // konekcija za user bpm
   function connectCoach() {
     if (wsUser.value) return // već konektovan

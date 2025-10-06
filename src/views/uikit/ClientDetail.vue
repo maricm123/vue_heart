@@ -286,10 +286,10 @@ const updateClient = async () => {
             <template #body="{ data }">{{ data.calories_burned }}</template>
         </Column>
         <Column field="name" header="Duration" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.duration_in_minutes }}</template>
+            <template #body="{ data }">{{ data.duration }}</template>
         </Column>
         <Column field="name" header="Max heart rate" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.duration_in_minutes }}</template>
+            <template #body="{ data }">{{ data }}</template>
         </Column>
         </DataTable>
 

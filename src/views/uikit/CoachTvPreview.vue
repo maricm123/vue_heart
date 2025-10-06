@@ -291,18 +291,16 @@ async function createSession(client) {
 
 
 // Finish session
-async function onFinishSession(client, calories) {
+async function onFinishSession(client, calories, seconds) {
   console.log("Calories for client", calories)
   console.log("Finish clicked for client:", client.id)
   console.log("sessionIds state:", sessionIds)
+  console.log("SECONDS state:", seconds)
   try {
     const sessionId = sessionIds[client.id]  // uzmi pravi ID
     if (!sessionId) return
 
-    console.log("Finishing session", sessionId, "for client", client.id)
-
-    console.log("Calories from WS for client:", caloriesFromWsCoach[client.id])
-    await finishSession(sessionIds[client.id], calories)
+    await finishSession(sessionIds[client.id], calories, seconds)
 
     // const sec = stopTimerFor(client.id)
     const sec = timersStore.stopTimerFor(client.id)
@@ -346,6 +344,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
       client: client.id,
       bpm: bpm,
       device_id: device.name,
+      seconds: timersStore.timers[client.id] || 0,
       training_session: sessionId || null, // Ako je sesija aktivna
       timestamp: new Date().toISOString()  // opcionalno, ako backend koristi
     });
@@ -551,7 +550,7 @@ onUnmounted(() => {
           label="Finish" 
           severity="danger" 
           size="small"
-          @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id])" 
+          @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id], timers[session.client.id])" 
         />
       </div>
     </SplitterPanel>
