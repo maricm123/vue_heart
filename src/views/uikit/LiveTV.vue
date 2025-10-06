@@ -26,7 +26,8 @@ const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
 const gridStyle = ref({})
 
 watchEffect(() => {
-  const count = 1
+  const count = bpmsEntries.value.length
+  console.log("Updating grid layout for", count, "sessions")
 
   if (count === 1) {
     gridStyle.value = {

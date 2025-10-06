@@ -81,15 +81,23 @@ export const webSocketStore = defineStore('ws', () => {
         bpmsForGym[data.client_id] = data.bpm
         client[data.client_id] = data.client_id
         coach[data.client_id] = data.coach_id
-        client_name[data.client_id] = data.client_name
       }
     }
 
-    wsGym.value.onclose = () => {
+    wsGym.value.onclose = (event) => {
+      console.log("❌ Gym WebSocket closed")
+      console.log("Code:", event.code)         // Close code (number)
+      console.log("Reason:", event.reason)     // Reason string from server
+      console.log("WasClean:", event.wasClean) // True if the connection closed cleanly
       console.log("❌ Gym WebSocket closed")
       isGymConnected.value = false
       wsGym.value = null
     }
+
+    wsGym.value.onerror = (err) => {
+      console.error("Gym WS error:", err)
+    }
+
   }
 
   function disconnectWholeGym() {

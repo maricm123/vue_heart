@@ -129,10 +129,10 @@ async function connectDevice(client) {
     console.log("Connected to device:", device)
 
     await BleClient.startNotifications(
-  device.deviceId,
-  '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-  '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
-  (value) => {
+      device.deviceId,
+      '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+      '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+      (value) => {
     // const data = new Uint8Array(value);
     // console.log("Raw HRM data:", data);
 
@@ -158,12 +158,18 @@ async function connectDevice(client) {
     wsStore.bpmsFromWsCoach[client.id] = bpm
 
     // Ako je sesija aktivna – šaljemo na backend
+    // if (sessionsStarted[client.id]) {
+    //   wsStore.client[client.id] = client.id
+    //   sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+    // }
     if (sessionsStarted[client.id]) {
-      wsStore.client[client.id] = client.id
-      sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+      try {
+        sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+      } catch (err) {
+        console.error("Failed to send BPM:", err);
+      }
     }
-  }
-);
+    } );
 
   } catch (err) {
     console.error('BLE error:', err);
