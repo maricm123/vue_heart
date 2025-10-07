@@ -105,6 +105,11 @@ async function connectDevice(client) {
 
     console.log("Requested device:", device, device.deviceId)
 
+    if (devices.value[device.deviceId]) {
+        alert("This heart rate sensor is already connected to another client.")
+        return
+    }
+
     // await BleClient.connect(device.deviceId);
     // Connect and attach disconnect callback
     await BleClient.connect(device.deviceId, (deviceId) => {
@@ -587,7 +592,6 @@ onUnmounted(() => {
 
       <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
     </span>
-    <span class="text-sm text-gray-500">time</span>
   </div>
   </div>
 </SplitterPanel>
