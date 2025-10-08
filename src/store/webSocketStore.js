@@ -81,6 +81,7 @@ export const webSocketStore = defineStore('ws', () => {
         bpmsForGym[data.client_id] = data.bpm
         client[data.client_id] = data.client_id
         coach[data.client_id] = data.coach_id
+        client_name[data.client_id] = data.client_name
       }
     }
 

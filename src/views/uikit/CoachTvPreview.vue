@@ -105,11 +105,6 @@ async function connectDevice(client) {
 
     console.log("Requested device:", device, device.deviceId)
 
-    if (devices.value[device.deviceId]) {
-        alert("This heart rate sensor is already connected to another client.")
-        return
-    }
-
     // await BleClient.connect(device.deviceId);
     // Connect and attach disconnect callback
     await BleClient.connect(device.deviceId, (deviceId) => {
@@ -127,6 +122,12 @@ async function connectDevice(client) {
 
       // Optional: notify UI or attempt auto-reconnect
     });
+
+    console.log(devices.value, "DEVICESSSS");
+    if (devices.value[device.deviceId]) {
+        alert("This heart rate sensor is already connected to another client.")
+        return
+    }
 
 
     devices.value[client.id] = device
