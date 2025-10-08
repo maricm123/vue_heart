@@ -17,6 +17,7 @@ export const webSocketStore = defineStore('ws', () => {
 
   const client = reactive({})
   const client_name = reactive({})
+  const seconds = reactive({})
   const coach = reactive({})
 
   // konekcija za user bpm
@@ -82,6 +83,7 @@ export const webSocketStore = defineStore('ws', () => {
         client[data.client_id] = data.client_id
         coach[data.client_id] = data.coach_id
         client_name[data.client_id] = data.client_name
+        seconds[data.client_id] = data.seconds
       }
     }
 
@@ -120,6 +122,7 @@ export const webSocketStore = defineStore('ws', () => {
     bpmsForGym,
     client,
     coach,
+    seconds,
     client_name,
     connectCoach,
     disconnectCoach,

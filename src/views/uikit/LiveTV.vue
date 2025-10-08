@@ -9,8 +9,7 @@
       <h1>BPM: {{ bpmsForGym[clientId] }}</h1>
       <h1>Calories: {{ caloriesForGym[clientId] }}</h1>
       <h1>Coach: {{ coach[clientId] }}</h1>
-      <h1>⏱️ Time: {{ timers[clientId] ? timersStore.formatDuration(timers[clientId]) : '00:00' }}</h1>
-
+      <h1>⏱️ Time: {{ timersStore.formatDuration(seconds[clientId]) }}</h1>
     </div>
   </div>
 </template>
@@ -23,14 +22,23 @@ import { storeToRefs } from 'pinia'
 
 
 const wsStore = webSocketStore()
-const { bpmsForGym, caloriesForGym, coach, client_name } = storeToRefs(wsStore)
+const { bpmsForGym, caloriesForGym, coach, client_name, seconds } = storeToRefs(wsStore)
 
 const timersStore = useSessionTimersStore()
-const { timers } = storeToRefs(timersStore) 
+const { timers } = storeToRefs(timersStore)
 
 const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
 
 const gridStyle = ref({})
+
+onMounted(() => {
+  // populate timers for all current active sessions
+  Object.keys(wsStore.bpmsForGym).forEach(clientId => {
+    if (!timersStore.timers[clientId]) {
+      timersStore.startTimerFor(clientId) // optional: pass start time if available
+    }
+  })
+})
 
 watchEffect(() => {
   const count = bpmsEntries.value.length
