@@ -15,7 +15,7 @@ import { useSessionTimersStore } from '@/store/sessionTimerStore'
 
 const timersStore = useSessionTimersStore()
 const { timers } = storeToRefs(timersStore)
-
+const batteryLevel = reactive({}) // batteryLevel[clientId] = percentage
 const sessionStore = useSessionStore()
 
 const _intervals = {}
@@ -101,6 +101,7 @@ async function connectDevice(client) {
     // Tražimo uređaj koji podržava Heart Rate Service
     const device = await BleClient.requestDevice({
       services: ['0000180d-0000-1000-8000-00805f9b34fb'], // Heart Rate Service
+      optionalServices: ['0000180f-0000-1000-8000-00805f9b34fb'] // Battery
     });
 
     console.log("Requested device:", device, device.deviceId)
@@ -115,7 +116,7 @@ async function connectDevice(client) {
 
       // Optional: auto-reconnect
       // console.log("DOSAO DO RECONNECTA IZ CONNECT DEVICEA")
-      // reconnectDevice(client.id, device);
+      reconnectDevice(client.id, device);
       // Cleanup
       // delete devices[clientId];
       // delete deviceClientMap[deviceId];
@@ -177,10 +178,35 @@ async function connectDevice(client) {
     }
     } );
 
+    await readBatteryLevel(client)
+
   } catch (err) {
     console.error('BLE error:', err);
   } finally {
     connectingDevices.value[client.id] = false
+  }
+}
+
+async function readBatteryLevel(client) {
+  try {
+    const device = devices.value[client.id]
+    if (!device) return
+
+    const batteryData = await BleClient.read(
+      device.deviceId,
+      '0000180f-0000-1000-8000-00805f9b34fb', // Battery Service
+      '00002a19-0000-1000-8000-00805f9b34fb'  // Battery Level Characteristic
+    )
+
+    if (!batteryData?.value) {
+      console.warn('Battery value is undefined')
+      return
+    }
+
+    const data = new Uint8Array(batteryData.value)
+    batteryLevel[client.id] = data[0] // battery percentage 0–100
+  } catch (err) {
+    console.warn('Failed to read battery level:', err)
   }
 }
 
@@ -193,7 +219,7 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
 
     // const device = await BleClient.connect(deviceId, onDeviceDisconnected);
     const device = await BleClient.connect(deviceId.deviceId, onDeviceDisconnected);
-    console.log(`Reconnecting to device for client ${clientId}:`, device);
+    console.log(`Reconnecting to device for client ${clientId}:`, deviceId.deviceId);
 
     // devices[clientId] = device;
     devices.value[clientId] = device
@@ -202,13 +228,19 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
     // Restart notifications after reconnect
     await BleClient.startNotifications(
 
-      device.deviceId,
+      deviceId.deviceId,
         '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
         '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
         (value) => {
-        const bpm = parseHeartRate(value);
+        const data = new Uint8Array(value.buffer);
+
+        // Probaj jednostavno ovako:
+        let bpm = data[1]; // 8-bit BPM
         wsStore.bpmsFromWsCoach[clientId] = bpm;
         
+        console.log(device, "DEVICE U RECONNECTU")
+        console.log(deviceId, "DEVICE ID U RECONNECTU")
+        console.log(deviceId.name, "DEVICE NAME U RECONNECTU")
         if (sessionsStarted[clientId]) {
           sendBpmToBackend({ id: clientId }, bpm, device, sessionIds[clientId]);
         }
@@ -355,7 +387,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
     const response = await api_heart.post("/save-heartbeat", {
       client: client.id,
       bpm: bpm,
-      device_id: device.name,
+      device_id: device.name || device.deviceId || device || 'unknown',
       seconds: timersStore.timers[client.id] || 0,
       training_session: sessionId || null, // Ako je sesija aktivna
       timestamp: new Date().toISOString()  // opcionalno, ako backend koristi
@@ -593,6 +625,9 @@ onUnmounted(() => {
 
       <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
     </span>
+    <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">
+      🔋 Battery: {{ batteryLevel[session.client.id] }}%
+    </p>
   </div>
   </div>
 </SplitterPanel>
