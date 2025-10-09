@@ -80,9 +80,9 @@ function removeClient(client) {
 
 import { BleClient, BluetoothLe  } from '@capacitor-community/bluetooth-le';
 
-function onDeviceDisconnected(deviceId) {
+function onDeviceDisconnected(clientId, deviceId) {
   // const clientId = deviceClientMap[deviceId];
-  console.warn(`⚠️ Device for client ${client} disconnected:`, deviceId);
+  console.warn(`⚠️ Device for client disconnected:`, clientId, deviceId);
 
   // Cleanup
   // delete devices[clientId];
@@ -238,11 +238,8 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
         let bpm = data[1]; // 8-bit BPM
         wsStore.bpmsFromWsCoach[clientId] = bpm;
         
-        console.log(device, "DEVICE U RECONNECTU")
-        console.log(deviceId, "DEVICE ID U RECONNECTU")
-        console.log(deviceId.name, "DEVICE NAME U RECONNECTU")
         if (sessionsStarted[clientId]) {
-          sendBpmToBackend({ id: clientId }, bpm, device, sessionIds[clientId]);
+          sendBpmToBackend({ id: clientId }, bpm, deviceId, sessionIds[clientId]);
         }
       }
     );
