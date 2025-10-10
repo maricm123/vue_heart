@@ -14,7 +14,6 @@ export async function fetchActiveSessions() {
   }
 }
 
-
 export async function finishSession(sessionId, calories, seconds) {
   console.log("Finishing session with ID:", sessionId, "and calories:", typeof calories, calories)
   try {
@@ -32,6 +31,28 @@ export async function finishSession(sessionId, calories, seconds) {
     return response.data
   } catch (err) {
     console.error('❌ Failed to finish session', err.response?.data || err)
+    throw err
+  }
+}
+
+export async function createSession(clientId) {
+  try {
+    const response = await api_heart.post(
+      '/create-session',
+      {
+        client_id: clientId,
+        start: new Date().toISOString(),
+        title: 'New session',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access')}`,
+        },
+      }
+    )
+    return response.data
+  } catch (err) {
+    console.error('❌ Failed to create session', err.response?.data || err)
     throw err
   }
 }

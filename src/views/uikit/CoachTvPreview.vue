@@ -1,15 +1,15 @@
 <script setup>
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { api_coach, api_heart } from '@/services/api';
+import { api_heart } from '@/services/api';
 import { formatIsoToLocal } from '@/utils/formatDate'
 import { useSessionTimers } from '@/composables/useSessionTimers'
 import { useBle } from '@/composables/useBle'
-import { fetchActiveSessions, finishSession } from '@/services/trainingSessionsService.js'
+import { fetchActiveSessions, finishSession, createSession } from '@/services/trainingSessionsService.js'
 import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/store/useSessionStore'
 import { getClientsByCoach } from '@/services/userService.js'
-
+import { BleClient } from '@capacitor-community/bluetooth-le';
 const { connect, disconnect, isNative } = useBle()
 // const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
 import { useSessionTimersStore } from '@/store/sessionTimerStore'
@@ -30,20 +30,10 @@ const defaultAvatar = 'https://i.pravatar.cc/150?img=3' // placeholder image
 const devices = ref({}) // store device per client { clientId: device }
 // selected clients (array instead of single)
 const selectedClients = ref([])
-
-
 const wsStore = webSocketStore()
-
 const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore)
-
-
-// za više klijenata – koristimo objekte umesto samo jedne vrednosti
-// const calories = reactive({})
-// const bpms = reactive({})
-
 const sessionsStarted = reactive({})
 const sessionIds = reactive({})      // čuvamo sessionId za svakog clienta
-
 const activeSessions = ref([])
 
 function fmtStart(iso) {
@@ -71,7 +61,7 @@ function removeClient(client) {
   if (index !== -1) selectedClients.value.splice(index, 1)
 }
 
-import { BleClient } from '@capacitor-community/bluetooth-le';
+
 
 function onDeviceDisconnected(clientId, deviceId) {
   // const clientId = deviceClientMap[deviceId];
@@ -154,14 +144,8 @@ async function connectDevice(client) {
     // Probaj jednostavno ovako:
     let bpm = data[1]; // 8-bit BPM
 
-    // bpms[client.id] = bpm;
     wsStore.bpmsFromWsCoach[client.id] = bpm
 
-    // Ako je sesija aktivna – šaljemo na backend
-    // if (sessionsStarted[client.id]) {
-    //   wsStore.client[client.id] = client.id
-    //   sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
-    // }
     if (sessionsStarted[client.id]) {
       try {
         sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
@@ -277,16 +261,9 @@ async function disconnectDevice(client) {
 
 
 // Start session
-async function createSession(client) {
+async function startSession(client) {
   try {
-    const response = await api_heart.post(
-      `/create-session`,
-      { client_id: client.id,
-        start: new Date().toISOString(),
-        title: "New session",
-       }, 
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
+    const response = await createSession(client.id)
 
     // Save the session id returned from backend
     // Sačuvaj boolean + ID odvojeno
@@ -548,7 +525,7 @@ onUnmounted(() => {
           <Button 
             v-if="!sessionsStarted[client.id]"
             label="Start Session" 
-            @click="createSession(client)" 
+            @click="startSession(client)" 
           />
         </div>
       </div>
