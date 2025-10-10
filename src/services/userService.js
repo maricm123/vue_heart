@@ -9,3 +9,17 @@ export const getCurrentCoach = async () => {
         throw error;
     }
 };
+
+export async function getClientsByCoach() {
+  try {
+    const response = await api_coach.get('/get-all-clients-based-on-coach', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    })
+    return response.data
+  } catch (err) {
+    console.error('❌ Error loading clients:', err)
+    throw err
+  }
+}

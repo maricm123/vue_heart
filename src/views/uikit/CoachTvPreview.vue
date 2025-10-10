@@ -8,6 +8,7 @@ import { fetchActiveSessions, finishSession } from '@/services/trainingSessionsS
 import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/store/useSessionStore'
+import { getClientsByCoach } from '@/services/userService.js'
 
 const { connect, disconnect, isNative } = useBle()
 // const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
@@ -56,17 +57,9 @@ async function open() {
   display.value = true
   loadingClients.value = true
   try {
-    const response = await api_coach.get(
-      '/get-all-clients-based-on-coach',
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('access')}`,
-        },
-      }
-    )
-    clients.value = response.data
+    clients.value = await getClientsByCoach()
   } catch (err) {
-    console.error('Error loading clients', err)
+    console.error('Failed to fetch clients:', err)
   } finally {
     loadingClients.value = false
   }
@@ -78,7 +71,7 @@ function removeClient(client) {
   if (index !== -1) selectedClients.value.splice(index, 1)
 }
 
-import { BleClient, BluetoothLe  } from '@capacitor-community/bluetooth-le';
+import { BleClient } from '@capacitor-community/bluetooth-le';
 
 function onDeviceDisconnected(clientId, deviceId) {
   // const clientId = deviceClientMap[deviceId];
@@ -116,7 +109,7 @@ async function connectDevice(client) {
 
       // Optional: auto-reconnect
       // console.log("DOSAO DO RECONNECTA IZ CONNECT DEVICEA")
-      reconnectDevice(client.id, device);
+      // reconnectDevice(client.id, device);
       // Cleanup
       // delete devices[clientId];
       // delete deviceClientMap[deviceId];
