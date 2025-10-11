@@ -113,6 +113,8 @@ async function connectDevice(client) {
         return
     }
 
+    const services = await BleClient.getServices(device.deviceId)
+    console.log(JSON.stringify(services, null, 2))
 
     devices.value[client.id] = device
 
@@ -169,21 +171,21 @@ async function readBatteryLevel(client) {
     const device = devices.value[client.id]
     if (!device) return
 
-    const batteryData = await BleClient.read(
+    // Prefer notifications, since characteristic supports it
+    await BleClient.startNotifications(
       device.deviceId,
-      '0000180f-0000-1000-8000-00805f9b34fb', // Battery Service
-      '00002a19-0000-1000-8000-00805f9b34fb'  // Battery Level Characteristic
+      '0000180f-0000-1000-8000-00805f9b34fb',
+      '00002a19-0000-1000-8000-00805f9b34fb',
+      value => {
+        const data = new Uint8Array(value)
+        console.log('🔋 Battery update:', data[0])
+        batteryLevel[client.id] = data[0]
+      }
     )
 
-    if (!batteryData?.value) {
-      console.warn('Battery value is undefined')
-      return
-    }
-
-    const data = new Uint8Array(batteryData.value)
-    batteryLevel[client.id] = data[0] // battery percentage 0–100
+    console.log('✅ Listening for battery notifications...')
   } catch (err) {
-    console.warn('Failed to read battery level:', err)
+    console.warn('Failed to get battery level:', err)
   }
 }
 

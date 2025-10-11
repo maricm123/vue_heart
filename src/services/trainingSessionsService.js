@@ -50,7 +50,7 @@ export async function createSession(clientId) {
         },
       }
     )
-    return response.data
+    return response
   } catch (err) {
     console.error('❌ Failed to create session', err.response?.data || err)
     throw err
