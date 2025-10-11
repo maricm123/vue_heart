@@ -9,7 +9,11 @@ import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/store/useSessionStore'
 import { getClientsByCoach } from '@/services/userService.js'
-import { BleClient } from '@capacitor-community/bluetooth-le';
+import { BleClient, numbersToDataView, numberToUUID } from '@capacitor-community/bluetooth-le';
+
+const BATTERY_SERVICE = numberToUUID(0x180f);
+const BATTERY_CHARACTERISTIC = numberToUUID(0x2a19);
+
 const { connect, disconnect, isNative } = useBle()
 // const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
 import { useSessionTimersStore } from '@/store/sessionTimerStore'
@@ -113,9 +117,6 @@ async function connectDevice(client) {
         return
     }
 
-    const services = await BleClient.getServices(device.deviceId)
-    console.log(JSON.stringify(services, null, 2))
-
     devices.value[client.id] = device
 
     console.log("Connected to device:", device)
@@ -157,7 +158,9 @@ async function connectDevice(client) {
     }
     } );
 
-    await readBatteryLevel(client)
+    const battery = await BleClient.read(device.deviceId, BATTERY_SERVICE, BATTERY_CHARACTERISTIC);
+    console.log('battery level', battery.getUint8(0));
+    batteryLevel[client.id] = battery.getUint8(0);
 
   } catch (err) {
     console.error('BLE error:', err);
@@ -166,28 +169,6 @@ async function connectDevice(client) {
   }
 }
 
-async function readBatteryLevel(client) {
-  try {
-    const device = devices.value[client.id]
-    if (!device) return
-
-    // Prefer notifications, since characteristic supports it
-    await BleClient.startNotifications(
-      device.deviceId,
-      '0000180f-0000-1000-8000-00805f9b34fb',
-      '00002a19-0000-1000-8000-00805f9b34fb',
-      value => {
-        const data = new Uint8Array(value)
-        console.log('🔋 Battery update:', data[0])
-        batteryLevel[client.id] = data[0]
-      }
-    )
-
-    console.log('✅ Listening for battery notifications...')
-  } catch (err) {
-    console.warn('Failed to get battery level:', err)
-  }
-}
 
 async function reconnectDevice(clientId, deviceId, retries = 50) {
   if (retries <= 0) return;
@@ -595,7 +576,7 @@ onUnmounted(() => {
       <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
     </span>
     <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">
-      🔋 Battery: {{ batteryLevel[session.client.id] }}%
+      🔋 Device battery: {{ batteryLevel[session.client.id] }}%
     </p>
   </div>
   </div>
