@@ -9,10 +9,9 @@ import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
 import { useSessionStore } from '@/store/useSessionStore'
 import { getClientsByCoach } from '@/services/userService.js'
-import { BleClient, numbersToDataView, numberToUUID } from '@capacitor-community/bluetooth-le';
+import { BleClient } from '@capacitor-community/bluetooth-le';
 
-const BATTERY_SERVICE = numberToUUID(0x180f);
-const BATTERY_CHARACTERISTIC = numberToUUID(0x2a19);
+import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, parseHeartRate } from '@/utils/bluetooth.js'
 
 const { connect, disconnect, isNative } = useBle()
 // const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
@@ -93,7 +92,6 @@ async function connectDevice(client) {
 
     console.log("Requested device:", device, device.deviceId)
 
-    // await BleClient.connect(device.deviceId);
     // Connect and attach disconnect callback
     await BleClient.connect(device.deviceId, (deviceId) => {
       // const clientId = deviceClientMap[deviceId];
@@ -123,43 +121,24 @@ async function connectDevice(client) {
 
     await BleClient.startNotifications(
       device.deviceId,
-      '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-      '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+      HEART_RATE_SERVICE,
+      HEART_RATE_MEASUREMENT_CHARACTERISTIC,
       (value) => {
-    // const data = new Uint8Array(value);
-    // console.log("Raw HRM data:", data);
+        let bpm = parseHeartRate(value);
 
-    // // 🔍 pravilno parsiranje HRM paketa
-    // const flags = data[0];
-    // let bpm;
-    // // if (flags & 0x01) {
-    // //   bpm = data[1] | (data[2] << 8); // 16-bit little endian
-    // // } else {
-    // //   bpm = data[1]; // 8-bit
-    // // }
-    // if ((flags & 0x01) && data.length >= 3) {
-    //   bpm = data[1] | (data[2] << 8); // 16-bit
-    // } else {
-    //   bpm = data[1]; // 8-bit
-    // }
-    const data = new Uint8Array(value.buffer);
+        wsStore.bpmsFromWsCoach[client.id] = bpm
 
-    // Probaj jednostavno ovako:
-    let bpm = data[1]; // 8-bit BPM
-
-    wsStore.bpmsFromWsCoach[client.id] = bpm
-
-    if (sessionsStarted[client.id]) {
-      try {
-        sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
-      } catch (err) {
-        console.error("Failed to send BPM:", err);
+        if (sessionsStarted[client.id]) {
+          try {
+            sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+          } catch (err) {
+            console.error("Failed to send BPM:", err);
+          }
+        }
       }
-    }
-    } );
+   );
 
     const battery = await BleClient.read(device.deviceId, BATTERY_SERVICE, BATTERY_CHARACTERISTIC);
-    console.log('battery level', battery.getUint8(0));
     batteryLevel[client.id] = battery.getUint8(0);
 
   } catch (err) {
