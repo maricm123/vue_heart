@@ -7,7 +7,6 @@ import { useBle } from '@/composables/useBle'
 import { fetchActiveSessions, finishSession, createSession } from '@/services/trainingSessionsService.js'
 import { webSocketStore } from '@/store/webSocketStore'
 import { storeToRefs } from 'pinia'
-import { useSessionStore } from '@/store/useSessionStore'
 import { getClientsByCoach } from '@/services/userService.js'
 import { BleClient } from '@capacitor-community/bluetooth-le';
 
@@ -20,7 +19,6 @@ import { useSessionTimersStore } from '@/store/sessionTimerStore'
 const timersStore = useSessionTimersStore()
 const { timers } = storeToRefs(timersStore)
 const batteryLevel = reactive({}) // batteryLevel[clientId] = percentage
-const sessionStore = useSessionStore()
 
 const _intervals = {}
 const loadingClients = ref(false)
@@ -246,9 +244,6 @@ async function startSession(client) {
       ...response.data,
       client: client
     }
-
-    sessionStore.addSession(newSession)
-
 
     // Add new active session to list
     activeSessions.value.push(newSession)
