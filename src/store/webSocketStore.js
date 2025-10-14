@@ -111,6 +111,46 @@ export const webSocketStore = defineStore('ws', () => {
     }
   }
 
+// function clearClientData(clientId) {
+//   delete bpmsFromWsCoach[clientId]
+//   delete caloriesFromWsCoach[clientId]
+//   delete bpmsForGym[clientId]
+//   delete caloriesForGym[clientId]
+//   delete client[clientId]
+//   delete client_name[clientId]
+//   delete seconds[clientId]
+//   delete coach[clientId]
+
+//   // ✅ Force reactivity
+//   // ✅ Trigger reactivity safely:
+//   Object.assign(bpmsForGym, { ...bpmsForGym })
+//   Object.assign(caloriesForGym, { ...caloriesForGym })
+//   Object.assign(client_name, { ...client_name })
+//   Object.assign(coach, { ...coach })
+//   Object.assign(seconds, { ...seconds })
+// }
+
+function clearClientData(clientId) {
+  const safeDelete = (obj) => {
+    if (obj[clientId] !== undefined) {
+      // Make a shallow copy without the deleted key
+      const { [clientId]: _, ...rest } = obj
+      // Reassign inside reactive scope
+      Object.keys(obj).forEach(key => delete obj[key])
+      Object.assign(obj, rest)
+    }
+  }
+
+  safeDelete(bpmsFromWsCoach)
+  safeDelete(caloriesFromWsCoach)
+  safeDelete(bpmsForGym)
+  safeDelete(caloriesForGym)
+  safeDelete(client)
+  safeDelete(client_name)
+  safeDelete(seconds)
+  safeDelete(coach)
+}
+
   return {
     wsUser,
     wsGym,
@@ -128,5 +168,6 @@ export const webSocketStore = defineStore('ws', () => {
     disconnectCoach,
     connectWholeGym,
     disconnectWholeGym,
+    clearClientData
   }
 })

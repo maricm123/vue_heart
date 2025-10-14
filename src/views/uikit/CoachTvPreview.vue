@@ -277,6 +277,9 @@ async function onFinishSession(client, calories, seconds) {
     delete sessionsStarted[client.id]
     delete sessionIds[client.id]
 
+    // ✅ Clear from WebSocket store because of LiveTV
+    wsStore.clearClientData(client.id)
+
     disconnectDevice(client) // disconnect device when finishing
 
     console.log(`✅ Session finished for client ${client.user.first_name}`)
