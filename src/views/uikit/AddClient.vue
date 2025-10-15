@@ -47,7 +47,7 @@ const multiselectValues = ref([
 const multiselectValue = ref(null);
 const toggleValue = ref(false);
 const selectButtonValue = ref(null);
-const selectButtonValues = ref([{ name: 'Option 1' }, { name: 'Option 2' }, { name: 'Option 3' }]);
+const selectButtonValues = ref([{ name: 'Male' }, { name: 'Female' },]);
 const knobValue = ref(50);
 const inputGroupValue = ref(false);
 const treeSelectNodes = ref(null);
@@ -75,81 +75,39 @@ function searchCountry(event) {
     <Fluid class="flex flex-col md:flex-row gap-8">
         <div class="md:w-1/2">
             <div class="card flex flex-col gap-4">
-                <div class="font-semibold text-xl">Default Informations</div>
+                <div class="font-semibold text-xl">Add new client</div>
+                <label class="mb-1 font-medium">First name</label>
                 <IconField>
                     <InputIcon class="pi pi-user" />
                     <InputText type="text" placeholder="First name" />
                 </IconField>
+                <label class="mb-1 font-medium">Last name</label>
                 <IconField>
                     <InputIcon class="pi pi-user" />
                     <InputText type="text" placeholder="Last name" />
                 </IconField>
+                <label class="mb-1 font-medium">Email</label>
+                <IconField>
+                    <InputIcon class="pi pi-user" />
+                    <InputText type="text" placeholder="Email" />
+                </IconField>
                 
                 <label class="mb-1 font-medium">Gender</label>
-                <SelectButton
-                    v-model="gender"
-                    :options="options"
-                    size="large"
-                    class="dark:bg-gray-700  dark:text-gray-100"
-                />
-
-                <div class="font-semibold text-xl">Float Label</div>
-                <FloatLabel>
-                    <InputText id="username" type="text" v-model="floatValue" />
-                    <label for="username">Username</label>
-                </FloatLabel>
+                <SelectButton v-model="selectButtonValue" :options="selectButtonValues" optionLabel="name" />
 
                 <div class="font-semibold text-xl">Descript client</div>
                 <Textarea placeholder="Your Message" :autoResize="true" rows="3" cols="30" />
 
-                <div class="font-semibold text-xl">AutoComplete</div>
-                <AutoComplete v-model="selectedAutoValue" :suggestions="autoFilteredValue" optionLabel="name" placeholder="Search" dropdown multiple display="chip" @complete="searchCountry($event)" />
-
                 <div class="font-semibold text-xl">Birth date</div>
                 <DatePicker :showIcon="true" :showButtonBar="true" v-model="calendarValue"></DatePicker>
 
-                <div class="font-semibold text-xl">InputNumber</div>
+                <label class="mb-1 font-medium">Weight</label>
+                <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
+                <label class="mb-1 font-medium">Height</label>
                 <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
             </div>
         </div>
         <div class="md:w-1/2">
-            <div class="card flex flex-col gap-4">
-                <div class="font-semibold text-xl">RadioButton</div>
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex items-center">
-                        <RadioButton id="option1" name="option" value="Chicago" v-model="radioValue" />
-                        <label for="option1" class="leading-none ml-2">Chicago</label>
-                    </div>
-                    <div class="flex items-center">
-                        <RadioButton id="option2" name="option" value="Los Angeles" v-model="radioValue" />
-                        <label for="option2" class="leading-none ml-2">Los Angeles</label>
-                    </div>
-                    <div class="flex items-center">
-                        <RadioButton id="option3" name="option" value="New York" v-model="radioValue" />
-                        <label for="option3" class="leading-none ml-2">New York</label>
-                    </div>
-                </div>
-
-                <div class="font-semibold text-xl">Checkbox</div>
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex items-center">
-                        <Checkbox id="checkOption1" name="option" value="Chicago" v-model="checkboxValue" />
-                        <label for="checkOption1" class="ml-2">Chicago</label>
-                    </div>
-                    <div class="flex items-center">
-                        <Checkbox id="checkOption2" name="option" value="Los Angeles" v-model="checkboxValue" />
-                        <label for="checkOption2" class="ml-2">Los Angeles</label>
-                    </div>
-                    <div class="flex items-center">
-                        <Checkbox id="checkOption3" name="option" value="New York" v-model="checkboxValue" />
-                        <label for="checkOption3" class="ml-2">New York</label>
-                    </div>
-                </div>
-
-                <div class="font-semibold text-xl">ToggleSwitch</div>
-                <ToggleSwitch v-model="switchValue" />
-            </div>
-
             <div class="card flex flex-col gap-4">
                 <div class="font-semibold text-xl">Listbox</div>
                 <Listbox v-model="listboxValue" :options="listboxValues" optionLabel="name" :filter="true" />
@@ -179,8 +137,6 @@ function searchCountry(event) {
                 <div class="font-semibold text-xl">TreeSelect</div>
                 <TreeSelect v-model="selectedNode" :options="treeSelectNodes" placeholder="Select Item"></TreeSelect>
             </div>
-
-
         </div>
     </Fluid>
 
