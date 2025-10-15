@@ -44,6 +44,11 @@ function goToClientDetail(clientId) {
 </script>
 
 <template>
+    <div class="card flex flex-col">
+        <div class="flex flex-wrap">
+            <Button label="Add new client" @click="router.push({ name: 'addClient' })"></Button>
+        </div>
+    </div>
     <div class="flex flex-col">
         <div class="card">
             <div class="font-semibold text-xl">Your client list</div>
@@ -56,8 +61,9 @@ function goToClientDetail(clientId) {
                         </template>
                     </SelectButton>
                     </div>
+                    
                 </template>
-
+                
                 <!-- List layout -->
                 <template #list="slotProps">
                     <div class="flex flex-col">

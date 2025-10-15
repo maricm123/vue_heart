@@ -26,6 +26,12 @@ const router = createRouter({
                     // meta: { requiresAuth: true }
                 },
                 {
+                    path: '/uikit/addClient',
+                    name: 'addClient',
+                    component: () => import('@/views/uikit/AddClient.vue'),
+                    // meta: { requiresAuth: true }
+                },
+                {
                     path: '/uikit/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
