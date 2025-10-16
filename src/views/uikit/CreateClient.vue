@@ -58,7 +58,7 @@ onMounted(() => {
     NodeService.getTreeNodes().then((data) => (treeSelectNodes.value = data));
 });
 
-import { UserService } from '@/services/userService';
+import { createClient } from '@/services/userService';
 
 const firstName = ref('');
 const lastName = ref('');
@@ -67,7 +67,7 @@ const description = ref('');
 const weightValue = ref(null);
 const heightValue = ref(null);
 
-async function createClient() {
+async function createClientFunction() {
     try {
         const payload = {
             firstName: firstName.value,
@@ -80,7 +80,7 @@ async function createClient() {
             height: heightValue.value
         };
 
-        const response = await UserService.createClient(payload);
+        const response = await createClient(payload);
         return response;
     } catch (error) {
         console.error('createClient error:', error);
