@@ -23,3 +23,26 @@ export async function getClientsByCoach() {
     throw err
   }
 }
+
+export async function createClient({
+  first_name,
+  last_name,
+  email,
+  phone,
+  dob,
+  gender,
+  notes
+} = {}) {
+  try {
+    const payload = { first_name, last_name, email, phone, dob, gender, notes };
+    const response = await api_coach.post('/create-client', payload, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error creating client:', err);
+    throw err;
+  }
+}

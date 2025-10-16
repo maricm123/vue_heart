@@ -46,7 +46,7 @@ function goToClientDetail(clientId) {
 <template>
     <div class="card flex flex-col">
         <div class="flex flex-wrap">
-            <Button label="Add new client" @click="router.push({ name: 'addClient' })"></Button>
+            <Button label="Add new client" @click="router.push({ name: 'createClient' })"></Button>
         </div>
     </div>
     <div class="flex flex-col">

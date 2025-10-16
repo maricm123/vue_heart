@@ -58,6 +58,36 @@ onMounted(() => {
     NodeService.getTreeNodes().then((data) => (treeSelectNodes.value = data));
 });
 
+import { UserService } from '@/services/userService';
+
+const firstName = ref('');
+const lastName = ref('');
+const email = ref('');
+const description = ref('');
+const weightValue = ref(null);
+const heightValue = ref(null);
+
+async function createClient() {
+    try {
+        const payload = {
+            firstName: firstName.value,
+            lastName: lastName.value,
+            email: email.value,
+            gender: selectButtonValue.value ? selectButtonValue.value.name : null,
+            description: description.value,
+            birthDate: calendarValue.value,
+            weight: weightValue.value,
+            height: heightValue.value
+        };
+
+        const response = await UserService.createClient(payload);
+        return response;
+    } catch (error) {
+        console.error('createClient error:', error);
+        throw error;
+    }
+}
+
 function searchCountry(event) {
     setTimeout(() => {
         if (!event.query.trim().length) {

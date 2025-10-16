@@ -26,9 +26,9 @@ const router = createRouter({
                     // meta: { requiresAuth: true }
                 },
                 {
-                    path: '/uikit/addClient',
-                    name: 'addClient',
-                    component: () => import('@/views/uikit/AddClient.vue'),
+                    path: '/uikit/createClient',
+                    name: 'createClient',
+                    component: () => import('@/views/uikit/CreateClient.vue'),
                     // meta: { requiresAuth: true }
                 },
                 {
