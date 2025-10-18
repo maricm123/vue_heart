@@ -64,28 +64,39 @@ const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
 const description = ref('');
+const phoneNumber = ref('');
 const weightValue = ref(null);
 const heightValue = ref(null);
 
 async function createClientFunction() {
-    try {
-        const payload = {
-            firstName: firstName.value,
-            lastName: lastName.value,
-            email: email.value,
-            gender: selectButtonValue.value ? selectButtonValue.value.name : null,
-            description: description.value,
-            birthDate: calendarValue.value,
-            weight: weightValue.value,
-            height: heightValue.value
-        };
-
-        const response = await createClient(payload);
-        return response;
-    } catch (error) {
-        console.error('createClient error:', error);
-        throw error;
+  try {
+    const payload = {
+      firstName: firstName.value,
+      lastName: lastName.value,
+      email: email.value,
+      gender: selectButtonValue.value ? selectButtonValue.value.name : null,
+      description: description.value,
+      birthDate: calendarValue.value,
+      phoneNumber: phoneNumber.value,
+      weight: weightValue.value,
+      height: heightValue.value
+    };
+    console.log('Creating client with payload:', payload);
+    const response = await createClient(payload);
+    console.log('Client created successfully:', response);
+    message.value = 'Client created successfully!';
+  } catch (error) {
+    if (error.response?.data) {
+      // Django REST error dict like { "email": ["This field is required."] }
+      formError.value = Object.entries(error.response.data)
+        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+        .join('\n')
+    } else {
+      formError.value = 'An unexpected error occurred. Please try again.'
     }
+    console.error('createClient error:', error);
+    message.value = 'Failed to create client.';
+  }
 }
 
 function searchCountry(event) {
@@ -102,40 +113,52 @@ function searchCountry(event) {
 </script>
 
 <template>
+    <div v-if="message" class="text-green-600 font-medium mt-4">{{ message }}</div>
     <Fluid class="flex flex-col md:flex-row gap-8">
         <div class="md:w-1/2">
             <div class="card flex flex-col gap-4">
                 <div class="font-semibold text-xl">Add new client</div>
+
                 <label class="mb-1 font-medium">First name</label>
                 <IconField>
                     <InputIcon class="pi pi-user" />
-                    <InputText type="text" placeholder="First name" />
+                    <InputText type="text" placeholder="First name" v-model="firstName" />
                 </IconField>
+
                 <label class="mb-1 font-medium">Last name</label>
                 <IconField>
                     <InputIcon class="pi pi-user" />
-                    <InputText type="text" placeholder="Last name" />
+                    <InputText type="text" placeholder="Last name" v-model="lastName" />
                 </IconField>
+
                 <label class="mb-1 font-medium">Email</label>
                 <IconField>
-                    <InputIcon class="pi pi-user" />
-                    <InputText type="text" placeholder="Email" />
+                    <InputIcon class="pi pi-envelope" />
+                    <InputText type="text" placeholder="Email" v-model="email" />
                 </IconField>
-                
+
+                <label class="mb-1 font-medium">Phone number</label>
+                <IconField>
+                    <InputIcon class="pi pi-phone" />
+                    <InputText type="text" placeholder="Phone number" v-model="phoneNumber" />
+                </IconField>
+
                 <label class="mb-1 font-medium">Gender</label>
                 <SelectButton v-model="selectButtonValue" :options="selectButtonValues" optionLabel="name" />
 
-                <div class="font-semibold text-xl">Descript client</div>
-                <Textarea placeholder="Your Message" :autoResize="true" rows="3" cols="30" />
+                <label class="mb-1 font-medium mt-4">Describe client</label>
+                <Textarea placeholder="Description" v-model="description" :autoResize="true" rows="3" cols="30" />
 
-                <div class="font-semibold text-xl">Birth date</div>
-                <DatePicker :showIcon="true" :showButtonBar="true" v-model="calendarValue"></DatePicker>
+                <label class="mb-1 font-medium mt-4">Birth date</label>
+                <DatePicker v-model="calendarValue" :showIcon="true" :showButtonBar="true" />
 
-                <label class="mb-1 font-medium">Weight</label>
-                <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
-                <label class="mb-1 font-medium">Height</label>
-                <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
-            </div>
+                <label class="mb-1 font-medium mt-4">Weight (kg)</label>
+                <InputNumber v-model="weightValue" showButtons mode="decimal" />
+
+                <label class="mb-1 font-medium">Height (cm)</label>
+                <InputNumber v-model="heightValue" showButtons mode="decimal" />
+
+                </div>
         </div>
         <div class="md:w-1/2">
             <div class="card flex flex-col gap-4">
@@ -166,6 +189,19 @@ function searchCountry(event) {
 
                 <div class="font-semibold text-xl">TreeSelect</div>
                 <TreeSelect v-model="selectedNode" :options="treeSelectNodes" placeholder="Select Item"></TreeSelect>
+            </div>
+            <div v-if="formError" class="p-3 bg-red-100 text-red-700 rounded-md whitespace-pre-line">
+            {{ formError }}
+            </div>
+            <div class="w-full">
+                <div class="card flex justify-end">
+                    <Button
+                        label="Create client"
+                        icon="pi pi-check"
+                        class="p-button-success"
+                        @click="() => createClientFunction()"
+                        />
+                </div>
             </div>
         </div>
     </Fluid>

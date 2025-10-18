@@ -24,25 +24,30 @@ export async function getClientsByCoach() {
   }
 }
 
-export async function createClient({
-  first_name,
-  last_name,
-  email,
-  phone,
-  dob,
-  gender,
-  notes
-} = {}) {
+export async function createClient(payload = {}) {
   try {
-    const payload = { first_name, last_name, email, phone, dob, gender, notes };
-    const response = await api_coach.post('/create-client', payload, {
+    const allowed = {
+      first_name: payload.firstName,
+      last_name: payload.lastName,
+      email: payload.email,
+      birth_date: payload.birthDate
+        ? payload.birthDate.toISOString().split('T')[0]
+        : null,
+      phone_number: payload.phoneNumber,
+      gender: payload.gender,
+      weight: payload.weight,
+      height: payload.height,
+    };
+
+    const response = await api_coach.post('/create-client', allowed, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },
     });
+
     return response.data;
   } catch (err) {
-    console.error('❌ Error creating client:', err);
+    console.error('❌ Error creating client:', err.response?.data || err.message);
     throw err;
   }
 }
