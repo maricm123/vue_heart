@@ -27,7 +27,7 @@ export const webSocketStore = defineStore('ws', () => {
     const token = localStorage.getItem('access')
     // wsCoach.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
     // wsCoach.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
-    wsCoach.value = new WebSocket(vite.env.VITE_WS_API_URL + `?token=${token}`);
+    wsCoach.value = new WebSocket(import.meta.env.VITE_WS_COACH_URL + `?token=${token}`);
 
     wsCoach.value.onopen = () => {
       console.log("✅ User WebSocket connected")
@@ -68,7 +68,7 @@ export const webSocketStore = defineStore('ws', () => {
     const token = localStorage.getItem('access')
     // wsGym.value = new WebSocket(`ws://13.48.248.110:8000/ws/gym/?token=${token}`)
     // wsGym.value = new WebSocket(`wss://heartapp.dev/ws/gym/?token=${token}`);
-    wsGym.value = new WebSocket(vite.env.VITE_WS_API_URL + `?token=${token}`);
+    wsGym.value = new WebSocket(import.meta.env.VITE_WS_GYM_URL + `?token=${token}`);
     console.log("Connecting to Gym WebSocket...")
 
     wsGym.value.onopen = () => {

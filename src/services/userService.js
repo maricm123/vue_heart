@@ -30,9 +30,9 @@ export async function createClient(payload = {}) {
       first_name: payload.firstName,
       last_name: payload.lastName,
       email: payload.email,
-      birth_date: payload.birthDate
-        ? payload.birthDate.toISOString().split('T')[0]
-        : null,
+      birth_date: payload.birthDate,
+        // ? payload.birthDate.toISOString().split('T')[0]
+        // : null,
       phone_number: payload.phoneNumber,
       gender: payload.gender,
       weight: payload.weight,
