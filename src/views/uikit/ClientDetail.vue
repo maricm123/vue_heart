@@ -224,9 +224,9 @@ const updateClient = async () => {
                 <div class="card flex flex-col gap-4">
                     <div class="font-semibold text-xl">Other informations</div>
                     <div class="grid grid-cols-12 gap-2">
-                        <label for="name3" class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0">Calories</label>
+                        <label for="name3" class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0">Number</label>
                         <div class="col-span-12 md:col-span-10">
-                            <InputText id="name3" type="text" />
+                            {{client.sessions_this_month}}
                         </div>
                     </div>
                     <div class="grid grid-cols-12 gap-2">
