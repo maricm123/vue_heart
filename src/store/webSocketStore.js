@@ -1,9 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
+import { W } from '../../android/app/src/main/assets/public/assets/CoachTvPreview-BXcMUTaC'
 
 export const webSocketStore = defineStore('ws', () => {
   // dva različita ws objekta
-  const wsUser = ref(null)
+  const wsCoach = ref(null)
   const wsGym = ref(null)
 
   const isUserConnected = ref(false)
@@ -22,17 +23,18 @@ export const webSocketStore = defineStore('ws', () => {
 
   // konekcija za user bpm
   function connectCoach() {
-    if (wsUser.value) return // već konektovan
+    if (wsCoach.value) return // već konektovan
     const token = localStorage.getItem('access')
-    // wsUser.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
-    wsUser.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
+    // wsCoach.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
+    // wsCoach.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
+    wsCoach.value = new WebSocket(vite.env.VITE_WS_API_URL + `?token=${token}`);
 
-    wsUser.value.onopen = () => {
+    wsCoach.value.onopen = () => {
       console.log("✅ User WebSocket connected")
       isUserConnected.value = true
     }
 
-    wsUser.value.onmessage = (event) => {
+    wsCoach.value.onmessage = (event) => {
       const data = JSON.parse(event.data)
       // console.log("User WS data:", data)
 
@@ -45,17 +47,17 @@ export const webSocketStore = defineStore('ws', () => {
       }
     }
 
-    wsUser.value.onclose = () => {
+    wsCoach.value.onclose = () => {
       console.log("❌ User WebSocket closed")
       isUserConnected.value = false
-      wsUser.value = null
+      wsCoach.value = null
     }
   }
 
   function disconnectCoach() {
-    if (wsUser.value) {
-      wsUser.value.close()
-      wsUser.value = null
+    if (wsCoach.value) {
+      wsCoach.value.close()
+      wsCoach.value = null
       isUserConnected.value = false
     }
   }
@@ -65,7 +67,8 @@ export const webSocketStore = defineStore('ws', () => {
     if (wsGym.value) return
     const token = localStorage.getItem('access')
     // wsGym.value = new WebSocket(`ws://13.48.248.110:8000/ws/gym/?token=${token}`)
-    wsGym.value = new WebSocket(`wss://heartapp.dev/ws/gym/?token=${token}`);
+    // wsGym.value = new WebSocket(`wss://heartapp.dev/ws/gym/?token=${token}`);
+    wsGym.value = new WebSocket(vite.env.VITE_WS_API_URL + `?token=${token}`);
     console.log("Connecting to Gym WebSocket...")
 
     wsGym.value.onopen = () => {
@@ -152,7 +155,7 @@ function clearClientData(clientId) {
 }
 
   return {
-    wsUser,
+    wsCoach,
     wsGym,
     isUserConnected,
     isGymConnected,
