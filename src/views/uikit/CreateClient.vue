@@ -3,6 +3,16 @@ import { CountryService } from '@/service/CountryService';
 import { NodeService } from '@/service/NodeService';
 import { onMounted, ref } from 'vue';
 
+const selectedPrefix = ref('+381')
+
+const countryPrefixes = [
+  { label: 'Serbia (+381)', value: '+381' },
+  { label: 'Croatia (+385)', value: '+385' },
+  { label: 'BiH (+387)', value: '+387' },
+  { label: 'Montenegro (+382)', value: '+382' },
+  { label: 'North Macedonia (+389)', value: '+389' },
+]
+
 const floatValue = ref(null);
 const autoValue = ref(null);
 const selectedAutoValue = ref(null);
@@ -77,7 +87,7 @@ async function createClientFunction() {
       gender: selectButtonValue.value ? selectButtonValue.value.name : null,
       description: description.value,
       birthDate: calendarValue.value,
-      phoneNumber: phoneNumber.value,
+      phoneNumber: selectedPrefix.value + phoneNumber.value,
       weight: weightValue.value,
       height: heightValue.value
     };
@@ -139,8 +149,20 @@ function searchCountry(event) {
 
                 <label class="mb-1 font-medium">Phone number</label>
                 <IconField>
-                    <InputIcon class="pi pi-phone" />
-                    <InputText type="text" placeholder="Phone number" v-model="phoneNumber" />
+                    <InputGroup>
+                        <Dropdown
+                            v-model="selectedPrefix"
+                            :options="countryPrefixes"
+                            optionLabel="label"
+                            optionValue="value"
+                            class="w-4"
+                        />
+                        <InputText
+                            v-model="phoneNumber"
+                            placeholder="Phone number"
+                            class="w-full"
+                        />
+                        </InputGroup>
                 </IconField>
 
                 <label class="mb-1 font-medium">Gender</label>
