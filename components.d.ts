@@ -25,6 +25,8 @@ declare module 'vue' {
     Chart: typeof import('primevue/chart')['default']
     Checkbox: typeof import('primevue/checkbox')['default']
     Chip: typeof import('primevue/chip')['default']
+    ClientHeartRateChart: typeof import('./src/components/charts/ClientHeartRateChart.vue')['default']
+    ClientSessionsPerMonthChart: typeof import('./src/components/charts/ClientSessionsPerMonthChart.vue')['default']
     ColorPicker: typeof import('primevue/colorpicker')['default']
     Column: typeof import('primevue/column')['default']
     ConfirmPopup: typeof import('primevue/confirmpopup')['default']
