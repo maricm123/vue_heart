@@ -7,6 +7,9 @@ import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
 const route = useRoute()
 const clientId = route.params.id
 
+const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
+const breadcrumbItems = ref([{ label: 'Client list' }, { label: 'Client detail' }]);
+
 // states
 const client = ref({
   user: {
@@ -118,6 +121,10 @@ const updateClient = async () => {
 
 <template>
 <Fluid>
+      <div class="card">
+          <!-- <div class="font-semibold text-xl mb-4">Breadcrumb</div> -->
+          <Breadcrumb :home="breadcrumbHome" :model="breadcrumbItems" />
+      </div>
         <div class="flex flex-col md:flex-row gap-8 mb-8">
             <div class="md:w-1/2">
                 <div v-if="client">
