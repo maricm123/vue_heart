@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
-import { W } from '../../android/app/src/main/assets/public/assets/CoachTvPreview-BXcMUTaC'
 
 export const webSocketStore = defineStore('ws', () => {
   // dva različita ws objekta
