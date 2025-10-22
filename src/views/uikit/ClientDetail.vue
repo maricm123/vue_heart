@@ -1,131 +1,74 @@
 <script setup>
-import { ref, onMounted, watch  } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { api_coach } from '@/services/api';
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api'
+import { api_coach } from '@/services/api'
 import ClientHeartRateChart from "@/components/charts/ClientHeartRateChart.vue";
+import ClientTrainingSessions from "@/views/uikit/ClientTrainingSessions.vue"; // ✅ NEW IMPORT
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api' // (you can remove if unused now)
 
-
+// route + base state
 const route = useRoute()
 const clientId = route.params.id
+
 const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
 const breadcrumbItems = ref([{ label: 'Client list' }, { label: 'Client detail' }]);
 
-// these will come from backend later
+// backend values later, static for now
 const hrZones = [540, 325, 702, 421, 237];
 
-// states
 const client = ref({
-  user: {
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    birth_date: null
-  },
+  user: { first_name: '', last_name: '', email: '', birth_date: null },
   height: null,
   weight: null,
   gender: null
 })
+
+const gender = ref('')
 const loading = ref(true)
 
-const defaultAvatar = 'https://i.pravatar.cc/150?img=3'
-// states
-// const client = ref(null)
-const trainingSessions = ref([])
-const filters = ref()
-const options = ref(['Female', 'Male'])
-const gender = ref('') // will hold selected gender
-
-// ✅ initialize filters for PrimeVue DataTable
-const initFilters = () => {
-  filters.value = {
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-    date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-    status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] }
-  }
-}
-initFilters()
-
-// 🔹 Format helpers
-const formatDate = (value) => {
-  if (!value) return ''
-  return new Date(value).toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
-}
-
-const clearFilter = () => {
-  initFilters()
-}
-
-// Keep client.gender in sync with SelectButton
-watch(gender, (newVal) => {
-    client.value.gender = newVal
-})
-
-// 🔹 Fetch client detail + training sessions
 onMounted(async () => {
   try {
-    // fetch client
-    const clientResponse = await api_coach.get(
+    const res = await api_coach.get(
       `/client-detail/${clientId}`,
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
-    client.value = clientResponse.data
-    gender.value = client.value.gender
-
-    // fetch training sessions
-    const sessionsResponse = await api_coach.get(
-      `/get-training-sessions-per-client/${clientId}`,
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
-    trainingSessions.value = sessionsResponse.data
-
+    client.value = res.data
+    gender.value = res.data.gender
   } catch (err) {
-    console.error('Failed to fetch client or sessions:', err)
+    console.error('Failed to fetch client:', err)
   } finally {
     loading.value = false
   }
 })
-function formatDateToYMD(date) {
+
+watch(gender, (val) => client.value.gender = val)
+
+const formatDateToYMD = (date) => {
   if (!date) return null
   const d = new Date(date)
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}   
-// 🔹 Update client
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
 const updateClient = async () => {
   try {
-    const payload = {
-    ...client.value,
-    user: {
-        ...client.value.user,
-        birth_date: formatDateToYMD(client.value.user.birth_date)
-      }
-    }
-    
     await api_coach.patch(
       `/client-detail/${clientId}`,
-      payload,
+      {
+        ...client.value,
+        user: { ...client.value.user, birth_date: formatDateToYMD(client.value.user.birth_date) }
+      },
       { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
     )
     alert('✅ Client updated successfully!')
   } catch (err) {
-    console.error('Update failed:', err.response?.data || err)
     alert('❌ Failed to update client')
   }
 }
 </script>
 
 <template>
-<Fluid>
-      <div class="card">
+  <Fluid>
+    <div class="card">
           <!-- <div class="font-semibold text-xl mb-4">Breadcrumb</div> -->
           <Breadcrumb :home="breadcrumbHome" :model="breadcrumbItems" />
       </div>
@@ -248,58 +191,6 @@ const updateClient = async () => {
                 <ClientHeartRateChart :zones="hrZones" />
             </div>
         </div>
-          
-        <DataTable
-            v-model:filters="filters"
-            :value="trainingSessions"
-            paginator
-            showGridlines
-            :rows="10"
-            dataKey="id"
-            filterDisplay="menu"
-            :loading="loading"
-            :globalFilterFields="['title', 'calories_burned', 'duration_in_minutes']"
-        >
-        <template #header>
-          <h3>Training sessions</h3>
-            <div class="flex justify-between">
-            <Button type="button" icon="pi pi-filter-slash" label="Clear" variant="outlined" @click="clearFilter()" />
-            <IconField>
-                <InputIcon>
-                <i class="pi pi-search" />
-                </InputIcon>
-                <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
-            </IconField>
-            </div>
-        </template>
-
-        <template #empty>No training sessions found.</template>
-        <template #loading>Loading training sessions...</template>
-
-        <!-- Columns -->
-        <Column field="name" header="Session Name" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.title }}</template>
-        </Column>
-
-        <Column field="date" header="Date" style="min-width: 10rem">
-            <template #body="{ data }">{{ formatDate(data.start) }}</template>
-        </Column>
-
-        <Column field="status" header="Status" style="min-width: 10rem">
-            <template #body="{ data }">
-            <Tag :value="data.status" :severity="data.status === 'completed' ? 'success' : 'info'" />
-            </template>
-        </Column>
-        <Column field="name" header="Cal burned" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.calories_burned }}</template>
-        </Column>
-        <Column field="name" header="Duration" style="min-width: 12rem">
-            <template #body="{ data }">{{ data.duration }}</template>
-        </Column>
-        <Column field="name" header="Max heart rate" style="min-width: 12rem">
-            <template #body="{ data }">{{ data }}</template>
-        </Column>
-        </DataTable>
-
-    </Fluid>
+    <ClientTrainingSessions :clientId="clientId" />
+  </Fluid>
 </template>
