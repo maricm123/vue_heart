@@ -5,6 +5,7 @@ import { api_coach } from '@/services/api'
 import ClientHeartRateChart from "@/components/charts/ClientHeartRateChart.vue";
 import ClientTrainingSessions from "@/views/uikit/ClientTrainingSessions.vue"; // ✅ NEW IMPORT
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api' // (you can remove if unused now)
+import { getClientDetail } from '@/services/userService'; // adjust path if needed
 
 // route + base state
 const route = useRoute()
@@ -26,20 +27,18 @@ const client = ref({
 const gender = ref('')
 const loading = ref(true)
 
+
 onMounted(async () => {
   try {
-    const res = await api_coach.get(
-      `/client-detail/${clientId}`,
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
-    client.value = res.data
-    gender.value = res.data.gender
+    const res = await getClientDetail(clientId);
+    client.value = res;
+    gender.value = res.gender;
   } catch (err) {
-    console.error('Failed to fetch client:', err)
+    console.error('Failed to fetch client:', err);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 
 watch(gender, (val) => client.value.gender = val)
 
