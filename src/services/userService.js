@@ -51,3 +51,17 @@ export async function createClient(payload = {}) {
     throw err;
   }
 }
+
+export async function getClientDetail(clientId) {
+  try {
+    const response = await api_coach.get(`/client-detail/${clientId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error fetching client detail:', err);
+    throw err;
+  }
+}

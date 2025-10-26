@@ -56,3 +56,18 @@ export async function createSession(clientId) {
     throw err
   }
 }
+
+export async function getTrainingSessionDetailsAndMetrics(sessionId) {
+  try {
+    const response = await api_coach.get(`/get-training-session-detail/${sessionId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    })
+    console.log('✅ Fetched session details and metrics:', response.data)
+    return response.data
+  } catch (err) {
+    console.error('❌ Failed to fetch session details', err.response?.data || err)
+    throw err
+  }
+}
