@@ -1,6 +1,14 @@
 <template>
   <div class="livetv-container" :style="gridStyle">
     <div
+      v-if="bpmsEntries.length === 0"
+      class="no-sessions"
+      style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;grid-column:1/-1;"
+    >
+      <h1>No active sessions yet</h1>
+      <p>Waiting for clients to connect.</p>
+    </div>
+    <div
       v-for="[clientId] in bpmsEntries"
       :key="clientId"
       class="session-tile"
