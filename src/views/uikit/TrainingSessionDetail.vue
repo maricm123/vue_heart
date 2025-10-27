@@ -13,6 +13,9 @@ const summary = ref({})
 const zones = ref({})
 const bpmData = ref([])
 
+const zoneChartData = ref({})
+const zoneChartOptions = ref({})
+
 const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' })
 const breadcrumbItems = ref([{ label: 'Client list' }, { label: 'Client detail' }, { label: 'Training Session Detail' }])
 
@@ -29,7 +32,12 @@ onMounted(async () => {
   bpmData.value = points.map(p => p.bpm)
 
   // Labels (X axis) — index or time
-  const labels = points.map((p, i) => `${i * summaryMetrics.points_per_minute * 10}s`)
+  // const labels = points.map((p, i) => `${i * summaryMetrics.points_per_minute * 10}s`)
+  // ✅ REAL TIMESTAMPS FOR X-AXIS (format HH:MM:SS)
+  const labels = points.map(p => {
+    const d = new Date(p.ts)
+    return d.toLocaleTimeString('en-US', { hour12: false })
+  })
 
   // Chart Data
   chartData.value = {
@@ -39,7 +47,7 @@ onMounted(async () => {
         label: 'Heart Rate (BPM)',
         data: bpmData.value,
         borderColor: '#4CAF50',
-        tension: 0.4,
+        tension: 0.5,
         fill: false
       }
     ]
@@ -48,16 +56,45 @@ onMounted(async () => {
   summary.value = summaryData
   zones.value = summaryData.hr_zones_seconds
 
-  chartOptions.value = {
-    responsive: true,
-    plugins: {
-      legend: { labels: { color: '#fff' } }
-    },
-    scales: {
-      x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-      y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-    }
+  // chartOptions.value = {
+  //   responsive: true,
+  //   plugins: {
+  //     legend: { labels: { color: '#fff' } }
+  //   },
+  //   scales: {
+  //     x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+  //     y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+  //   }
+  // }
+
+  // ✅ BAR CHART FOR ZONES
+  zoneChartData.value = {
+    labels: ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'],
+    datasets: [
+      {
+        label: 'Time in Zone (seconds)',
+        data: [
+          zones.value.z1,
+          zones.value.z2,
+          zones.value.z3,
+          zones.value.z4,
+          zones.value.z5
+        ],
+        backgroundColor: ['#4CAF50', '#8BC34A', '#FFC107', '#FF9800', '#F44336']
+      }
+    ]
   }
+
+  // zoneChartOptions.value = {
+  //   responsive: true,
+  //   plugins: {
+  //     legend: { labels: { color: '#fff' } }
+  //   },
+  //   scales: {
+  //     x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+  //     y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+  //   }
+  // }
 })
 </script>
 
@@ -74,20 +111,15 @@ onMounted(async () => {
 
     <!-- Summary -->
     <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-2">Heart Rate Zones</h3>
+      <Chart type="bar" :data="zoneChartData" :options="zoneChartOptions" class="mt-4" />
+    </div>
+    <div class="mt-6">
       <h3 class="text-lg font-semibold mb-2">Session Summary</h3>
       <p><strong>Max BPM:</strong> {{ summary.max_hr }}</p>
       <p><strong>Avg BPM:</strong> {{ summary.avg_hr }}</p>
       <p><strong>Duration:</strong> {{ summary.duration_seconds }} sec</p>
       <p><strong>Calories:</strong> {{ summary.calories }}</p>
-
-      <h4 class="font-semibold mt-3">Time in Zones (seconds):</h4>
-      <ul>
-        <li>Zone 1: {{ zones.z1 }}s</li>
-        <li>Zone 2: {{ zones.z2 }}s</li>
-        <li>Zone 3: {{ zones.z3 }}s</li>
-        <li>Zone 4: {{ zones.z4 }}s</li>
-        <li>Zone 5: {{ zones.z5 }}s</li>
-      </ul>
     </div>
   </div>
 </template>
