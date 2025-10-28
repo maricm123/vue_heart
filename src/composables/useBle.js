@@ -86,11 +86,24 @@ export function useBle() {
     return isNative ? disconnectDeviceNative(client) : disconnectDeviceWeb(client)
   }
 
+  async function safeIsConnected(deviceId) {
+    try {
+      if (typeof BleClient.isConnected === 'function') {
+        return await BleClient.isConnected(deviceId);
+      }
+      return false; // On web, treat as disconnected
+    } catch (err) {
+      console.warn('safeIsConnected failed:', err);
+      return false;
+    }
+  }
+
   return {
     devices,
     connectingDevices,
     connect,
     disconnect,
     isNative,
+    safeIsConnected,
   }
 }

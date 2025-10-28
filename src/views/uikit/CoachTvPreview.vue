@@ -10,6 +10,9 @@ import { storeToRefs } from 'pinia';
 import { getClientsByCoach } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 
+
+const { safeIsConnected } = useBle()
+
 import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, parseHeartRate } from '@/utils/bluetooth.js';
 
 const { connect, disconnect, isNative } = useBle();
@@ -19,6 +22,9 @@ import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
 const { timers } = storeToRefs(timersStore);
 const batteryLevel = reactive({}); // batteryLevel[clientId] = percentage
+
+// When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
+const manuallyDisconnecting = reactive({});
 
 const _intervals = {};
 const loadingClients = ref(false);
@@ -63,15 +69,8 @@ function removeClient(client) {
 }
 
 function onDeviceDisconnected(clientId, deviceId) {
-    // const clientId = deviceClientMap[deviceId];
-    console.warn(`⚠️ Device for client disconnected:`, clientId, deviceId);
-
-    // Cleanup
-    // delete devices[clientId];
-    // delete deviceClientMap[deviceId];
-
-    // Optional: auto-reconnect
-    reconnectDevice(clientId, deviceId);
+    console.warn(`⚠️ Unexpected disconnection for client ${clientId}`, deviceId);
+    reconnectDevice(clientId, { deviceId });
 }
 
 async function connectDevice(client) {
@@ -89,19 +88,16 @@ async function connectDevice(client) {
 
         // Connect and attach disconnect callback
         await BleClient.connect(device.deviceId, (deviceId) => {
-            // const clientId = deviceClientMap[deviceId];
-            console.log(`⚠️ Device for client ${client} disconnected:`, deviceId);
+            console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
 
-            // HERE WE NEED TO SEE WHAT TO DO ON CALLBACK
+            // Ignore manual disconnects
+            if (manuallyDisconnecting[client.id]) {
+                console.log(`ℹ️ Manual disconnect for client ${client.id}, skipping reconnect.`);
+                return;
+            }
 
-            // Optional: auto-reconnect
-            // console.log("DOSAO DO RECONNECTA IZ CONNECT DEVICEA")
-            // reconnectDevice(client.id, device);
-            // Cleanup
-            // delete devices[clientId];
-            // delete deviceClientMap[deviceId];
-
-            // Optional: notify UI or attempt auto-reconnect
+            // Unexpected disconnect → auto-reconnect
+            onDeviceDisconnected(client.id, deviceId);
         });
 
         console.log(devices.value, 'DEVICESSSS');
@@ -138,29 +134,56 @@ async function connectDevice(client) {
 }
 
 async function reconnectDevice(clientId, deviceId, retries = 50) {
-    if (retries <= 0) return;
+    // 1️⃣ Validate input
+    if (!deviceId?.deviceId) {
+        console.warn(`Invalid deviceId object for client ${clientId}:`, deviceId);
+        return;
+    }
+    if (manuallyDisconnecting[clientId]) {
+        console.log(`🛑 Skipping reconnect — manual disconnect for client ${clientId}`);
+        return;
+    }
 
-    console.log(deviceId, clientId);
-    console.log(`Trying to reconnect ${clientId}... (${retries} left) ${deviceId.deviceId}`);
+    // 2️⃣ Stop if already connected
     try {
-        // const device = await BleClient.connect(deviceId, onDeviceDisconnected);
-        const device = await BleClient.connect(deviceId.deviceId, onDeviceDisconnected);
-        console.log(`Reconnecting to device for client ${clientId}:`, deviceId.deviceId);
+        // const connected = await BleClient.isConnected(deviceId.deviceId);
+        const connected = await safeIsConnected(deviceId.deviceId);
+        if (connected) {
+            console.log(`✅ Device ${deviceId.deviceId} already connected (client ${clientId})`);
+            return;
+        }
+    } catch (err) {
+        console.warn(`⚠️ Error checking connection for ${deviceId.deviceId}:`, err);
+    }
 
-        // devices[clientId] = device;
-        devices.value[clientId] = device;
+    // 3️⃣ Stop if retries are exhausted
+    if (retries <= 0) {
+        console.warn(`❌ Reconnect attempts exhausted for client ${clientId}`);
+        return;
+    }
 
-        console.log(devices.value, 'DEVICESSSS');
-        // Restart notifications after reconnect
+    console.log(`🔄 Trying to reconnect client ${clientId}... (${retries} left)`, deviceId.deviceId);
+
+    try {
+        // 4️⃣ Try to reconnect
+        await BleClient.connect(deviceId.deviceId, () => {
+            console.warn(`⚠️ Device disconnected again for client ${clientId}`);
+            reconnectDevice(clientId, deviceId, retries - 1);
+        });
+
+        console.log(`✅ Reconnected device for client ${clientId}:`, deviceId.deviceId);
+
+        // 5️⃣ Store reference
+        devices.value[clientId] = deviceId;
+
+        // 6️⃣ Restart heart rate notifications
         await BleClient.startNotifications(
             deviceId.deviceId,
             '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-            '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement Characteristic
+            '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement
             (value) => {
                 const data = new Uint8Array(value.buffer);
-
-                // Probaj jednostavno ovako:
-                let bpm = data[1]; // 8-bit BPM
+                const bpm = data[1]; // simple parse
                 wsStore.bpmsFromWsCoach[clientId] = bpm;
 
                 if (sessionsStarted[clientId]) {
@@ -169,42 +192,32 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
             }
         );
 
-        console.log(`Reconnected and restarted notifications for client ${clientId}`);
-        console.log(`Reconnected ${clientId}`);
+        console.log(`📡 Notifications restarted for client ${clientId}`);
     } catch (err) {
+        console.warn(`⚠️ Reconnect failed for ${clientId}, retrying...`, err.message);
         setTimeout(() => reconnectDevice(clientId, deviceId, retries - 1), 2000);
     }
 }
 
-// Disconnect device
 async function disconnectDevice(client) {
     console.log('Disconnecting device for client', client.id);
-
-    try {
-        // Zaustavi notifikacije
-        if (devices.value[client.id]) {
-            await BleClient.stopNotifications(
-                devices.value[client.id].deviceId,
-                '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-                '00002a37-0000-1000-8000-00805f9b34fb' // Heart Rate Measurement
-            );
-        }
-    } catch (err) {
-        console.warn('⚠️ stopNotifications failed:', err.message);
-    }
+    manuallyDisconnecting[client.id] = true; // 👈 mark manual disconnect
 
     try {
         if (devices.value[client.id]) {
+            await BleClient.stopNotifications(devices.value[client.id].deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
             await BleClient.disconnect(devices.value[client.id].deviceId);
         }
     } catch (err) {
         console.warn('⚠️ disconnect failed:', err.message);
     }
 
-    // Obriši iz lokalnog state-a
     delete devices.value[client.id];
-    delete bpmsFromWsCoach[client.id];
+    delete wsStore.bpmsFromWsCoach[client.id];
     delete sessionsStarted[client.id];
+
+    // Unset manual flag after a short delay (to avoid race)
+    setTimeout(() => delete manuallyDisconnecting[client.id], 2000);
 }
 
 // Start session
@@ -260,6 +273,7 @@ async function onFinishSession(client, calories, seconds) {
         const sec = timersStore.stopTimerFor(client.id);
         // console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
 
+        manuallyDisconnecting[client.id] = true;
         delete sessionsStarted[client.id];
         delete sessionIds[client.id];
 
