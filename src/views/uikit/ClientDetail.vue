@@ -6,7 +6,7 @@ import ClientHeartRateChart from "@/components/charts/ClientHeartRateChart.vue";
 import ClientTrainingSessions from "@/views/uikit/ClientTrainingSessions.vue"; // ✅ NEW IMPORT
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api' // (you can remove if unused now)
 import { getClientDetail } from '@/services/userService'; // adjust path if needed
-
+import { updateClient } from '@/services/userService'; // adjust path if needed
 // route + base state
 const route = useRoute()
 const clientId = route.params.id
@@ -42,27 +42,14 @@ onMounted(async () => {
 
 watch(gender, (val) => client.value.gender = val)
 
-const formatDateToYMD = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-}
-
-const updateClient = async () => {
+const updateClientFunction = async () => {
   try {
-    await api_coach.patch(
-      `/client-detail/${clientId}`,
-      {
-        ...client.value,
-        user: { ...client.value.user, birth_date: formatDateToYMD(client.value.user.birth_date) }
-      },
-      { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } }
-    )
-    alert('✅ Client updated successfully!')
+    await updateClient(clientId, client.value);
+    alert('✅ Client updated successfully!');
   } catch (err) {
-    alert('❌ Failed to update client')
+    alert('❌ Failed to update client');
   }
-}
+};
 </script>
 
 <template>
@@ -118,7 +105,7 @@ const updateClient = async () => {
                         v-model="client.user.last_name"
                         type="text"
                         placeholder="Last Name"
-                        class="border rounded-lg p-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
+                        class="border rounded-lg p-2  "
                         />
 
                         <label class="mb-1 font-medium">Email (cannot update)</label>
@@ -162,7 +149,7 @@ const updateClient = async () => {
                     </div>
 
                     <button
-                        @click="updateClient"
+                        @click="updateClientFunction"
                         class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
                     >
                         Update
@@ -175,19 +162,20 @@ const updateClient = async () => {
         </div>
             <div class="md:w-1/2">
                 <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Client sessions diagrams</div>
-                    <div class="grid grid-cols-12 gap-2">
-                        <!-- <label for="name3" class="flex items-center md:col-span-2 md:mb-0">Number of sessions this month</label> -->
-                         <div class="col-span-12 md:col-span-10">
-                            Number of sessions this month:
-                        </div>
-                        <div class="col-span-12 md:col-span-10">
-                            {{client.sessions_this_month}}
-                        </div>
-                    </div>
-
+                        <label class="mb-1 font-medium">Max heart rate</label>
+                        <input
+                        v-model="client.max_heart_rate"
+                        type="text"
+                        class="border rounded-lg p-1 bg-gray-100 dark:bg-gray-700 dark:text-gray-100"
+                        />
                 </div>
-                <ClientHeartRateChart :zones="hrZones" />
+                <button
+                        @click="updateClientFunction"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
+                    >
+                        Update metrics
+                    </button>
+                <!-- <ClientHeartRateChart :zones="hrZones" /> -->
             </div>
         </div>
     <ClientTrainingSessions :clientId="clientId" />

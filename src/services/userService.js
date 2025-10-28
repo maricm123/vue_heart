@@ -65,3 +65,31 @@ export async function getClientDetail(clientId) {
     throw err;
   }
 }
+
+const formatDateToYMD = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+export async function updateClient(clientId, client) {
+  try {
+    const payload = {
+      ...client,
+      user: {
+        ...client.user,
+        birth_date: formatDateToYMD(client.user.birth_date),
+      },
+    };
+
+    const response = await api_coach.patch(`/client-detail/${clientId}`, payload, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error updating client:', err.response?.data || err.message);
+    throw err;
+  }
+}
