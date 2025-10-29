@@ -10,8 +10,9 @@ import { storeToRefs } from 'pinia';
 import { getClientsByCoach } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 
+const connectionStatus = reactive({}); // { clientId: 'connected' | 'connecting' | 'reconnecting' | 'disconnected' }
 
-const { safeIsConnected } = useBle()
+const { safeIsConnected } = useBle();
 
 import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, parseHeartRate } from '@/utils/bluetooth.js';
 
@@ -74,6 +75,7 @@ function onDeviceDisconnected(clientId, deviceId) {
 }
 
 async function connectDevice(client) {
+    connectionStatus[client.id] = 'connecting';
     connectingDevices.value[client.id] = true;
     try {
         await BleClient.initialize();
@@ -85,7 +87,7 @@ async function connectDevice(client) {
         });
 
         console.log('Requested device:', device, device.deviceId);
-
+        connectionStatus[client.id] = 'connected';
         // Connect and attach disconnect callback
         await BleClient.connect(device.deviceId, (deviceId) => {
             console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
@@ -134,6 +136,7 @@ async function connectDevice(client) {
 }
 
 async function reconnectDevice(clientId, deviceId, retries = 50) {
+    connectionStatus[clientId] = 'reconnecting';
     // 1️⃣ Validate input
     if (!deviceId?.deviceId) {
         console.warn(`Invalid deviceId object for client ${clientId}:`, deviceId);
@@ -158,6 +161,7 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
 
     // 3️⃣ Stop if retries are exhausted
     if (retries <= 0) {
+        connectionStatus[clientId] = 'disconnected';
         console.warn(`❌ Reconnect attempts exhausted for client ${clientId}`);
         return;
     }
@@ -172,7 +176,7 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
         });
 
         console.log(`✅ Reconnected device for client ${clientId}:`, deviceId.deviceId);
-
+        connectionStatus[clientId] = 'connected';
         // 5️⃣ Store reference
         devices.value[clientId] = deviceId;
 
@@ -209,12 +213,14 @@ async function disconnectDevice(client) {
             await BleClient.disconnect(devices.value[client.id].deviceId);
         }
     } catch (err) {
+        connectionStatus[client.id] = 'disconnected';
         console.warn('⚠️ disconnect failed:', err.message);
     }
 
     delete devices.value[client.id];
     delete wsStore.bpmsFromWsCoach[client.id];
     delete sessionsStarted[client.id];
+    connectionStatus[client.id] = 'disconnected';
 
     // Unset manual flag after a short delay (to avoid race)
     setTimeout(() => delete manuallyDisconnecting[client.id], 2000);
@@ -503,6 +509,15 @@ onUnmounted(() => {
                         </span>
                         <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
                     </div>
+                    <span
+                        :class="{
+                            'text-green-500': connectionStatus  === 'connected',
+                            'text-yellow-500': connectionStatus  === 'connecting' || connectionStatus  === 'reconnecting',
+                            'text-red-500': connectionStatus  === 'disconnected'
+                        }"
+                    >
+                        {{ connectionStatus  }}
+                    </span>
                 </div>
             </SplitterPanel>
         </Splitter>
