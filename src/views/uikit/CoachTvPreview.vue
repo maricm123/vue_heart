@@ -507,7 +507,6 @@ onUnmounted(() => {
 
                             <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
                         </span>
-                        <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
                     </div>
                     <span
                         :class="{
@@ -516,8 +515,9 @@ onUnmounted(() => {
                             'text-red-500': connectionStatus  === 'disconnected'
                         }"
                     >
-                        {{ connectionStatus  }}
+                         Device is: {{ connectionStatus[session.client.id] }}
                     </span>
+                    <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
                 </div>
             </SplitterPanel>
         </Splitter>
