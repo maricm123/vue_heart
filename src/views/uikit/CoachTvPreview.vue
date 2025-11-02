@@ -280,6 +280,11 @@ async function onFinishSession(client, calories, seconds) {
         // console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
 
         manuallyDisconnecting[client.id] = true;
+
+        // Kada obrisem jednu sesiju a imam drugu aktivnu, nakon toga se desi da sessionIds je prazno
+        // sessionIds state: Proxy(Object) {10: 145, 11: 146} ovo mi pokazalo kada sam brisao prvu sesiju, znaci oba objekta trening sesije su tu
+        // a prikzuje mi prazan state kad zelim da obrisem drugu sesiju
+        // uopste ne dodje i ne posalje zahtev ka backend za brisanje druge sesije
         delete sessionsStarted[client.id];
         delete sessionIds[client.id];
 
@@ -308,25 +313,16 @@ function isSelected(client) {
     return selectedClients.value.some((c) => c.id === client.id);
 }
 
-// 📌 Funkcija za slanje BPM-a na backend REST endpoint
 async function sendBpmToBackend(client, bpm, device, sessionId) {
-    // console.log("Sending BPM to backend:", {
-    //   clientId: client.id,
-    //   bpm: bpm,
-    //   device: device,
-    //   sessionId: sessionId
-    // });
     try {
         const response = await api_heart.post('/save-heartbeat', {
-            client: client.id,
+            // client: client.id,
             bpm: bpm,
             device_id: device.name || device.deviceId || device || 'unknown',
             seconds: timersStore.timers[client.id] || 0,
-            training_session: sessionId || null, // Ako je sesija aktivna
+            training_session_id: sessionId || null, // Ako je sesija aktivna
             timestamp: new Date().toISOString() // opcionalno, ako backend koristi
         });
-
-        // console.log("✅ BPM sent:", response.data);
     } catch (err) {
         console.error('❌ Error sending BPM:', err);
     }
@@ -335,7 +331,6 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 onMounted(async () => {
     try {
         activeSessions.value = await fetchActiveSessions();
-        console.log('✅ Active sessions loaded', activeSessions.value);
     } catch (err) {
         // već je logovano u servisu, ovde možeš prikazati poruku korisniku
     }
