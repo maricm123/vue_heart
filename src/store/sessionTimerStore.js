@@ -18,17 +18,19 @@ export const useSessionTimersStore = defineStore('sessionTimers', () => {
   }
 
   function startTimerFor(id, startIso) {
-    const start = startIso ? new Date(startIso) : new Date()
-    if (Number.isNaN(start.getTime())) return
+    const startIsoo = new Date().toISOString();
+    const startUtc = Date.parse(startIsoo); // UTC epoch ms
+    const nowUtc = Date.now();             // UTC epoch ms
+    const diffSec = Math.floor((nowUtc - startUtc) / 1000);
 
-    startTimes[id] = start
-    timers[id] = Math.floor((Date.now() - start.getTime()) / 1000)
+    timers[id] = diffSec;
+    startTimes[id] = new Date(startUtc);
 
-    if (_intervals[id]) clearInterval(_intervals[id])
+    if (_intervals[id]) clearInterval(_intervals[id]);
     _intervals[id] = setInterval(() => {
-      timers[id] = Math.floor((Date.now() - start.getTime()) / 1000)
-    }, 1000)
-  }
+      timers[id] = Math.floor((Date.now() - startUtc) / 1000);
+    }, 1000);
+}
 
   function stopTimerFor(id) {
     if (_intervals[id]) {

@@ -36,12 +36,18 @@ export async function finishSession(sessionId, calories, seconds) {
 }
 
 export async function createSession(clientId) {
+  const localISOTime = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString();
+  console.log(new Date().toISOString())
+  const localDate = new Date();
+  const utcISOString = localDate.toISOString(); // this is the correct UTC time
+  console.log("Creating session for client ID:", clientId, "at time:", utcISOString)
+
   try {
     const response = await api_heart.post(
       '/create-session',
       {
         client_id: clientId,
-        start: new Date().toISOString(),
+        start: utcISOString,
         title: 'New session',
       },
       {
@@ -50,6 +56,8 @@ export async function createSession(clientId) {
         },
       }
     )
+    console.log("Backend start:", response.data.start);
+
     return response
   } catch (err) {
     console.error('❌ Failed to create session', err.response?.data || err)
