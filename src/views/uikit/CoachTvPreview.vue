@@ -9,6 +9,7 @@ import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import { getClientsByCoach } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
+import BelgradeClock from '@/components/BelgradeClock.vue'
 
 const connectionStatus = reactive({}); // { clientId: 'connected' | 'connecting' | 'reconnecting' | 'disconnected' }
 
@@ -33,7 +34,6 @@ const connectingDevices = ref({});
 const display = ref(false);
 const clients = ref([]);
 const layout = ref('list');
-const options = ['list', 'grid'];
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3'; // placeholder image
 const devices = ref({}); // store device per client { clientId: device }
 // selected clients (array instead of single)
@@ -517,4 +517,5 @@ onUnmounted(() => {
             </SplitterPanel>
         </Splitter>
     </div>
+    <BelgradeClock />
 </template>

@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia'
 import App from './App.vue';
 import router from './router';
+import Card from 'primevue/card' // ✅ Default import (no curly braces)
 
 import { webSocketStore } from './store/webSocketStore';
 
@@ -25,6 +26,7 @@ app.use(PrimeVue, {
         }
     }
 });
+app.component('Card', Card)
 app.use(ToastService);
 app.use(ConfirmationService);
 

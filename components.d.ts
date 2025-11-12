@@ -15,6 +15,7 @@ declare module 'vue' {
     Avatar: typeof import('primevue/avatar')['default']
     AvatarGroup: typeof import('primevue/avatargroup')['default']
     Badge: typeof import('primevue/badge')['default']
+    BelgradeClock: typeof import('./src/components/BelgradeClock.vue')['default']
     BestSellingWidget: typeof import('./src/components/dashboard/BestSellingWidget.vue')['default']
     Breadcrumb: typeof import('primevue/breadcrumb')['default']
     Button: typeof import('primevue/button')['default']
