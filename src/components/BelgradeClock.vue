@@ -1,5 +1,5 @@
 <template>
-  <Card class="clock-card">
+  <!-- <Card class="clock-card">
     <div class="flex flex-col items-center justify-center text-center p-4">
       <div class="text-sm text-gray-400 mb-1 flex items-center gap-1">
         <i class="pi pi-map-marker text-primary"></i>
@@ -14,14 +14,19 @@
         {{ date || 'Loading date...' }}
       </div>
     </div>
-  </Card>
-  <div>{{ time }}</div>
-
+  </Card> -->
+  
+  <div class="card">
+    <div>
+      <div class="font-semibold text-xl text-center">Current time</div>
+    </div>
+      
+      <div class="font-semibold text-xl text-center">{{time}}</div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import Card from 'primevue/card' // ✅ Default import (no curly braces)
 
 const time = ref('')
 const date = ref('')
