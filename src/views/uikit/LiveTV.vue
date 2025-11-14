@@ -7,29 +7,9 @@
           <i class="pi pi-heart-fill text-blue-500 text-3xl"></i>
           HeartApp
         </h1>
-        <p class="text-sm text-gray-400">Real-time Training Monitor</p>
       </div>
-
-      <div class="flex flex-col items-end">
-        <BelgradeClock />
-      </div>
+        <BelgradeClock class="text-gray-600 bg-transparent text-sm" />
     </header>
-
-    <!-- STATS -->
-    <!-- <div class="flex justify-center gap-16 text-center mt-4">
-      <div>
-        <p class="text-blue-400 text-3xl font-semibold">12</p>
-        <p class="text-gray-400 text-sm">Active Users</p>
-      </div>
-      <div>
-        <p class="text-green-400 text-3xl font-semibold">315</p>
-        <p class="text-gray-400 text-sm">Avg Calories</p>
-      </div>
-      <div>
-        <p class="text-red-400 text-3xl font-semibold">141</p>
-        <p class="text-gray-400 text-sm">Avg BPM</p>
-      </div>
-    </div> -->
 
     <!-- GRID -->
     <div class="grid gap-6 p-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 overflow-hidden">
