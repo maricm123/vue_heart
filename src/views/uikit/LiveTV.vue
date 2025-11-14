@@ -5,7 +5,7 @@
       <div>
         <h1 class="text-2xl font-bold flex items-center gap-2">
           <i class="pi pi-heart-fill text-blue-500 text-3xl"></i>
-          FitZone Dashboard
+          HeartApp
         </h1>
         <p class="text-sm text-gray-400">Real-time Training Monitor</p>
       </div>
