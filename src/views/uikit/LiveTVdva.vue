@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-white text-slate-900 flex flex-col overflow-hidden">
+  <div class="h-screen bg-white text-slate-900 flex flex-col overflow-hidden">
     <!-- HEADER -->
     <header
   class="flex justify-between items-center px-10 py-5 shadow-lg"
@@ -35,7 +35,7 @@
   </div>
 
   <!-- 1+ users → single dynamic grid -->
-  <div v-else class="h-[calc(100vh-96px)]">
+  <div v-else class="h-full">
     <div
       class="grid h-full gap-6"
       :style="gridStyle"
