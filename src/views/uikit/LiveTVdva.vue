@@ -16,80 +16,113 @@
 
   <!-- RIGHT: Clock -->
   <!-- RIGHT: Custom Clock -->
-<div class="flex flex-col items-end text-white">
-  <div class="text-4xl font-bold leading-none">
-    {{ time }}
+  <div class="flex flex-col items-end text-white">
+    <div class="text-4xl font-bold leading-none">
+      {{ time }}
+    </div>
+    <div class="text-2xl opacity-90 -mt-1">
+      {{ date }}
+    </div>
   </div>
-  <div class="text-2xl opacity-90 -mt-1">
-    {{ date }}
-  </div>
-</div>
-</header>
+  </header>
+
 
     <!-- MAIN CONTENT / GRID -->
-    <main class="flex-1 px-8 py-6 overflow-hidden">
-      <div v-if="activeUsers === 0" class="h-full flex items-center justify-center mt-44">
-        <p class="text-slate-500 text-5xl">No active sessions at the moment</p>
-      </div>
+<main class="flex-1 px-8 py-6 overflow-hidden">
+  <!-- No users -->
+  <div v-if="activeUsers === 0" class="h-full flex items-center justify-center mt-44">
+    <p class="text-slate-500 text-5xl">No active sessions at the moment</p>
+  </div>
 
-      <!-- Single big card -->
+  <!-- 1+ users → single dynamic grid -->
+  <div v-else class="h-[calc(100vh-96px)]">
+    <div
+      class="grid h-full gap-6"
+      :style="gridStyle"
+    >
       <div
-        v-else-if="activeUsers === 1"
-        class="h-full grid grid-cols-1 auto-rows-fr"
+        v-for="[clientId] in bpmsEntries"
+        :key="clientId"
+        :class="[cardBaseClass, { 'h-full': activeUsers === 1 }]"
       >
-        <div
-          v-for="[clientId] in bpmsEntries"
-          :key="clientId"
-          class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl flex flex-col justify-between h-full"
-        >
-          <UserCardContent :client-id="clientId" />
-        </div>
+        <UserCardContent :client-id="clientId" />
       </div>
-
-      <!-- Two big cards -->
-      <div
-        v-else-if="activeUsers === 2"
-        class="h-full grid grid-cols-2 gap-6 auto-rows-fr"
-      >
-        <div
-          v-for="[clientId] in bpmsEntries"
-          :key="clientId"
-          class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl flex flex-col justify-between h-full"
-        >
-          <UserCardContent :client-id="clientId" />
-        </div>
-      </div>
-
-      <!-- 3+ users: responsive grid like the screenshot (up to 4 columns) -->
-      <div
-        v-else
-        class="h-full grid gap-6 auto-rows-fr"
-        :class="gridColsClass"
-      >
-        <div
-          v-for="[clientId] in bpmsEntries"
-          :key="clientId"
-          class="bg-white border border-slate-200 rounded-3xl p-6 shadow-lg flex flex-col justify-between"
-        >
-          <UserCardContent :client-id="clientId" />
-        </div>
-      </div>
-    </main>
+    </div>
+  </div>
+</main>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, defineComponent, onBeforeUnmount } from 'vue'
-import { storeToRefs } from 'pinia'
+import { computed, onMounted, watchEffect, ref, onBeforeUnmount } from 'vue'
 import { webSocketStore } from '@/store/webSocketStore'
 import { useSessionTimersStore } from '@/store/sessionTimerStore'
+import { storeToRefs } from 'pinia'
 import UserCardContent from '@/components/UserCardContent.vue'
-import { ref} from 'vue'
 
+const wsStore = webSocketStore()
+const { bpmsForGym, caloriesForGym, client_name, seconds } = storeToRefs(wsStore)
+
+const timersStore = useSessionTimersStore()
+const { timers } = storeToRefs(timersStore)
+
+// entries like before
+const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
+
+// number of active users
+const activeUsers = computed(() => bpmsEntries.value.length)
+
+// dynamic grid style
+const gridStyle = ref({})
+
+// base class for card
+const cardBaseClass =
+  'bg-white border border-slate-200 rounded-3xl p-6 shadow-xl flex flex-col justify-between'
+
+// adjust grid according to number of users
+watchEffect(() => {
+  const count = activeUsers.value
+
+  if (count <= 0) {
+    gridStyle.value = {}
+    return
+  }
+
+  if (count === 1) {
+    // one big tile filling the screen
+    gridStyle.value = {
+      gridTemplateColumns: '1fr',
+      gridTemplateRows: '1fr'
+    }
+  } else if (count === 2) {
+    // two tiles: left / right
+    gridStyle.value = {
+      gridTemplateColumns: '1fr 1fr',
+      gridTemplateRows: '1fr'
+    }
+  } else if (count <= 4) {
+    // 2x2
+    gridStyle.value = {
+      gridTemplateColumns: '1fr 1fr',
+      gridTemplateRows: '1fr 1fr'
+    }
+  } else if (count <= 6) {
+    // 3x2
+    gridStyle.value = {
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gridTemplateRows: '1fr 1fr'
+    }
+  } else {
+    // 3x3 (or more, they’ll wrap inside)
+    gridStyle.value = {
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gridTemplateRows: '1fr 1fr 1fr'
+    }
+  }
+})
 const time = ref('')
 const date = ref('')
 let intervalId = null
-
 function updateClock() {
   const now = new Date()
 
@@ -109,41 +142,6 @@ function updateClock() {
     day: 'numeric'
   })
 }
-const wsStore = webSocketStore()
-const { bpmsForGym, caloriesForGym, client_name, seconds } = storeToRefs(wsStore)
-
-const timersStore = useSessionTimersStore()
-const { timers } = storeToRefs(timersStore)
-
-const bpmsEntries = computed(() => Object.entries(bpmsForGym.value))
-const activeUsers = computed(() => bpmsEntries.value.length)
-
-const avgCalories = computed(() => {
-  const values = Object.values(caloriesForGym.value || {}).filter(
-    v => typeof v === 'number' && v > 0
-  )
-  if (!values.length) return 0
-  const total = values.reduce((sum, v) => sum + v, 0)
-  return Math.round(total / values.length)
-})
-
-const avgBpm = computed(() => {
-  const values = Object.values(bpmsForGym.value || {}).filter(
-    v => typeof v === 'number' && v > 0
-  )
-  if (!values.length) return 0
-  const total = values.reduce((sum, v) => sum + v, 0)
-  return Math.round(total / values.length)
-})
-
-const gridColsClass = computed(() => {
-  const count = activeUsers.value
-  if (count === 3) return 'grid-cols-3'
-  if (count === 4) return 'grid-cols-4'
-  if (count <= 6) return 'grid-cols-3 xl:grid-cols-3'
-  return 'grid-cols-4 xl:grid-cols-4'
-})
-
 onMounted(() => {
   updateClock()
   intervalId = setInterval(updateClock, 1000)

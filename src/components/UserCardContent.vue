@@ -39,7 +39,7 @@
       </div>
 
       <div class="flex items-center justify-between">
-        <span class="text-slate-500">Training Time</span>
+        <span class="text-slate-500 text-2xl">Training Time</span>
         <span class="text-blue-600 font-bold text-lg">
           {{ duration }}
         </span>
