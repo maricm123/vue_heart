@@ -9,7 +9,7 @@ import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import { getClientsByCoach } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
-import BelgradeClock from '@/components/BelgradeClock.vue'
+import BelgradeClock from '@/components/BelgradeClock.vue';
 
 const connectionStatus = reactive({}); // { clientId: 'connected' | 'connecting' | 'reconnecting' | 'disconnected' }
 
@@ -505,12 +505,12 @@ onUnmounted(() => {
                     </div>
                     <span
                         :class="{
-                            'text-green-500': connectionStatus  === 'connected',
-                            'text-yellow-500': connectionStatus  === 'connecting' || connectionStatus  === 'reconnecting',
-                            'text-red-500': connectionStatus  === 'disconnected'
+                            'text-green-500': connectionStatus === 'connected',
+                            'text-yellow-500': connectionStatus === 'connecting' || connectionStatus === 'reconnecting',
+                            'text-red-500': connectionStatus === 'disconnected'
                         }"
                     >
-                         Device is: {{ connectionStatus[session.client.id] }}
+                        Device is: {{ connectionStatus[session.client.id] }}
                     </span>
                     <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
                 </div>
