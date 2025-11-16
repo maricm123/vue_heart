@@ -110,6 +110,8 @@ declare module 'vue' {
     Tree: typeof import('primevue/tree')['default']
     TreeSelect: typeof import('primevue/treeselect')['default']
     TreeTable: typeof import('primevue/treetable')['default']
+    UserCardComponent: typeof import('./src/components/UserCardContent.vue')['default']
+    UserCardContent: typeof import('./src/components/UserCardContent.vue')['default']
   }
   export interface ComponentCustomProperties {
     StyleClass: typeof import('primevue/styleclass')['default']

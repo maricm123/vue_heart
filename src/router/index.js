@@ -170,7 +170,7 @@ const router = createRouter({
         {
             path: '/uikit/livetv',
             name: 'livetv',
-            component: () => import('@/views/uikit/LiveTV.vue')
+            component: () => import('@/views/uikit/LiveTVdva.vue')
         },
         
     ]
