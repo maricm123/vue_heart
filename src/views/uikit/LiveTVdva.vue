@@ -14,7 +14,6 @@
     </div>
   </div>
 
-  <!-- RIGHT: Clock -->
   <!-- RIGHT: Custom Clock -->
   <div class="flex flex-col items-end text-white">
     <div class="text-4xl font-bold leading-none">
@@ -30,8 +29,8 @@
     <!-- MAIN CONTENT / GRID -->
 <main class="flex-1 px-8 py-6 overflow-hidden">
   <!-- No users -->
-  <div v-if="activeUsers === 0" class="h-full flex items-center justify-center mt-44">
-    <p class="text-slate-500 text-5xl">No active sessions at the moment</p>
+  <div v-if="activeUsers === 0" class="h-full flex items-center justify-center">
+    <p class="text-slate-500 text-5xl">No active training sessions at the moment</p>
   </div>
 
   <!-- 1+ users → single dynamic grid -->
