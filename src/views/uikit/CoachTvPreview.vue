@@ -329,6 +329,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 }
 
 onMounted(async () => {
+    wsStore.connectCoach()
     try {
         activeSessions.value = await fetchActiveSessions();
     } catch (err) {

@@ -128,6 +128,7 @@ function updateClock() {
     });
 }
 onMounted(() => {
+    wsStore.connectWholeGym()
     updateClock();
     intervalId = setInterval(updateClock, 1000);
     Object.keys(wsStore.bpmsForGym).forEach((clientId) => {

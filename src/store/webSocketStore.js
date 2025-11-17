@@ -27,6 +27,7 @@ export const webSocketStore = defineStore('ws', () => {
     // wsCoach.value = new WebSocket(`ws://13.48.248.110:8000/ws/bpm/?token=${token}`)
     // wsCoach.value = new WebSocket(`wss://heartapp.dev/ws/bpm/?token=${token}`);
     wsCoach.value = new WebSocket(import.meta.env.VITE_WS_COACH_URL + `?token=${token}`);
+    console.log("Connecting to Gym WebSocket...")
 
     wsCoach.value.onopen = () => {
       console.log("✅ User WebSocket connected")
