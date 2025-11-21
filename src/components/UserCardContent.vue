@@ -58,7 +58,7 @@ const bpm = computed(() => bpmsForGym.value[props.clientId] || 0);
 const calories = computed(() => caloriesForGym.value[props.clientId] || 0);
 const name = computed(() => client_name.value[props.clientId] || 'Client Name');
 const duration = computed(() => timersStore.formatDuration(seconds.value[props.clientId]));
-
+console.log(duration, "DURATIONNNNN")
 /* COLOR HELPERS */
 function zoneColor(bpm) {
     if (!bpm) return 'bg-slate-400 text-white';
