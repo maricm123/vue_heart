@@ -40,9 +40,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { webSocketStore } from '@/store/webSocketStore';
-import { useSessionTimersStore } from '@/store/sessionTimerStore';
 import { storeToRefs } from 'pinia';
 
 const props = defineProps({
@@ -50,14 +49,57 @@ const props = defineProps({
 });
 
 const wsStore = webSocketStore();
-const timersStore = useSessionTimersStore();
+const { bpmsForGym, caloriesForGym, client_name, startedAt } = storeToRefs(wsStore);
 
-const { bpmsForGym, caloriesForGym, client_name, seconds } = storeToRefs(wsStore);
-
+// osnovni podaci
 const bpm = computed(() => bpmsForGym.value[props.clientId] || 0);
 const calories = computed(() => caloriesForGym.value[props.clientId] || 0);
 const name = computed(() => client_name.value[props.clientId] || 'Client Name');
-const duration = computed(() => timersStore.formatDuration(seconds.value[props.clientId]));
+const started_at = computed(() => startedAt.value[props.clientId] || null);
+
+// lokalni timer u sekundama
+const elapsedSeconds = ref(0);
+let intervalId = null;
+
+function recalcElapsed() {
+    const start = started_at.value;
+    if (!start) {
+        elapsedSeconds.value = 0;
+        return;
+    }
+
+    // u storu verovatno već čuvaš Date, ali budimo sigurni
+    const startDate = start instanceof Date ? start : new Date(start);
+    if (isNaN(startDate.getTime())) {
+        elapsedSeconds.value = 0;
+        return;
+    }
+
+    elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000);
+}
+
+// format mm:ss
+const duration = computed(() => {
+    const total = elapsedSeconds.value;
+    const mm = String(Math.floor(total / 60)).padStart(2, '0');
+    const ss = String(total % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+});
+
+onMounted(() => {
+    recalcElapsed();
+    intervalId = setInterval(recalcElapsed, 1000);
+});
+
+// ako se started_at promeni (npr. novi trening) – reset i ponovni izračun
+watch(started_at, () => {
+    recalcElapsed();
+});
+
+onBeforeUnmount(() => {
+    if (intervalId) clearInterval(intervalId);
+});
+
 /* COLOR HELPERS */
 function zoneColor(bpm) {
     if (!bpm) return 'bg-slate-400 text-white';

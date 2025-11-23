@@ -42,15 +42,11 @@
 <script setup>
 import { computed, onMounted, watchEffect, ref, onBeforeUnmount } from 'vue';
 import { webSocketStore } from '@/store/webSocketStore';
-import { useSessionTimersStore } from '@/store/sessionTimerStore';
 import { storeToRefs } from 'pinia';
 import UserCardContent from '@/components/UserCardContent.vue';
 
 const wsStore = webSocketStore();
-const { bpmsForGym, caloriesForGym, client_name, seconds } = storeToRefs(wsStore);
-
-const timersStore = useSessionTimersStore();
-const { timers } = storeToRefs(timersStore);
+const { bpmsForGym } = storeToRefs(wsStore);
 
 // entries like before
 const bpmsEntries = computed(() => Object.entries(bpmsForGym.value));
@@ -74,44 +70,41 @@ watchEffect(() => {
     }
 
     if (count === 1) {
-        // one big tile filling the screen
         gridStyle.value = {
             gridTemplateColumns: '1fr',
             gridTemplateRows: '1fr'
         };
     } else if (count === 2) {
-        // two tiles: left / right
         gridStyle.value = {
             gridTemplateColumns: '1fr 1fr',
             gridTemplateRows: '1fr'
         };
     } else if (count <= 4) {
-        // 2x2
         gridStyle.value = {
             gridTemplateColumns: '1fr 1fr',
             gridTemplateRows: '1fr 1fr'
         };
     } else if (count <= 6) {
-        // 3x2
         gridStyle.value = {
             gridTemplateColumns: '1fr 1fr 1fr',
             gridTemplateRows: '1fr 1fr'
         };
     } else {
-        // 3x3 (or more, they’ll wrap inside)
         gridStyle.value = {
             gridTemplateColumns: '1fr 1fr 1fr',
             gridTemplateRows: '1fr 1fr 1fr'
         };
     }
 });
+
+// HEADER clock
 const time = ref('');
 const date = ref('');
 let intervalId = null;
+
 function updateClock() {
     const now = new Date();
 
-    // 24-hour time HH:MM:SS
     time.value = now.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
@@ -119,7 +112,6 @@ function updateClock() {
         hour12: false
     });
 
-    // Date example: Thursday, November 13, 2025
     date.value = now.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -127,46 +119,16 @@ function updateClock() {
         day: 'numeric'
     });
 }
+
 onMounted(() => {
-    wsStore.connectWholeGym()
+    wsStore.connectWholeGym();
     updateClock();
     intervalId = setInterval(updateClock, 1000);
-    Object.keys(wsStore.bpmsForGym).forEach((clientId) => {
-        if (!timersStore.timers[clientId]) timersStore.startTimerFor(clientId);
-    });
 });
 
 onBeforeUnmount(() => {
     clearInterval(intervalId);
 });
-
-// --- helpers for color coding ---
-function zoneColor(bpm) {
-    if (!bpm) return 'bg-slate-400 text-white';
-    if (bpm < 100) return 'bg-green-500 text-white';
-    if (bpm < 130) return 'bg-yellow-400 text-slate-900';
-    if (bpm < 160) return 'bg-orange-500 text-white';
-    if (bpm < 190) return 'bg-red-500 text-white';
-    return 'bg-pink-500 text-white';
-}
-
-function bpmTextColor(bpm) {
-    if (!bpm) return 'text-slate-400';
-    if (bpm < 100) return 'text-green-500';
-    if (bpm < 130) return 'text-yellow-500';
-    if (bpm < 160) return 'text-orange-500';
-    if (bpm < 190) return 'text-red-500';
-    return 'text-pink-500';
-}
-
-function zoneLabel(bpm) {
-    if (!bpm) return 'Zone 0';
-    if (bpm < 100) return 'Zone 1';
-    if (bpm < 130) return 'Zone 2';
-    if (bpm < 160) return 'Zone 3';
-    if (bpm < 190) return 'Zone 4';
-    return 'Zone 5';
-}
 </script>
 
 <style scoped>
