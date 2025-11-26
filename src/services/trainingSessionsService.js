@@ -79,3 +79,17 @@ export async function getTrainingSessionDetailsAndMetrics(sessionId) {
     throw err
   }
 }
+
+export async function deleteTrainingSession(sessionId) {
+  try {
+    const response = await api_coach.delete(`/delete-training-session-detail/${sessionId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error deleting training session:', err);
+    throw err; // re-throw so caller can handle it
+  }
+}

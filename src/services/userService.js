@@ -104,6 +104,6 @@ export async function deleteClient(clientId) {
     return response.data;
   } catch (err) {
     console.error('❌ Error deleting client:', err);
-    throw err;
+    throw err; // important: re-throw the error so the caller can catch it
   }
 }
