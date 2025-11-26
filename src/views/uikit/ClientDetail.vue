@@ -9,11 +9,14 @@ import { getClientDetail } from '@/services/userService';
 import { updateClient } from '@/services/userService';
 import { deleteClient } from '@/services/userService';
 import { useRouter } from 'vue-router';
+import { useToast } from 'primevue/usetoast';
 
-
+// Toast for notifications
+const toast = useToast();
 // route + base state
 const route = useRoute();
 const clientId = route.params.id;
+const displayConfirmation = ref(false);
 
 const breadcrumbHome = ref({ icon: 'pi pi-home', to: '/' });
 const breadcrumbItems = ref([{ label: 'Client list' }, { label: 'Client detail' }]);
@@ -56,15 +59,38 @@ const updateClientFunction = async () => {
     }
 };
 
-const deleteClientFunction = async () => {
-    if (!confirm("Are you sure you want to delete this client?")) return;
+function openConfirmation() {
+    displayConfirmation.value = true;
+}
 
+function closeConfirmation() {
+    displayConfirmation.value = false;
+}
+
+const deleteClientFunction = async () => {
     try {
         await deleteClient(clientId);
-        alert("🗑️ Client deleted successfully!");
-        router.push('/uikit/ClientListOfCoach');  // ✅ Router redirect
+
+        toast.add({
+            severity: "success",
+            summary: "Client Deleted",
+            detail: "The client was deleted successfully.",
+            life: 3000
+        });
+
+        router.push('/uikit/ClientListOfCoach');
     } catch (err) {
-        alert("❌ Failed to delete client");
+        // Extract backend error message
+        const backendError =
+            err.response?.data?.errors?.[0]?.message ||
+            "An unexpected error occurred.";
+
+        toast.add({
+            severity: "error",
+            summary: "Delete Failed",
+            detail: backendError,
+            life: 4000
+        });
     }
 };
 
@@ -137,6 +163,19 @@ const deleteClientFunction = async () => {
         </div>
         <ClientTrainingSessions :clientId="clientId" />
         <h3>Danger zone</h3>
-        <Button label="Delete client" @click="deleteClientFunction" severity="danger" raised />
+        <div class="card">
+                <div class="font-semibold text-xl mb-4">Delete client</div>
+                <Button label="Delete" icon="pi pi-trash" severity="danger" style="width: auto" @click="openConfirmation" />
+                <Dialog header="Confirmation" v-model:visible="displayConfirmation" :style="{ width: '350px' }" :modal="true">
+                    <div class="flex items-center justify-center">
+                        <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
+                        <span>Are you sure you want to delete this client?</span>
+                    </div>
+                    <template #footer>
+                        <Button label="No" icon="pi pi-times" @click="closeConfirmation" text severity="secondary" />
+                        <Button label="Yes" icon="pi pi-check" @click="deleteClientFunction" severity="danger" outlined autofocus />
+                    </template>
+                </Dialog>
+            </div>
     </Fluid>
 </template>
