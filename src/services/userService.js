@@ -93,3 +93,17 @@ export async function updateClient(clientId, client) {
     throw err;
   }
 }
+
+export async function deleteClient(clientId) {
+  try {
+    const response = await api_coach.delete(`/client-delete/${clientId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error deleting client:', err);
+    throw err;
+  }
+}

@@ -3,10 +3,14 @@ import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { api_coach } from '@/services/api';
 import ClientHeartRateChart from '@/components/charts/ClientHeartRateChart.vue';
-import ClientTrainingSessions from '@/views/uikit/ClientTrainingSessions.vue'; // ✅ NEW IMPORT
-import { FilterMatchMode, FilterOperator } from '@primevue/core/api'; // (you can remove if unused now)
-import { getClientDetail } from '@/services/userService'; // adjust path if needed
-import { updateClient } from '@/services/userService'; // adjust path if needed
+import ClientTrainingSessions from '@/views/uikit/ClientTrainingSessions.vue';
+import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
+import { getClientDetail } from '@/services/userService';
+import { updateClient } from '@/services/userService';
+import { deleteClient } from '@/services/userService';
+import { useRouter } from 'vue-router';
+
+
 // route + base state
 const route = useRoute();
 const clientId = route.params.id;
@@ -26,6 +30,8 @@ const client = ref({
 
 const gender = ref('');
 const loading = ref(true);
+
+const router = useRouter();
 
 onMounted(async () => {
     try {
@@ -49,6 +55,19 @@ const updateClientFunction = async () => {
         alert('❌ Failed to update client');
     }
 };
+
+const deleteClientFunction = async () => {
+    if (!confirm("Are you sure you want to delete this client?")) return;
+
+    try {
+        await deleteClient(clientId);
+        alert("🗑️ Client deleted successfully!");
+        router.push('/uikit/ClientListOfCoach');  // ✅ Router redirect
+    } catch (err) {
+        alert("❌ Failed to delete client");
+    }
+};
+
 </script>
 
 <template>
@@ -117,5 +136,7 @@ const updateClientFunction = async () => {
             </div>
         </div>
         <ClientTrainingSessions :clientId="clientId" />
+        <h3>Danger zone</h3>
+        <Button label="Delete client" @click="deleteClientFunction" severity="danger" raised />
     </Fluid>
 </template>
