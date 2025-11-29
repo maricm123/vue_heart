@@ -194,6 +194,7 @@ export const webSocketStore = defineStore('ws', () => {
     const bpmsForGym = reactive({});
     const client = reactive({});
     const client_name = reactive({});
+    const max_heart_rate = reactive({});
     const coach = reactive({});
     const startedAt = reactive({}); // store start timestamp locally
 
@@ -268,11 +269,12 @@ export const webSocketStore = defineStore('ws', () => {
 
                 if (data.client_name) client_name[data.client_id] = data.client_name;
                 if (data.coach_id) coach[data.client_id] = data.coach_id;
+                if (data.max_heart_rate) max_heart_rate[data.client_id] = data.max_heart_rate;
+                
             }
 
-            console.log('RAW started_at:', data.started_at);
-            console.log('PARSED date:', new Date(data.started_at));
             client[data.client_id] = data.client_id;
+            console.log(data.max_heart_rate)
 
             // ---------- METADATA (send once) ----------
             if (!receivedGymMetadata[data.client_id]) {
@@ -352,6 +354,7 @@ export const webSocketStore = defineStore('ws', () => {
         coach,
         client_name,
         startedAt,
+        max_heart_rate,
         connectCoach,
         disconnectCoach,
         connectWholeGym,
