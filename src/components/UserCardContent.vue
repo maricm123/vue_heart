@@ -10,9 +10,14 @@
                 </div>
             </div>
 
-            <span :class="zoneColor(bpm)">{{ zoneLabel(bpm, max_heart_rate_value) }}</span>
-                <!-- {{ zoneLabel(bpm) }} -->
-            <!-- </span> -->
+            <span
+                :class="[
+                    'px-4 py-1 rounded-full text-sm font-semibold uppercase tracking-wide shadow-sm opacity-90 backdrop-blur-sm',
+                    zoneColor(bpm)
+                ]"
+            >
+                {{ zoneLabel(bpm, max_heart_rate_value) }}
+            </span>
         </div>
 
         <!-- DATA SECTION -->
