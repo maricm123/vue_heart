@@ -516,14 +516,14 @@ onUnmounted(() => {
                     </div>
                     <span
                         :class="{
-                            'text-green-500': connectionStatus[session.client.id] === 'connected',
+                            'text-black-500': connectionStatus[session.client.id] === 'connected',
                             'text-yellow-500': connectionStatus[session.client.id] === 'connecting' || connectionStatus[session.client.id] === 'reconnecting',
                             'text-red-500': connectionStatus[session.client.id] === 'disconnected'
                         }"
                     >
                         Device is: {{ connectionStatus[session.client.id] }}
                     </span>
-                    <p v-if="devices[session.client.id] && batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
+                    <p v-if="batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
                 </div>
             </SplitterPanel>
         </Splitter>
