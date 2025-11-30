@@ -11,7 +11,9 @@ import { getClientsByCoach } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import BelgradeClock from '@/components/BelgradeClock.vue';
 
-const connectionStatus = reactive({}); // { clientId: 'connected' | 'connecting' | 'reconnecting' | 'disconnected' }
+import { useBleStore } from '@/store/useBleStore.js';
+const bleStore = useBleStore();
+const { connectionStatus, batteryLevel } = storeToRefs(bleStore);
 
 const { safeIsConnected } = useBle();
 
@@ -23,7 +25,6 @@ import { useSessionTimersStore } from '@/store/sessionTimerStore';
 
 const timersStore = useSessionTimersStore();
 const { timers } = storeToRefs(timersStore);
-const batteryLevel = reactive({}); // batteryLevel[clientId] = percentage
 
 // When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
 const manuallyDisconnecting = reactive({});
@@ -62,6 +63,7 @@ async function open() {
         loadingClients.value = false;
     }
 }
+
 // Remove client & disconnect if needed
 function removeClient(client) {
     // disconnectDevice(client)   // disconnect first
@@ -75,7 +77,8 @@ function onDeviceDisconnected(clientId, deviceId) {
 }
 
 async function connectDevice(client) {
-    connectionStatus[client.id] = 'connecting';
+    // connectionStatus[client.id] = 'connecting';
+    bleStore.setConnection(client.id, 'connecting');
     connectingDevices.value[client.id] = true;
     try {
         await BleClient.initialize();
@@ -87,7 +90,8 @@ async function connectDevice(client) {
         });
 
         console.log('Requested device:', device, device.deviceId);
-        connectionStatus[client.id] = 'connected';
+        // connectionStatus[client.id] = 'connected';
+        bleStore.setConnection(client.id, 'connected');
         // Connect and attach disconnect callback
         await BleClient.connect(device.deviceId, (deviceId) => {
             console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
@@ -127,7 +131,8 @@ async function connectDevice(client) {
         });
 
         const battery = await BleClient.read(device.deviceId, BATTERY_SERVICE, BATTERY_CHARACTERISTIC);
-        batteryLevel[client.id] = battery.getUint8(0);
+        // batteryLevel[client.id] = battery.getUint8(0);
+        bleStore.setBattery(client.id, battery.getUint8(0));
     } catch (err) {
         console.error('BLE error:', err);
     } finally {
@@ -136,7 +141,8 @@ async function connectDevice(client) {
 }
 
 async function reconnectDevice(clientId, deviceId, retries = 50) {
-    connectionStatus[clientId] = 'reconnecting';
+    // connectionStatus[clientId] = 'reconnecting';
+    bleStore.setConnection(clientId, 'reconnecting');
     // 1️⃣ Validate input
     if (!deviceId?.deviceId) {
         console.warn(`Invalid deviceId object for client ${clientId}:`, deviceId);
@@ -161,7 +167,8 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
 
     // 3️⃣ Stop if retries are exhausted
     if (retries <= 0) {
-        connectionStatus[clientId] = 'disconnected';
+        // connectionStatus[clientId] = 'disconnected';
+        bleStore.setConnection(clientId, 'disconnected');
         console.warn(`❌ Reconnect attempts exhausted for client ${clientId}`);
         return;
     }
@@ -176,7 +183,8 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
         });
 
         console.log(`✅ Reconnected device for client ${clientId}:`, deviceId.deviceId);
-        connectionStatus[clientId] = 'connected';
+        // connectionStatus[clientId] = 'connected';
+        bleStore.setConnection(clientId, 'connected');
         // 5️⃣ Store reference
         devices.value[clientId] = deviceId;
 
@@ -213,14 +221,16 @@ async function disconnectDevice(client) {
             await BleClient.disconnect(devices.value[client.id].deviceId);
         }
     } catch (err) {
-        connectionStatus[client.id] = 'disconnected';
+        // connectionStatus[client.id] = 'disconnected';
+        bleStore.setConnection(client.id, 'disconnected');
         console.warn('⚠️ disconnect failed:', err.message);
     }
 
     delete devices.value[client.id];
     delete wsStore.bpmsFromWsCoach[client.id];
     delete sessionsStarted[client.id];
-    connectionStatus[client.id] = 'disconnected';
+    // connectionStatus[client.id] = 'disconnected';
+    bleStore.setConnection(client.id, 'disconnected');
 
     // Unset manual flag after a short delay (to avoid race)
     setTimeout(() => delete manuallyDisconnecting[client.id], 2000);
@@ -329,7 +339,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 }
 
 onMounted(async () => {
-    wsStore.connectCoach()
+    wsStore.connectCoach();
     try {
         activeSessions.value = await fetchActiveSessions();
     } catch (err) {
@@ -506,9 +516,9 @@ onUnmounted(() => {
                     </div>
                     <span
                         :class="{
-                            'text-green-500': connectionStatus === 'connected',
-                            'text-yellow-500': connectionStatus === 'connecting' || connectionStatus === 'reconnecting',
-                            'text-red-500': connectionStatus === 'disconnected'
+                            'text-green-500': connectionStatus[session.client.id] === 'connected',
+                            'text-yellow-500': connectionStatus[session.client.id] === 'connecting' || connectionStatus[session.client.id] === 'reconnecting',
+                            'text-red-500': connectionStatus[session.client.id] === 'disconnected'
                         }"
                     >
                         Device is: {{ connectionStatus[session.client.id] }}
