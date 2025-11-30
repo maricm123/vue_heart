@@ -13,7 +13,7 @@ import BelgradeClock from '@/components/BelgradeClock.vue';
 
 import { useBleStore } from '@/store/useBleStore.js';
 const bleStore = useBleStore();
-const { connectionStatus, batteryLevel } = storeToRefs(bleStore);
+const { connectionStatus, batteryLevel, sessionIds, sessionsStarted } = storeToRefs(bleStore);
 
 const { safeIsConnected } = useBle();
 
@@ -41,8 +41,8 @@ const devices = ref({}); // store device per client { clientId: device }
 const selectedClients = ref([]);
 const wsStore = webSocketStore();
 const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore);
-const sessionsStarted = reactive({});
-const sessionIds = reactive({}); // čuvamo sessionId za svakog clienta
+// const sessionsStarted = reactive({});
+// const sessionIds = reactive({}); // čuvamo sessionId za svakog clienta
 const activeSessions = ref([]);
 
 function fmtStart(iso) {
@@ -121,9 +121,9 @@ async function connectDevice(client) {
 
             wsStore.bpmsFromWsCoach[client.id] = bpm;
 
-            if (sessionsStarted[client.id]) {
+            if (bleStore.isSessionStarted(client.id)) {
                 try {
-                    sendBpmToBackend(client, bpm, device, sessionIds[client.id]);
+                    sendBpmToBackend(client, bpm, device, bleStore.getSessionId(client.id));
                 } catch (err) {
                     console.error('Failed to send BPM:', err);
                 }
@@ -237,77 +237,128 @@ async function disconnectDevice(client) {
 }
 
 // Start session
+// async function startSession(client) {
+//     try {
+//         const response = await createSession(client.id);
+
+//         // Save the session id returned from backend
+//         // Sačuvaj boolean + ID odvojeno
+//         // sessionsStarted[client.id] = true;
+//         // sessionIds[client.id] = response.data.id;
+
+//         bleStore.setSessionStarted(client.id, true);
+//         bleStore.setSessionId(client.id, response.data.id);
+
+//         console.log('✅ Session started', {
+//             clientId: client.id,
+//             started: sessionsStarted[client.id],
+//             sessionId: sessionIds[client.id]
+//         });
+
+//         // Add new active session to list
+//         // activeSessions.value.push(response.data)
+
+//         // 👉 Attach the client object locally so it renders immediately
+//         const newSession = {
+//             ...response.data,
+//             client: client
+//         };
+
+//         // Add new active session to list
+//         activeSessions.value.push(newSession);
+//         removeClient(client); // remove client from selected list
+
+//         // ⏱️ pokreni timer (koristi start sa backenda ako ga vrati)
+//         // startTimerFor(client.id, response.data.start) // ⏱️
+//         timersStore.startTimerFor(client.id, response.data.start);
+//     } catch (err) {
+//         console.error('Failed to start session', err.response?.data || err);
+//     }
+// }
+
 async function startSession(client) {
     try {
         const response = await createSession(client.id);
+        const sessionId = response.data.id;
 
-        // Save the session id returned from backend
-        // Sačuvaj boolean + ID odvojeno
-        sessionsStarted[client.id] = true;
-        sessionIds[client.id] = response.data.id;
+        bleStore.setSessionStarted(client.id, true);
+        bleStore.setSessionId(client.id, sessionId);
 
-        console.log('✅ Session started', {
-            clientId: client.id,
-            started: sessionsStarted[client.id],
-            sessionId: sessionIds[client.id]
+        activeSessions.value.push({
+            ...response.data,
+            client
         });
 
-        // Add new active session to list
-        // activeSessions.value.push(response.data)
+        removeClient(client);
 
-        // 👉 Attach the client object locally so it renders immediately
-        const newSession = {
-            ...response.data,
-            client: client
-        };
-
-        // Add new active session to list
-        activeSessions.value.push(newSession);
-        removeClient(client); // remove client from selected list
-
-        // ⏱️ pokreni timer (koristi start sa backenda ako ga vrati)
-        // startTimerFor(client.id, response.data.start) // ⏱️
         timersStore.startTimerFor(client.id, response.data.start);
     } catch (err) {
-        console.error('Failed to start session', err.response?.data || err);
+        console.error('Failed to start session', err);
     }
 }
 
 // Finish session
+// async function onFinishSession(client, calories, seconds) {
+//     console.log('Calories for client', calories);
+//     console.log('Finish clicked for client:', client.id);
+//     console.log('sessionIds state:', sessionIds);
+//     console.log('SECONDS state:', seconds);
+//     try {
+//         const sessionId = bleStore.getSessionId(client.id); // uzmi pravi ID
+//         if (!sessionId) return;
+
+//         await finishSession(sessionIds[client.id], calories, seconds);
+
+//         // const sec = stopTimerFor(client.id)
+//         const sec = timersStore.stopTimerFor(client.id);
+//         // console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
+
+//         manuallyDisconnecting[client.id] = true;
+
+//         // Kada obrisem jednu sesiju a imam drugu aktivnu, nakon toga se desi da sessionIds je prazno
+//         // sessionIds state: Proxy(Object) {10: 145, 11: 146} ovo mi pokazalo kada sam brisao prvu sesiju, znaci oba objekta trening sesije su tu
+//         // a prikzuje mi prazan state kad zelim da obrisem drugu sesiju
+//         // uopste ne dodje i ne posalje zahtev ka backend za brisanje druge sesije
+//         // delete sessionsStarted[client.id];
+//         // delete sessionIds[client.id];
+
+//         // ✅ Clear from WebSocket store because of LiveTV
+//         wsStore.clearClientData(client.id);
+
+//         bleStore.clearSession(client.id);     // ❗ OVO JE BITNO
+
+//         disconnectDevice(client); // disconnect device when finishing
+
+//         console.log(`✅ Session finished for client ${client.user.first_name}`);
+
+//         activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
+//     } catch (err) {
+//         console.error('Failed to finish session', err.response?.data || err);
+//     }
+// }
+
 async function onFinishSession(client, calories, seconds) {
-    console.log('Calories for client', calories);
-    console.log('Finish clicked for client:', client.id);
-    console.log('sessionIds state:', sessionIds);
-    console.log('SECONDS state:', seconds);
     try {
-        const sessionId = sessionIds[client.id]; // uzmi pravi ID
+        const sessionId = bleStore.getSessionId(client.id);
         if (!sessionId) return;
 
-        await finishSession(sessionIds[client.id], calories, seconds);
+        await finishSession(sessionId, calories, seconds);
 
-        // const sec = stopTimerFor(client.id)
-        const sec = timersStore.stopTimerFor(client.id);
-        // console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
+        timersStore.stopTimerFor(client.id);
 
-        manuallyDisconnecting[client.id] = true;
-
-        // Kada obrisem jednu sesiju a imam drugu aktivnu, nakon toga se desi da sessionIds je prazno
-        // sessionIds state: Proxy(Object) {10: 145, 11: 146} ovo mi pokazalo kada sam brisao prvu sesiju, znaci oba objekta trening sesije su tu
-        // a prikzuje mi prazan state kad zelim da obrisem drugu sesiju
-        // uopste ne dodje i ne posalje zahtev ka backend za brisanje druge sesije
-        delete sessionsStarted[client.id];
-        delete sessionIds[client.id];
-
-        // ✅ Clear from WebSocket store because of LiveTV
         wsStore.clearClientData(client.id);
 
-        disconnectDevice(client); // disconnect device when finishing
+        // bleStore.setManual(client.id, true);
+        manuallyDisconnecting[client.id] = true;
 
-        console.log(`✅ Session finished for client ${client.user.first_name}`);
+        bleStore.clearSession(client.id);
 
-        activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
+        disconnectDevice(client);
+
+        activeSessions.value = activeSessions.value.filter(s => s.id !== sessionId);
+
     } catch (err) {
-        console.error('Failed to finish session', err.response?.data || err);
+        console.error('Failed to finish session', err);
     }
 }
 
