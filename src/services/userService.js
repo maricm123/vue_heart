@@ -12,7 +12,21 @@ export const getCurrentCoach = async () => {
 
 export async function getClientsByCoach() {
   try {
-    const response = await api_coach.get('/get-all-clients-based-on-coach', {
+    const response = await api_coach.get('/get-all-clients-from-coach', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    })
+    return response.data
+  } catch (err) {
+    console.error('❌ Error loading clients:', err)
+    throw err
+  }
+}
+
+export async function getClientsByCoachNotInActiveSession() {
+  try {
+    const response = await api_coach.get('/get-all-clients-from-coach-not-active-session', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },

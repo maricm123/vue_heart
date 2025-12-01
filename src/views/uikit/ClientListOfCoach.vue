@@ -16,7 +16,7 @@ const router = useRouter();
 
 onMounted(async () => {
     try {
-        const response = await api_coach.get('/get-all-clients-based-on-coach', {
+        const response = await api_coach.get('/get-all-clients-from-coach', {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('access')}`
             }

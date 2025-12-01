@@ -7,7 +7,7 @@ import { useBle } from '@/composables/useBle';
 import { fetchActiveSessions, finishSession, createSession } from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
-import { getClientsByCoach } from '@/services/userService.js';
+import { getClientsByCoachNotInActiveSession } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
 import BelgradeClock from '@/components/BelgradeClock.vue';
 
@@ -56,7 +56,7 @@ async function open() {
     display.value = true;
     loadingClients.value = true;
     try {
-        clients.value = await getClientsByCoach();
+        clients.value = await getClientsByCoachNotInActiveSession();
     } catch (err) {
         console.error('Failed to fetch clients:', err);
     } finally {
