@@ -1,8 +1,8 @@
 import { api_coach, api_heart } from './api.js'
 
-export async function fetchActiveSessions() {
+export async function getActiveTrainingSessions() {
   try {
-    const response = await api_coach.get('/active-training-sessions', {
+    const response = await api_coach.get('/get-active-training-sessions', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },

@@ -4,7 +4,7 @@ import { api_heart } from '@/services/api';
 import { formatIsoToLocal } from '@/utils/formatDate';
 import { useSessionTimers } from '@/composables/useSessionTimers';
 import { useBle } from '@/composables/useBle';
-import { fetchActiveSessions, finishSession, createSession } from '@/services/trainingSessionsService.js';
+import { getActiveTrainingSessions, finishSession, createSession } from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import { getClientsByCoachNotInActiveSession } from '@/services/userService.js';
@@ -392,7 +392,7 @@ async function sendBpmToBackend(client, bpm, device, sessionId) {
 onMounted(async () => {
     wsStore.connectCoach();
     try {
-        activeSessions.value = await fetchActiveSessions();
+        activeSessions.value = await getActiveTrainingSessions();
     } catch (err) {
         // već je logovano u servisu, ovde možeš prikazati poruku korisniku
     }
