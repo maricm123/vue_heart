@@ -9,15 +9,13 @@ import StatsWidget from '@/components/dashboard/StatsWidget.vue';
 <template>
     <div class="grid grid-cols-12 gap-8">
         <div class="col-span-12 mb-6">
-    <div class="p-6 rounded-xl shadow bg-white flex justify-between items-center">
-        <div>
-            <h1 class="text-3xl font-bold text-surface-900">Welcome, Coach!</h1>
-            <p class="text-surface-600 text-lg">
-                Here’s what’s happening in your gym right now.
-            </p>
+            <div class="p-6 rounded-xl shadow bg-white flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-surface-900">Welcome, Coach!</h1>
+                    <p class="text-surface-600 text-lg">Here’s what’s happening in your gym right now.</p>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
         <StatsWidget />
 

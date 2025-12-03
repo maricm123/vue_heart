@@ -198,8 +198,15 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
                 const bpm = data[1]; // simple parse
                 wsStore.bpmsFromWsCoach[clientId] = bpm;
 
-                if (sessionsStarted[clientId]) {
-                    sendBpmToBackend({ id: clientId }, bpm, deviceId, sessionIds[clientId]);
+                // if (sessionsStarted[clientId]) {
+                //     sendBpmToBackend({ id: clientId }, bpm, deviceId, sessionIds[clientId]);
+                // }
+                if (bleStore.isSessionStarted(client.id)) {
+                    try {
+                        sendBpmToBackend({ id: clientId }, bpm, deviceId, bleStore.getSessionId(client.id));
+                    } catch (err) {
+                        console.error('Failed to send BPM:', err);
+                    }
                 }
             }
         );
@@ -355,8 +362,7 @@ async function onFinishSession(client, calories, seconds) {
 
         disconnectDevice(client);
 
-        activeSessions.value = activeSessions.value.filter(s => s.id !== sessionId);
-
+        activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
     } catch (err) {
         console.error('Failed to finish session', err);
     }
