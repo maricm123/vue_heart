@@ -195,15 +195,12 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
             '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement
             (value) => {
                 const data = new Uint8Array(value.buffer);
-                const bpm = data[1]; // simple parse
+                const bpm = data[1];
                 wsStore.bpmsFromWsCoach[clientId] = bpm;
 
-                // if (sessionsStarted[clientId]) {
-                //     sendBpmToBackend({ id: clientId }, bpm, deviceId, sessionIds[clientId]);
-                // }
-                if (bleStore.isSessionStarted(client.id)) {
+                if (bleStore.isSessionStarted(clientId)) {
                     try {
-                        sendBpmToBackend({ id: clientId }, bpm, deviceId, bleStore.getSessionId(client.id));
+                        sendBpmToBackend({ id: clientId }, bpm, deviceId, bleStore.getSessionId(clientId));
                     } catch (err) {
                         console.error('Failed to send BPM:', err);
                     }
