@@ -1,4 +1,8 @@
 import { api_coach, api_heart } from './api.js'
+import { storeToRefs } from 'pinia';
+import { useSessionTimersStore } from '@/store/sessionTimerStore';
+const timersStore = useSessionTimersStore();
+const { timers } = storeToRefs(timersStore);
 
 export async function getActiveTrainingSessions() {
   try {
@@ -92,4 +96,20 @@ export async function deleteTrainingSession(sessionId) {
     console.error('❌ Error deleting training session:', err);
     throw err; // re-throw so caller can handle it
   }
+}
+
+
+export async function sendBpmToBackend(client, bpm, device, sessionId) {
+    try {
+        const response = await api_heart.post('/save-heartbeat', {
+            // client: client.id,
+            bpm: bpm,
+            device_id: device.name || device.deviceId || device || 'unknown',
+            seconds: timersStore.timers[client.id] || 0,
+            training_session_id: sessionId || null, // Ako je sesija aktivna
+            timestamp: new Date().toISOString() // opcionalno, ako backend koristi
+        });
+    } catch (err) {
+        console.error('❌ Error sending BPM:', err);
+    }
 }

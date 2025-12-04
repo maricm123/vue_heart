@@ -17,12 +17,11 @@ const { connectionStatus, batteryLevel, sessionIds, sessionsStarted } = storeToR
 
 const { safeIsConnected } = useBle();
 
-import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, parseHeartRate } from '@/utils/bluetooth.js';
+import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, parseHeartRate, startHeartRateNotifications } from '@/utils/bluetooth.js';
 
 const { connect, disconnect, isNative } = useBle();
 // const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
-
 const timersStore = useSessionTimersStore();
 const { timers } = storeToRefs(timersStore);
 
@@ -41,8 +40,6 @@ const devices = ref({}); // store device per client { clientId: device }
 const selectedClients = ref([]);
 const wsStore = webSocketStore();
 const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore);
-// const sessionsStarted = reactive({});
-// const sessionIds = reactive({}); // čuvamo sessionId za svakog clienta
 const activeSessions = ref([]);
 
 function fmtStart(iso) {
@@ -66,7 +63,6 @@ async function open() {
 
 // Remove client & disconnect if needed
 function removeClient(client) {
-    // disconnectDevice(client)   // disconnect first
     const index = selectedClients.value.findIndex((c) => c.id === client.id);
     if (index !== -1) selectedClients.value.splice(index, 1);
 }
@@ -77,7 +73,7 @@ function onDeviceDisconnected(clientId, deviceId) {
 }
 
 async function connectDevice(client) {
-    // connectionStatus[client.id] = 'connecting';
+    const clientId = client.id;
     bleStore.setConnection(client.id, 'connecting');
     connectingDevices.value[client.id] = true;
     try {
@@ -89,22 +85,22 @@ async function connectDevice(client) {
             optionalServices: ['0000180f-0000-1000-8000-00805f9b34fb'] // Battery
         });
 
+        const deviceId = device.deviceId;
+
         console.log('Requested device:', device, device.deviceId);
-        // connectionStatus[client.id] = 'connected';
-        bleStore.setConnection(client.id, 'connected');
         // Connect and attach disconnect callback
         await BleClient.connect(device.deviceId, (deviceId) => {
             console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
-
             // Ignore manual disconnects
             if (manuallyDisconnecting[client.id]) {
                 console.log(`ℹ️ Manual disconnect for client ${client.id}, skipping reconnect.`);
                 return;
             }
-
             // Unexpected disconnect → auto-reconnect
             onDeviceDisconnected(client.id, deviceId);
         });
+
+        bleStore.setConnection(client.id, 'connected');
 
         console.log(devices.value, 'DEVICESSSS');
         if (devices.value[device.deviceId]) {
@@ -116,22 +112,9 @@ async function connectDevice(client) {
 
         console.log('Connected to device:', device);
 
-        await BleClient.startNotifications(device.deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, (value) => {
-            let bpm = parseHeartRate(value);
-
-            wsStore.bpmsFromWsCoach[client.id] = bpm;
-
-            if (bleStore.isSessionStarted(client.id)) {
-                try {
-                    sendBpmToBackend(client, bpm, device, bleStore.getSessionId(client.id));
-                } catch (err) {
-                    console.error('Failed to send BPM:', err);
-                }
-            }
-        });
+        await startHeartRateNotifications(clientId, deviceId);
 
         const battery = await BleClient.read(device.deviceId, BATTERY_SERVICE, BATTERY_CHARACTERISTIC);
-        // batteryLevel[client.id] = battery.getUint8(0);
         bleStore.setBattery(client.id, battery.getUint8(0));
     } catch (err) {
         console.error('BLE error:', err);
@@ -141,7 +124,6 @@ async function connectDevice(client) {
 }
 
 async function reconnectDevice(clientId, deviceId, retries = 50) {
-    // connectionStatus[clientId] = 'reconnecting';
     bleStore.setConnection(clientId, 'reconnecting');
     // 1️⃣ Validate input
     if (!deviceId?.deviceId) {
@@ -189,24 +171,25 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
         devices.value[clientId] = deviceId;
 
         // 6️⃣ Restart heart rate notifications
-        await BleClient.startNotifications(
-            deviceId.deviceId,
-            '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-            '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement
-            (value) => {
-                const data = new Uint8Array(value.buffer);
-                const bpm = data[1];
-                wsStore.bpmsFromWsCoach[clientId] = bpm;
+        // await BleClient.startNotifications(
+        //     deviceId.deviceId,
+        //     '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
+        //     '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement
+        //     (value) => {
+        //         const data = new Uint8Array(value.buffer);
+        //         const bpm = data[1];
+        //         wsStore.bpmsFromWsCoach[clientId] = bpm;
 
-                if (bleStore.isSessionStarted(clientId)) {
-                    try {
-                        sendBpmToBackend({ id: clientId }, bpm, deviceId, bleStore.getSessionId(clientId));
-                    } catch (err) {
-                        console.error('Failed to send BPM:', err);
-                    }
-                }
-            }
-        );
+        //         if (bleStore.isSessionStarted(clientId)) {
+        //             try {
+        //                 sendBpmToBackend({ id: clientId }, bpm, deviceId, bleStore.getSessionId(clientId));
+        //             } catch (err) {
+        //                 console.error('Failed to send BPM:', err);
+        //             }
+        //         }
+        //     }
+        // );
+        await startHeartRateNotifications(clientId, deviceId.deviceId);
 
         console.log(`📡 Notifications restarted for client ${clientId}`);
     } catch (err) {
@@ -233,52 +216,12 @@ async function disconnectDevice(client) {
     delete devices.value[client.id];
     delete wsStore.bpmsFromWsCoach[client.id];
     delete sessionsStarted[client.id];
-    // connectionStatus[client.id] = 'disconnected';
     bleStore.setConnection(client.id, 'disconnected');
 
     // Unset manual flag after a short delay (to avoid race)
     setTimeout(() => delete manuallyDisconnecting[client.id], 2000);
 }
 
-// Start session
-// async function startSession(client) {
-//     try {
-//         const response = await createSession(client.id);
-
-//         // Save the session id returned from backend
-//         // Sačuvaj boolean + ID odvojeno
-//         // sessionsStarted[client.id] = true;
-//         // sessionIds[client.id] = response.data.id;
-
-//         bleStore.setSessionStarted(client.id, true);
-//         bleStore.setSessionId(client.id, response.data.id);
-
-//         console.log('✅ Session started', {
-//             clientId: client.id,
-//             started: sessionsStarted[client.id],
-//             sessionId: sessionIds[client.id]
-//         });
-
-//         // Add new active session to list
-//         // activeSessions.value.push(response.data)
-
-//         // 👉 Attach the client object locally so it renders immediately
-//         const newSession = {
-//             ...response.data,
-//             client: client
-//         };
-
-//         // Add new active session to list
-//         activeSessions.value.push(newSession);
-//         removeClient(client); // remove client from selected list
-
-//         // ⏱️ pokreni timer (koristi start sa backenda ako ga vrati)
-//         // startTimerFor(client.id, response.data.start) // ⏱️
-//         timersStore.startTimerFor(client.id, response.data.start);
-//     } catch (err) {
-//         console.error('Failed to start session', err.response?.data || err);
-//     }
-// }
 
 async function startSession(client) {
     try {
