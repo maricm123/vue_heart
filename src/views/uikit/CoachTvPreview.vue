@@ -165,30 +165,11 @@ async function reconnectDevice(clientId, deviceId, retries = 50) {
         });
 
         console.log(`✅ Reconnected device for client ${clientId}:`, deviceId.deviceId);
-        // connectionStatus[clientId] = 'connected';
         bleStore.setConnection(clientId, 'connected');
+        
         // 5️⃣ Store reference
         devices.value[clientId] = deviceId;
 
-        // 6️⃣ Restart heart rate notifications
-        // await BleClient.startNotifications(
-        //     deviceId.deviceId,
-        //     '0000180d-0000-1000-8000-00805f9b34fb', // Heart Rate Service
-        //     '00002a37-0000-1000-8000-00805f9b34fb', // Heart Rate Measurement
-        //     (value) => {
-        //         const data = new Uint8Array(value.buffer);
-        //         const bpm = data[1];
-        //         wsStore.bpmsFromWsCoach[clientId] = bpm;
-
-        //         if (bleStore.isSessionStarted(clientId)) {
-        //             try {
-        //                 sendBpmToBackend({ id: clientId }, bpm, deviceId, bleStore.getSessionId(clientId));
-        //             } catch (err) {
-        //                 console.error('Failed to send BPM:', err);
-        //             }
-        //         }
-        //     }
-        // );
         await startHeartRateNotifications(clientId, deviceId.deviceId);
 
         console.log(`📡 Notifications restarted for client ${clientId}`);
@@ -208,7 +189,6 @@ async function disconnectDevice(client) {
             await BleClient.disconnect(devices.value[client.id].deviceId);
         }
     } catch (err) {
-        // connectionStatus[client.id] = 'disconnected';
         bleStore.setConnection(client.id, 'disconnected');
         console.warn('⚠️ disconnect failed:', err.message);
     }
@@ -318,21 +298,6 @@ function selectClient(client) {
 
 function isSelected(client) {
     return selectedClients.value.some((c) => c.id === client.id);
-}
-
-async function sendBpmToBackend(client, bpm, device, sessionId) {
-    try {
-        const response = await api_heart.post('/save-heartbeat', {
-            // client: client.id,
-            bpm: bpm,
-            device_id: device.name || device.deviceId || device || 'unknown',
-            seconds: timersStore.timers[client.id] || 0,
-            training_session_id: sessionId || null, // Ako je sesija aktivna
-            timestamp: new Date().toISOString() // opcionalno, ako backend koristi
-        });
-    } catch (err) {
-        console.error('❌ Error sending BPM:', err);
-    }
 }
 
 onMounted(async () => {
