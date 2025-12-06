@@ -224,46 +224,6 @@ async function startSession(client) {
     }
 }
 
-// Finish session
-// async function onFinishSession(client, calories, seconds) {
-//     console.log('Calories for client', calories);
-//     console.log('Finish clicked for client:', client.id);
-//     console.log('sessionIds state:', sessionIds);
-//     console.log('SECONDS state:', seconds);
-//     try {
-//         const sessionId = bleStore.getSessionId(client.id); // uzmi pravi ID
-//         if (!sessionId) return;
-
-//         await finishSession(sessionIds[client.id], calories, seconds);
-
-//         // const sec = stopTimerFor(client.id)
-//         const sec = timersStore.stopTimerFor(client.id);
-//         // console.log(`⏱️ Session duration for ${client.user.first_name}: ${sec}s (${formatDuration(sec)})`)
-
-//         manuallyDisconnecting[client.id] = true;
-
-//         // Kada obrisem jednu sesiju a imam drugu aktivnu, nakon toga se desi da sessionIds je prazno
-//         // sessionIds state: Proxy(Object) {10: 145, 11: 146} ovo mi pokazalo kada sam brisao prvu sesiju, znaci oba objekta trening sesije su tu
-//         // a prikzuje mi prazan state kad zelim da obrisem drugu sesiju
-//         // uopste ne dodje i ne posalje zahtev ka backend za brisanje druge sesije
-//         // delete sessionsStarted[client.id];
-//         // delete sessionIds[client.id];
-
-//         // ✅ Clear from WebSocket store because of LiveTV
-//         wsStore.clearClientData(client.id);
-
-//         bleStore.clearSession(client.id);     // ❗ OVO JE BITNO
-
-//         disconnectDevice(client); // disconnect device when finishing
-
-//         console.log(`✅ Session finished for client ${client.user.first_name}`);
-
-//         activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
-//     } catch (err) {
-//         console.error('Failed to finish session', err.response?.data || err);
-//     }
-// }
-
 async function onFinishSession(client, calories, seconds) {
     try {
         const sessionId = bleStore.getSessionId(client.id);
