@@ -27,6 +27,28 @@ const { timers } = storeToRefs(timersStore);
 
 // When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
 const manuallyDisconnecting = reactive({});
+const manualDisconnects = reactive({});
+
+// kad ručno diskonektuješ
+function markManualDisconnect(clientId, deviceId) {
+    if (!manualDisconnects[clientId]) {
+        manualDisconnects[clientId] = {};
+    }
+    manualDisconnects[clientId][deviceId] = true;
+}
+
+function isManualDisconnect(clientId, deviceId) {
+    return !!manualDisconnects[clientId]?.[deviceId];
+}
+
+function consumeManualDisconnect(clientId, deviceId) {
+    if (manualDisconnects[clientId]) {
+        delete manualDisconnects[clientId][deviceId];
+        if (Object.keys(manualDisconnects[clientId]).length === 0) {
+            delete manualDisconnects[clientId];
+        }
+    }
+}
 
 const _intervals = {};
 const loadingClients = ref(false);
@@ -88,12 +110,12 @@ async function connectDevice(client) {
         const deviceId = device.deviceId;
 
         console.log('Requested device:', device, device.deviceId);
-        // Connect and attach disconnect callback
         await BleClient.connect(device.deviceId, (deviceId) => {
             console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
-            // Ignore manual disconnects
-            if (manuallyDisconnecting[client.id]) {
+
+            if (isManualDisconnect(client.id, deviceId)) {
                 console.log(`ℹ️ Manual disconnect for client ${client.id}, skipping reconnect.`);
+                consumeManualDisconnect(client.id, deviceId);
                 return;
             }
             // Unexpected disconnect → auto-reconnect
@@ -123,85 +145,107 @@ async function connectDevice(client) {
     }
 }
 
-async function reconnectDevice(clientId, deviceId, retries = 50) {
+async function reconnectDevice(clientId, deviceInfo, retries = 50) {
     bleStore.setConnection(clientId, 'reconnecting');
+
     // 1️⃣ Validate input
-    if (!deviceId?.deviceId) {
-        console.warn(`Invalid deviceId object for client ${clientId}:`, deviceId);
+    if (!deviceInfo?.deviceId) {
+        console.warn(`Invalid deviceInfo for client ${clientId}:`, deviceInfo);
         return;
     }
-    if (manuallyDisconnecting[clientId]) {
-        console.log(`🛑 Skipping reconnect — manual disconnect for client ${clientId}`);
+
+    const deviceId = deviceInfo.deviceId; // string
+
+    // 1.1️⃣ Ako je ovo zapravo manual disconnect → ne reconnectuj
+    if (isManualDisconnect(clientId, deviceId)) {
+        console.log(`🛑 Skipping reconnect — manual disconnect for client ${clientId}, device ${deviceId}`);
+        consumeManualDisconnect(clientId, deviceId);
         return;
     }
 
     // 2️⃣ Stop if already connected
     try {
-        // const connected = await BleClient.isConnected(deviceId.deviceId);
-        const connected = await safeIsConnected(deviceId.deviceId);
+        const connected = await safeIsConnected(deviceId);
         if (connected) {
-            console.log(`✅ Device ${deviceId.deviceId} already connected (client ${clientId})`);
+            console.log(`✅ Device ${deviceId} already connected (client ${clientId})`);
             return;
         }
     } catch (err) {
-        console.warn(`⚠️ Error checking connection for ${deviceId.deviceId}:`, err);
+        console.warn(`⚠️ Error checking connection for ${deviceId}:`, err);
     }
 
     // 3️⃣ Stop if retries are exhausted
     if (retries <= 0) {
-        // connectionStatus[clientId] = 'disconnected';
         bleStore.setConnection(clientId, 'disconnected');
         console.warn(`❌ Reconnect attempts exhausted for client ${clientId}`);
         return;
     }
 
-    console.log(`🔄 Trying to reconnect client ${clientId}... (${retries} left)`, deviceId.deviceId);
+    console.log(`🔄 Trying to reconnect client ${clientId}... (${retries} left)`, deviceId);
 
     try {
         // 4️⃣ Try to reconnect
-        await BleClient.connect(deviceId.deviceId, () => {
-            console.warn(`⚠️ Device disconnected again for client ${clientId}`);
-            reconnectDevice(clientId, deviceId, retries - 1);
+        await BleClient.connect(deviceId, (disconnectedDeviceId) => {
+            console.warn(`⚠️ Device disconnected again for client ${clientId}:`, disconnectedDeviceId);
+
+            if (isManualDisconnect(clientId, disconnectedDeviceId)) {
+                console.log(`ℹ️ Manual disconnect during reconnect loop for client ${clientId}, device ${disconnectedDeviceId}`);
+                consumeManualDisconnect(clientId, disconnectedDeviceId);
+                return;
+            }
+
+            reconnectDevice(clientId, { deviceId: disconnectedDeviceId }, retries - 1);
         });
 
-        console.log(`✅ Reconnected device for client ${clientId}:`, deviceId.deviceId);
+        console.log(`✅ Reconnected device for client ${clientId}:`, deviceId);
         bleStore.setConnection(clientId, 'connected');
-        
-        // 5️⃣ Store reference
-        devices.value[clientId] = deviceId;
 
-        await startHeartRateNotifications(clientId, deviceId.deviceId);
+        // 5️⃣ Store reference – sada uvek čuvamo minimalni objekat { deviceId }
+        devices.value[clientId] = { deviceId };
+
+        await startHeartRateNotifications(clientId, deviceId);
 
         console.log(`📡 Notifications restarted for client ${clientId}`);
     } catch (err) {
         console.warn(`⚠️ Reconnect failed for ${clientId}, retrying...`, err.message);
-        setTimeout(() => reconnectDevice(clientId, deviceId, retries - 1), 2000);
+        setTimeout(() => reconnectDevice(clientId, { deviceId }, retries - 1), 2000);
     }
 }
 
 async function disconnectDevice(client) {
-    console.log('Disconnecting device for client', client.id);
-    manuallyDisconnecting[client.id] = true; // 👈 mark manual disconnect
+    const clientId = client.id;
+    const device = devices.value[clientId];
+    console.log(device, "DEVICE TO DISCONNECT");
 
-    try {
-        if (devices.value[client.id]) {
-            await BleClient.stopNotifications(devices.value[client.id].deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
-            await BleClient.disconnect(devices.value[client.id].deviceId);
-        }
-    } catch (err) {
-        bleStore.setConnection(client.id, 'disconnected');
-        console.warn('⚠️ disconnect failed:', err.message);
+    console.log('Disconnecting device for client', clientId);
+
+    if (!device) {
+        console.log('No device found for client', clientId);
+        return;
     }
 
-    delete devices.value[client.id];
-    delete wsStore.bpmsFromWsCoach[client.id];
-    delete sessionsStarted[client.id];
-    bleStore.setConnection(client.id, 'disconnected');
+    const deviceId = device.deviceId;
+    markManualDisconnect(clientId, deviceId);
 
-    // Unset manual flag after a short delay (to avoid race)
-    setTimeout(() => delete manuallyDisconnecting[client.id], 2000);
+    try {
+        await BleClient.stopNotifications(deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
+        await BleClient.disconnect(deviceId);
+
+        try {
+            const stillConnected = await safeIsConnected(deviceId);
+            console.log(`🔎 After manual disconnect, isConnected(${deviceId}) =`, stillConnected);
+        } catch (e) {
+            console.log(`🔎 After manual disconnect, safeIsConnected threw (što je ok):`, e?.message || e);
+        }
+    } catch (err) {
+        console.warn('⚠️ disconnect failed:', err.message);
+    } finally {
+        delete devices.value[clientId];
+        delete wsStore.bpmsFromWsCoach[clientId];
+        delete sessionsStarted[clientId];
+        bleStore.setConnection(clientId, 'disconnected');
+    }
 }
-
 
 async function startSession(client) {
     try {
@@ -236,7 +280,7 @@ async function onFinishSession(client, calories, seconds) {
         wsStore.clearClientData(client.id);
 
         // bleStore.setManual(client.id, true);
-        manuallyDisconnecting[client.id] = true;
+        // manuallyDisconnecting[client.id] = true;
 
         bleStore.clearSession(client.id);
 
@@ -377,7 +421,8 @@ onUnmounted(() => {
                                 :disabled="connectingDevices[client.id]"
                                 @click="connectDevice(client)"
                             />
-                            <Button v-else label="Disconnect Device" severity="danger" @click="disconnect(client)" />
+                            <!-- <Button v-else label="Disconnect Device" severity="danger" @click="disconnect(client)" /> -->
+                            <Button v-else label="Disconnect Device" severity="danger" @click="disconnectDevice(client)" />
                         </div>
 
                         <!-- Show BPM and Start Session only when connected -->
