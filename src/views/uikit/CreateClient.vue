@@ -26,6 +26,10 @@ const heightValue = ref(null);
 const calendarValue = ref(null); // Date or ISO string depending on your DatePicker
 const selectButtonValue = ref(null); // { name: 'Male' } or { name: 'Female' }
 
+const max_heart_rate = ref(null);
+
+const auto_calculate_max_hr = ref(false);
+
 // other UI state
 const message = ref('');
 const formError = ref(null);
@@ -39,7 +43,8 @@ const touched = {
     weightValue: ref(false),
     heightValue: ref(false),
     calendarValue: ref(false),
-    selectButtonValue: ref(false)
+    selectButtonValue: ref(false),
+    max_heart_rate: ref(false)
 };
 
 // used to show errors after first submit attempt as well
@@ -69,6 +74,18 @@ function normalizeDateToYYYYMMDD(d) {
     return null;
 }
 
+function validateMaxHeartRate(v) {
+    // ✅ prazno je dozvoljeno
+    if (v === null || v === undefined || v === '') return null;
+
+    const num = Number(v);
+    if (Number.isNaN(num)) return 'Max heart rate must be a number.';
+    if (num > 250) return 'Max heart rate cannot be above 250.';
+    if (num < 50) return 'Max heart rate cannot be below 50.';
+
+    return null;
+}
+
 // computed: form validity
 const isFormValid = computed(() => {
     return (
@@ -80,7 +97,8 @@ const isFormValid = computed(() => {
         isNonEmptyString(selectButtonValue.value.name) &&
         isPositiveNumber(weightValue.value) &&
         isPositiveNumber(heightValue.value) &&
-        !!normalizeDateToYYYYMMDD(calendarValue.value)
+        !!normalizeDateToYYYYMMDD(calendarValue.value) &&
+        !validateMaxHeartRate(max_heart_rate.value)
     );
 });
 
@@ -115,6 +133,8 @@ function getFieldError(field) {
         case 'selectButtonValue':
             if (!selectButtonValue.value || !selectButtonValue.value.name) return 'Please select gender.';
             return null;
+        case 'max_heart_rate':
+            return validateMaxHeartRate(max_heart_rate.value);
         default:
             return null;
     }
@@ -156,7 +176,9 @@ async function createClientFunction() {
         birthDate: normalizeDateToYYYYMMDD(calendarValue.value),
         phoneNumber: selectedPrefix.value + phoneNumber.value,
         weight: Number(weightValue.value),
-        height: Number(heightValue.value)
+        height: Number(heightValue.value),
+        max_heart_rate: max_heart_rate.value ? Number(max_heart_rate.value) : null,
+        auto_calculate_max_hr: auto_calculate_max_hr.value
     };
 
     try {
@@ -250,10 +272,6 @@ function markTouched(name) {
                     <SelectButton v-model="selectButtonValue" :options="[{ name: 'Male' }, { name: 'Female' }]" optionLabel="name" @blur="markTouched('selectButtonValue')" />
                     <div v-if="getFieldError('selectButtonValue')" class="text-red-600 text-sm">{{ getFieldError('selectButtonValue') }}</div>
 
-                    <!-- Description -->
-                    <label class="mb-1 font-medium mt-4">Describe client</label>
-                    <Textarea placeholder="Description" v-model="description" :autoResize="true" rows="3" cols="30" />
-
                     <!-- Birth date -->
                     <label class="mb-1 font-medium mt-4">Birth date</label>
                     <DatePicker v-model="calendarValue" :showIcon="true" :showButtonBar="true" @blur="markTouched('calendarValue')" />
@@ -268,39 +286,41 @@ function markTouched(name) {
                     <label class="mb-1 font-medium">Height (cm)</label>
                     <InputNumber v-model="heightValue" showButtons mode="decimal" @blur="markTouched('heightValue')" />
                     <div v-if="getFieldError('heightValue')" class="text-red-600 text-sm">{{ getFieldError('heightValue') }}</div>
+                    <!-- Description -->
+                    <label class="mb-1 font-medium mt-4">Additional Informations</label>
+                    <Textarea placeholder="Informations" v-model="description" :autoResize="true" rows="3" cols="30" />
                 </div>
             </div>
 
             <div class="md:w-1/2">
                 <div class="card flex flex-col gap-4">
-                    <div class="font-semibold text-xl">Extras</div>
-                    <div class="font-semibold text-xl">Listbox</div>
-                    <Listbox v-model="listboxValue" :options="listboxValues" optionLabel="name" :filter="true" />
+                    <div class="font-semibold text-xl">Other metrics</div>
 
-                    <div class="font-semibold text-xl">Select</div>
-                    <Select v-model="dropdownValue" :options="dropdownValues" optionLabel="name" placeholder="Select" />
+                    <!-- Height -->
+                    <label class="mb-1 mt-4 font-medium">Maximal heart rate</label>
+                    <InputNumber v-model="max_heart_rate" :useGrouping="false" showButtons mode="decimal" @blur="markTouched('max_heart_rate')" />
 
-                    <div class="font-semibold text-xl">MultiSelect</div>
-                    <MultiSelect v-model="multiselectValue" :options="multiselectValues" optionLabel="name" placeholder="Select Countries" :filter="true">
-                        <template #value="slotProps">
-                            <div class="inline-flex items-center py-1 px-2 bg-primary text-primary-contrast rounded-border mr-2" v-for="option of slotProps.value" :key="option.code">
-                                <span :class="'mr-2 flag flag-' + option.code.toLowerCase()" style="width: 18px; height: 12px" />
-                                <div>{{ option.name }}</div>
-                            </div>
-                            <template v-if="!slotProps.value || slotProps.value.length === 0">
-                                <div class="p-1">Select Countries</div>
-                            </template>
-                        </template>
-                        <template #option="slotProps">
-                            <div class="flex items-center">
-                                <span :class="'mr-2 flag flag-' + slotProps.option.code.toLowerCase()" style="width: 18px; height: 12px" />
-                                <div>{{ slotProps.option.name }}</div>
-                            </div>
-                        </template>
-                    </MultiSelect>
-
-                    <div class="font-semibold text-xl">TreeSelect</div>
-                    <TreeSelect v-model="selectedNode" :options="treeSelectNodes" placeholder="Select Item"></TreeSelect>
+                    <div v-if="getFieldError('max_heart_rate')" class="text-red-600 text-sm">
+                        {{ getFieldError('max_heart_rate') }}
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex items-center">
+                            <Checkbox id="checkOption1" name="option" v-model="auto_calculate_max_hr" :binary="true" />
+                            <label for="checkOption1" class="ml-2"> Auto calculate maximal heart rate based on age </label>
+                            <div class="card"></div>
+                        </div>
+                    </div>
+                    <Fieldset legend="How this setting works" :toggleable="true">
+                        <p class="leading-normal m-0">The maximal heart rate field is used to calculate training zones and the % of maximum effort shown in LiveTV and reports. If you enter a value here, that manual value will always be used.</p>
+                        <p class="leading-normal mt-3">
+                            If you leave this field empty and enable “Auto calculate maximal heart rate based on age”, the system will estimate the client’s maximal heart rate from their age using a standard formula. This value is only an
+                            approximation and can be adjusted manually at any time if you have a more accurate test result.
+                        </p>
+                        <p class="leading-normal mt-3">
+                            If you leave the field empty and do <strong>not</strong> enable the auto calculation option, the client will only see their raw heart rate. Training zones, zone colors and “current zone” information will not be shown for
+                            this client.
+                        </p>
+                    </Fieldset>
                 </div>
 
                 <!-- backend errors -->

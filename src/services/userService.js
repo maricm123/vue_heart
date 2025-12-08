@@ -51,6 +51,8 @@ export async function createClient(payload = {}) {
       gender: payload.gender,
       weight: payload.weight,
       height: payload.height,
+      max_heart_rate: payload.max_heart_rate,
+      auto_calculate_max_hr: payload.auto_calculate_max_hr,
     };
 
     const response = await api_coach.post('/create-client', allowed, {
