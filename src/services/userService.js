@@ -87,10 +87,12 @@ const formatDateToYMD = (date) => {
   const d = new Date(date)
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
-export async function updateClient(clientId, client) {
+export async function updateClient(clientId, client, max_heart_rate, auto_calculate_max_hr) {
   try {
     const payload = {
       ...client,
+      max_heart_rate,
+      auto_calculate_max_hr,
       user: {
         ...client.user,
         birth_date: formatDateToYMD(client.user.birth_date),

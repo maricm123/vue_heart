@@ -10,7 +10,7 @@ import { updateClient } from '@/services/userService';
 import { deleteClient } from '@/services/userService';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
-
+import MaxHeartRateField from '@/components/MaxHeartRateField.vue';
 // Toast for notifications
 const toast = useToast();
 // route + base state
@@ -28,7 +28,17 @@ const client = ref({
     user: { first_name: '', last_name: '', email: '', birth_date: null },
     height: null,
     weight: null,
-    gender: null
+    gender: null,
+    max_heart_rate: null
+});
+
+// Max HR local reactive state
+const max_heart_rate = ref(null);
+const auto_calculate_max_hr = ref(false);
+
+// track touched fields
+const touched = ref({
+    max_heart_rate: false
 });
 
 const gender = ref('');
@@ -41,6 +51,8 @@ onMounted(async () => {
         const res = await getClientDetail(clientId);
         client.value = res;
         gender.value = res.gender;
+        max_heart_rate.value = res.max_heart_rate;
+        auto_calculate_max_hr.value = res.auto_calculate_max_hr ?? false;
     } catch (err) {
         console.error('Failed to fetch client:', err);
     } finally {
@@ -52,7 +64,7 @@ watch(gender, (val) => (client.value.gender = val));
 
 const updateClientFunction = async () => {
     try {
-        await updateClient(clientId, client.value);
+        await updateClient(clientId, client.value, max_heart_rate.value, auto_calculate_max_hr.value);
         alert('✅ Client updated successfully!');
     } catch (err) {
         alert('❌ Failed to update client');
@@ -72,28 +84,25 @@ const deleteClientFunction = async () => {
         await deleteClient(clientId);
 
         toast.add({
-            severity: "success",
-            summary: "Client Deleted",
-            detail: "The client was deleted successfully.",
+            severity: 'success',
+            summary: 'Client Deleted',
+            detail: 'The client was deleted successfully.',
             life: 3000
         });
 
         router.push('/uikit/ClientListOfCoach');
     } catch (err) {
         // Extract backend error message
-        const backendError =
-            err.response?.data?.errors?.[0]?.message ||
-            "An unexpected error occurred.";
+        const backendError = err.response?.data?.errors?.[0]?.message || 'An unexpected error occurred.';
 
         toast.add({
-            severity: "error",
-            summary: "Delete Failed",
+            severity: 'error',
+            summary: 'Delete Failed',
             detail: backendError,
             life: 4000
         });
     }
 };
-
 </script>
 
 <template>
@@ -154,28 +163,26 @@ const deleteClientFunction = async () => {
             </div>
             <div class="md:w-1/2">
                 <div class="card flex flex-col gap-4">
-                    <label class="mb-1 font-medium">Max heart rate</label>
-                    <input v-model="client.max_heart_rate" type="text" class="border rounded-lg p-1 bg-gray-100 dark:bg-gray-700 dark:text-gray-100" />
+                    <MaxHeartRateField v-model="max_heart_rate" :autoCalculate="auto_calculate_max_hr" @update:autoCalculate="auto_calculate_max_hr = $event" :touched="touched.max_heart_rate" @blur="touched.max_heart_rate = true" />
                 </div>
                 <button @click="updateClientFunction" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Update metrics</button>
-                <!-- <ClientHeartRateChart :zones="hrZones" /> -->
             </div>
         </div>
         <ClientTrainingSessions :clientId="clientId" />
         <h3>Danger zone</h3>
         <div class="card">
-                <div class="font-semibold text-xl mb-4">Delete client</div>
-                <Button label="Delete" icon="pi pi-trash" severity="danger" style="width: auto" @click="openConfirmation" />
-                <Dialog header="Confirmation" v-model:visible="displayConfirmation" :style="{ width: '350px' }" :modal="true">
-                    <div class="flex items-center justify-center">
-                        <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
-                        <span>Are you sure you want to delete this client?</span>
-                    </div>
-                    <template #footer>
-                        <Button label="No" icon="pi pi-times" @click="closeConfirmation" text severity="secondary" />
-                        <Button label="Yes" icon="pi pi-check" @click="deleteClientFunction" severity="danger" outlined autofocus />
-                    </template>
-                </Dialog>
-            </div>
+            <div class="font-semibold text-xl mb-4">Delete client</div>
+            <Button label="Delete" icon="pi pi-trash" severity="danger" style="width: auto" @click="openConfirmation" />
+            <Dialog header="Confirmation" v-model:visible="displayConfirmation" :style="{ width: '350px' }" :modal="true">
+                <div class="flex items-center justify-center">
+                    <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
+                    <span>Are you sure you want to delete this client?</span>
+                </div>
+                <template #footer>
+                    <Button label="No" icon="pi pi-times" @click="closeConfirmation" text severity="secondary" />
+                    <Button label="Yes" icon="pi pi-check" @click="deleteClientFunction" severity="danger" outlined autofocus />
+                </template>
+            </Dialog>
+        </div>
     </Fluid>
 </template>

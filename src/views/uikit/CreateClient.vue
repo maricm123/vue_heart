@@ -4,6 +4,7 @@ import { CountryService } from '@/service/CountryService';
 import { NodeService } from '@/service/NodeService';
 import { onMounted } from 'vue';
 import { createClient } from '@/services/userService';
+import MaxHeartRateField from '@/components/MaxHeartRateField.vue';
 
 // --- phone prefixes ---
 const selectedPrefix = ref('+381');
@@ -295,32 +296,7 @@ function markTouched(name) {
             <div class="md:w-1/2">
                 <div class="card flex flex-col gap-4">
                     <div class="font-semibold text-xl">Other metrics</div>
-
-                    <!-- Height -->
-                    <label class="mb-1 mt-4 font-medium">Maximal heart rate</label>
-                    <InputNumber v-model="max_heart_rate" :useGrouping="false" showButtons mode="decimal" @blur="markTouched('max_heart_rate')" />
-
-                    <div v-if="getFieldError('max_heart_rate')" class="text-red-600 text-sm">
-                        {{ getFieldError('max_heart_rate') }}
-                    </div>
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="flex items-center">
-                            <Checkbox id="checkOption1" name="option" v-model="auto_calculate_max_hr" :binary="true" />
-                            <label for="checkOption1" class="ml-2"> Auto calculate maximal heart rate based on age </label>
-                            <div class="card"></div>
-                        </div>
-                    </div>
-                    <Fieldset legend="How this setting works" :toggleable="true">
-                        <p class="leading-normal m-0">The maximal heart rate field is used to calculate training zones and the % of maximum effort shown in LiveTV and reports. If you enter a value here, that manual value will always be used.</p>
-                        <p class="leading-normal mt-3">
-                            If you leave this field empty and enable “Auto calculate maximal heart rate based on age”, the system will estimate the client’s maximal heart rate from their age using a standard formula. This value is only an
-                            approximation and can be adjusted manually at any time if you have a more accurate test result.
-                        </p>
-                        <p class="leading-normal mt-3">
-                            If you leave the field empty and do <strong>not</strong> enable the auto calculation option, the client will only see their raw heart rate. Training zones, zone colors and “current zone” information will not be shown for
-                            this client.
-                        </p>
-                    </Fieldset>
+                    <MaxHeartRateField v-model="max_heart_rate" :autoCalculate="auto_calculate_max_hr" @update:autoCalculate="auto_calculate_max_hr = $event" :touched="touched.max_heart_rate" @blur="markTouched('max_heart_rate')" />
                 </div>
 
                 <!-- backend errors -->
