@@ -9,14 +9,12 @@
                 </div>
             </div>
 
-            <span
-                :class="[
-                    'px-4 py-1 rounded-full text-sm font-semibold uppercase tracking-wide shadow-sm opacity-90 backdrop-blur-sm',
-                    zoneColor(bpm)
-                ]"
-            >
+            <span v-if="max_heart_rate_value" :class="['px-4 py-1 rounded-full text-sm font-semibold uppercase tracking-wide shadow-sm opacity-90 backdrop-blur-sm', zoneColor(bpm)]">
                 {{ zoneLabel(bpm, max_heart_rate_value) }}
             </span>
+
+            <!-- Ako nema max HR, prikaži neutralni badge -->
+            <span v-else class="px-4 py-1 rounded-full text-sm font-semibold bg-slate-300 text-slate-700 shadow-sm opacity-90 backdrop-blur-sm"> NO MAX HR </span>
         </div>
 
         <!-- DATA SECTION -->
@@ -130,33 +128,51 @@ function zoneLabel(bpm, max) {
 
 function zoneColor(bpm) {
     const max = max_heart_rate_value.value;
+    if (!max) return "bg-slate-400 text-white"; // default
     const zone = getZone(bpm, max);
 
     switch (zone) {
-        case 0: return "bg-slate-400 text-white";
-        case 1: return "bg-green-500 text-white";
-        case 2: return "bg-yellow-400 text-slate-900";
-        case 3: return "bg-orange-500 text-white";
-        case 4: return "bg-red-500 text-white";
-        case 5: return "bg-pink-500 text-white";
-        case 6: return "bg-rose-600 text-white"; // over MAX HR
-        default: return "bg-slate-400 text-white";
+        case 0:
+            return 'bg-slate-400 text-white';
+        case 1:
+            return 'bg-green-500 text-white';
+        case 2:
+            return 'bg-yellow-400 text-slate-900';
+        case 3:
+            return 'bg-orange-500 text-white';
+        case 4:
+            return 'bg-red-500 text-white';
+        case 5:
+            return 'bg-pink-500 text-white';
+        case 6:
+            return 'bg-rose-600 text-white'; // over MAX HR
+        default:
+            return 'bg-slate-400 text-white';
     }
 }
 
 function bpmTextColor(bpm) {
     const max = max_heart_rate_value.value;
+    if (!max) return "text-slate-400"; // default
     const zone = getZone(bpm, max);
 
     switch (zone) {
-        case 0: return "text-slate-400";
-        case 1: return "text-green-500";
-        case 2: return "text-yellow-500";
-        case 3: return "text-orange-500";
-        case 4: return "text-red-500";
-        case 5: return "text-pink-500";
-        case 6: return "text-rose-600";
-        default: return "text-slate-400";
+        case 0:
+            return 'text-slate-400';
+        case 1:
+            return 'text-green-500';
+        case 2:
+            return 'text-yellow-500';
+        case 3:
+            return 'text-orange-500';
+        case 4:
+            return 'text-red-500';
+        case 5:
+            return 'text-pink-500';
+        case 6:
+            return 'text-rose-600';
+        default:
+            return 'text-slate-400';
     }
 }
 </script>
