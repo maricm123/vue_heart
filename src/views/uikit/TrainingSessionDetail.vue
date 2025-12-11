@@ -109,15 +109,15 @@ function closeConfirmation() {
 
 const deleteTrainingSessionFunction = async (sessionId, clientId) => {
     console.log(sessionId, clientId);
-  try {
-    await deleteTrainingSession(sessionId);
-    toast.add({ severity: 'success', summary: 'Deleted', detail: 'Training session deleted successfully!', life: 5000 });
-    // Redirect back to the client detail page
-    router.push(`/uikit/clientDetail/${clientId}`);
-  } catch (err) {
-    const errorMsg = err.response?.data?.errors?.[0]?.message || 'Failed to delete session';
-    toast.add({ severity: 'error', summary: 'Error', detail: errorMsg, life: 5000 });
-  }
+    try {
+        await deleteTrainingSession(sessionId);
+        toast.add({ severity: 'success', summary: 'Deleted', detail: 'Training session deleted successfully!', life: 5000 });
+        // Redirect back to the client detail page
+        router.push(`/uikit/clientDetail/${clientId}`);
+    } catch (err) {
+        const errorMsg = err.response?.data?.errors?.[0]?.message || 'Failed to delete session';
+        toast.add({ severity: 'error', summary: 'Error', detail: errorMsg, life: 5000 });
+    }
 };
 </script>
 
@@ -146,18 +146,18 @@ const deleteTrainingSessionFunction = async (sessionId, clientId) => {
         </div>
     </div>
     <h3>Danger zone</h3>
-        <div class="card">
-                <div class="font-semibold text-xl mb-4">Delete training session</div>
-                <Button label="Delete" icon="pi pi-trash" severity="danger" style="width: auto" @click="openConfirmation" />
-                <Dialog header="Confirmation" v-model:visible="displayConfirmation" :style="{ width: '350px' }" :modal="true">
-                    <div class="flex items-center justify-center">
-                        <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
-                        <span>Are you sure you want to delete this training session?</span>
-                    </div>
-                    <template #footer>
-                        <Button label="No" icon="pi pi-times" @click="closeConfirmation" text severity="secondary" />
-                        <Button label="Yes" icon="pi pi-check" @click="deleteTrainingSessionFunction(sessionId, client)"  severity="danger" outlined autofocus />
-                    </template>
-                </Dialog>
+    <div class="card">
+        <div class="font-semibold text-xl mb-4">Delete training session</div>
+        <Button label="Delete" icon="pi pi-trash" severity="danger" style="width: auto" @click="openConfirmation" />
+        <Dialog header="Confirmation" v-model:visible="displayConfirmation" :style="{ width: '350px' }" :modal="true">
+            <div class="flex items-center justify-center">
+                <i class="pi pi-exclamation-triangle mr-4" style="font-size: 2rem" />
+                <span>Are you sure you want to delete this training session?</span>
             </div>
+            <template #footer>
+                <Button label="No" icon="pi pi-times" @click="closeConfirmation" text severity="secondary" />
+                <Button label="Yes" icon="pi pi-check" @click="deleteTrainingSessionFunction(sessionId, client)" severity="danger" outlined autofocus />
+            </template>
+        </Dialog>
+    </div>
 </template>

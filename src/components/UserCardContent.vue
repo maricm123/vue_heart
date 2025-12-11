@@ -128,7 +128,7 @@ function zoneLabel(bpm, max) {
 
 function zoneColor(bpm) {
     const max = max_heart_rate_value.value;
-    if (!max) return "bg-slate-400 text-white"; // default
+    if (!max) return 'bg-slate-400 text-white'; // default
     const zone = getZone(bpm, max);
 
     switch (zone) {
@@ -153,7 +153,7 @@ function zoneColor(bpm) {
 
 function bpmTextColor(bpm) {
     const max = max_heart_rate_value.value;
-    if (!max) return "text-slate-400"; // default
+    if (!max) return 'text-slate-400'; // default
     const zone = getZone(bpm, max);
 
     switch (zone) {
