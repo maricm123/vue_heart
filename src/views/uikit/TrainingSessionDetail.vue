@@ -13,7 +13,8 @@ const displayConfirmation = ref(false);
 const chartData = ref({});
 const chartOptions = ref({});
 const summary = ref({});
-const zones = ref({});
+const zones = ref(null);
+const hasHrZones = ref(false);
 
 const bpmData = ref([]);
 
@@ -62,7 +63,8 @@ onMounted(async () => {
     };
 
     summary.value = summaryData;
-    zones.value = summaryData.hr_zones_seconds;
+    zones.value = summaryData.hr_zones_seconds || null;
+    hasHrZones.value = response.summary_metrics.summary.has_max_hr;
 
     // chartOptions.value = {
     //   responsive: true,
@@ -76,16 +78,18 @@ onMounted(async () => {
     // }
 
     // ✅ BAR CHART FOR ZONES
-    zoneChartData.value = {
-        labels: ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'],
-        datasets: [
-            {
-                label: 'Time in Zone (seconds)',
-                data: [zones.value.z1, zones.value.z2, zones.value.z3, zones.value.z4, zones.value.z5],
-                backgroundColor: ['#4CAF50', '#8BC34A', '#FFC107', '#FF9800', '#F44336']
-            }
-        ]
-    };
+    if (zones.value) {
+        zoneChartData.value = {
+            labels: ['Z1', 'Z2', 'Z3', 'Z4', 'Z5'],
+            datasets: [
+                {
+                    label: 'Time in Zone (seconds)',
+                    data: [zones.value.z1, zones.value.z2, zones.value.z3, zones.value.z4, zones.value.z5],
+                    backgroundColor: ['#4CAF50', '#8BC34A', '#FFC107', '#FF9800', '#F44336']
+                }
+            ]
+        };
+    }
 
     // zoneChartOptions.value = {
     //   responsive: true,
@@ -135,8 +139,20 @@ const deleteTrainingSessionFunction = async (sessionId, clientId) => {
         <!-- Summary -->
         <div class="mt-6">
             <h3 class="text-lg font-semibold mb-2">Heart Rate Zones</h3>
-            <Chart type="bar" :data="zoneChartData" :options="zoneChartOptions" class="mt-4" />
-        </div>
+
+            <!-- Zones chart -->
+            <Chart v-if="hasHrZones" type="bar" :data="zoneChartData" :options="zoneChartOptions" class="mt-4" />
+
+            <!-- Missing max HR message -->
+                <div v-else
+    class="mt-4 p-4 border border-cyan-300 bg-cyan-50 text-cyan-800 rounded"
+>
+    <i class="pi pi-info-circle mr-2"></i>
+    For this training session, a maximum heart rate was not available, so
+    time spent in heart rate zones could not be calculated.
+    If you haven’t already, please set a maximum heart rate for this client to enable zone analysis in future sessions.
+</div>
+            </div>
         <div class="mt-6">
             <h3 class="text-lg font-semibold mb-2">Session Summary</h3>
             <p><strong>Max BPM:</strong> {{ summary.max_hr }}</p>
