@@ -70,7 +70,7 @@ export async function createClient(payload = {}) {
 
 export async function getClientDetail(clientId) {
   try {
-    const response = await api_coach.get(`/client-detail/${clientId}`, {
+    const response = await api_coach.get(`/get-client-detail/${clientId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },
@@ -87,6 +87,7 @@ const formatDateToYMD = (date) => {
   const d = new Date(date)
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 }
+
 export async function updateClient(clientId, client, max_heart_rate, auto_calculate_max_hr) {
   try {
     const payload = {
@@ -99,7 +100,7 @@ export async function updateClient(clientId, client, max_heart_rate, auto_calcul
       },
     };
 
-    const response = await api_coach.patch(`/client-detail/${clientId}`, payload, {
+    const response = await api_coach.patch(`/update-client/${clientId}`, payload, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },
