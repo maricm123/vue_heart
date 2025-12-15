@@ -4,10 +4,11 @@ export const useBleStore = defineStore('ble', {
   state: () => ({
     connectionStatus: {},       // { clientId: "connected" | "connecting" | etc }
     batteryLevel: {},           // { clientId: 88 }
-    devices: {},                // { clientId: { deviceId } }
+    // devices: {},                // { clientId: { deviceId } }
     manuallyDisconnecting: {},  // { clientId: true/false }
     sessionsStarted: {},        // { clientId: true/false }
-    sessionIds: {}              // { clientId: sessionId }
+    sessionIds: {},              // { clientId: sessionId }
+    connectedDevices: {} // { [clientId]: deviceId }
   }),
 
   getters: {
@@ -43,13 +44,20 @@ export const useBleStore = defineStore('ble', {
       this.batteryLevel[clientId] = percent
     },
 
-    setDevice(clientId, device) {
-      this.devices[clientId] = device
+    setDevice(clientId, deviceId) {
+      this.connectedDevices[clientId] = deviceId;
+    },
+    removeDevice(clientId) {
+      delete this.connectedDevices[clientId];
     },
 
-    removeDevice(clientId) {
-      delete this.devices[clientId]
+    getDeviceId(clientId) {
+      return this.connectedDevices[clientId];
     },
+
+    // removeDevice(clientId) {
+    //   delete this.devices[clientId]
+    // },
 
     setManual(clientId, value) {
       this.manuallyDisconnecting[clientId] = value
