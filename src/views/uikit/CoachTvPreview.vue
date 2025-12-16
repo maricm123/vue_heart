@@ -13,7 +13,7 @@ import BelgradeClock from '@/components/BelgradeClock.vue';
 
 import { useBleStore } from '@/store/useBleStore.js';
 const bleStore = useBleStore();
-const { connectionStatus, batteryLevel, sessionIds, sessionsStarted } = storeToRefs(bleStore);
+const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
 
 const { safeIsConnected } = useBle();
 
@@ -57,7 +57,7 @@ const display = ref(false);
 const clients = ref([]);
 const layout = ref('list');
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3'; // placeholder image
-const devices = ref({}); // store device per client { clientId: device }
+// const devices = ref({}); // store device per client { clientId: device }
 // selected clients (array instead of single)
 const selectedClients = ref([]);
 const wsStore = webSocketStore();
@@ -90,6 +90,12 @@ function removeClient(client) {
 }
 
 function onDeviceDisconnected(clientId, deviceId) {
+    if (isManualDisconnect(clientId, deviceId)) {
+        console.log(`🛑 Manual disconnect detected — no reconnect for client ${clientId}`);
+        consumeManualDisconnect(clientId, deviceId);
+        return;
+    }
+
     console.warn(`⚠️ Unexpected disconnection for client ${clientId}`, deviceId);
     reconnectDevice(clientId, { deviceId });
 }
@@ -109,6 +115,10 @@ async function connectDevice(client) {
 
         const deviceId = device.deviceId;
 
+
+        // devices.value[client.id] = { deviceId }; // local cache
+        bleStore.setDevice(client.id, deviceId);  // ✅ persistent reference
+
         console.log('Requested device:', device, device.deviceId);
         await BleClient.connect(device.deviceId, (deviceId) => {
             console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
@@ -124,15 +134,15 @@ async function connectDevice(client) {
 
         bleStore.setConnection(client.id, 'connected');
 
-        console.log(devices.value, 'DEVICESSSS');
-        if (devices.value[device.deviceId]) {
-            alert('This heart rate sensor is already connected to another client.');
-            return;
-        }
+        // console.log(devices.value, 'DEVICESSSS');
+        // if (devices.value[device.deviceId]) {
+        //     alert('This heart rate sensor is already connected to another client.');
+        //     return;
+        // }
 
-        devices.value[client.id] = device;
+        // devices.value[client.id] = device;
 
-        console.log('Connected to device:', device);
+        // console.log('Connected to device:', device);
 
         await startHeartRateNotifications(clientId, deviceId);
 
@@ -146,6 +156,17 @@ async function connectDevice(client) {
 }
 
 async function reconnectDevice(clientId, deviceInfo, retries = 50) {
+    const storedDeviceId = bleStore.getDeviceId(clientId);
+
+    if (!storedDeviceId || storedDeviceId !== deviceInfo.deviceId) {
+        console.log(`🛑 Reconnect aborted — device no longer registered for client ${clientId}`);
+        return;
+    }
+
+    if (isManualDisconnect(clientId, deviceInfo.deviceId)) {
+        consumeManualDisconnect(clientId, deviceInfo.deviceId);
+        return;
+    }
     bleStore.setConnection(clientId, 'reconnecting');
 
     // 1️⃣ Validate input
@@ -214,36 +235,48 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
 
 async function disconnectDevice(client) {
     const clientId = client.id;
-    const device = devices.value[clientId];
-    console.log(device, "DEVICE TO DISCONNECT");
 
-    console.log('Disconnecting device for client', clientId);
+    // ✅ SINGLE source of truth
+    const deviceId = bleStore.getDeviceId(clientId);
 
-    if (!device) {
-        console.log('No device found for client', clientId);
+    console.log('Disconnecting device for client', clientId, 'deviceId:', deviceId);
+
+    if (!deviceId) {
+        console.warn('No stored deviceId for client', clientId);
         return;
     }
 
-    const deviceId = device.deviceId;
     markManualDisconnect(clientId, deviceId);
 
+    bleStore.removeDevice(clientId);
+    bleStore.setConnection(clientId, 'disconnected');
+
     try {
-        await BleClient.stopNotifications(deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
+        await BleClient.stopNotifications(
+            deviceId,
+            HEART_RATE_SERVICE,
+            HEART_RATE_MEASUREMENT_CHARACTERISTIC
+        );
+
         await BleClient.disconnect(deviceId);
 
         try {
             const stillConnected = await safeIsConnected(deviceId);
-            console.log(`🔎 After manual disconnect, isConnected(${deviceId}) =`, stillConnected);
+            console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
         } catch (e) {
-            console.log(`🔎 After manual disconnect, safeIsConnected threw (što je ok):`, e?.message || e);
+            // safeIsConnected may throw — this is OK
         }
     } catch (err) {
-        console.warn('⚠️ disconnect failed:', err.message);
+        console.warn('Disconnect failed:', err.message);
     } finally {
-        delete devices.value[clientId];
+        // 🧹 CLEANUP
+        bleStore.clearManual(clientId);
+        bleStore.setConnection(clientId, 'disconnected');
+        bleStore.removeDevice?.(clientId); // optional
+        delete devices.value[clientId];    // optional local cache
         delete wsStore.bpmsFromWsCoach[clientId];
         delete sessionsStarted[clientId];
-        bleStore.setConnection(clientId, 'disconnected');
+        delete bleStore.connectedDevices[clientId];
     }
 }
 
@@ -311,6 +344,15 @@ onMounted(async () => {
     } catch (err) {
         // već je logovano u servisu, ovde možeš prikazati poruku korisniku
     }
+    for (const [clientId, deviceId] of Object.entries(bleStore.connectedDevices)) {
+        const isConnected = await safeIsConnected(deviceId);
+        console.log(`On mount - client ${clientId} device ${deviceId} isConnected:`, isConnected);
+            if (isConnected) {
+                bleStore.setConnection(clientId, 'connected');
+            } else {
+                bleStore.clearDevice(clientId);
+        }
+  }
 });
 
 onUnmounted(() => {
@@ -414,24 +456,37 @@ onUnmounted(() => {
 
                         <div>
                             <!-- Connect / Disconnect device -->
-                            <Button
-                                v-if="!devices[client.id]"
-                                :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'"
-                                :loading="connectingDevices[client.id]"
-                                :disabled="connectingDevices[client.id]"
-                                @click="connectDevice(client)"
-                            />
-                            <!-- <Button v-else label="Disconnect Device" severity="danger" @click="disconnect(client)" /> -->
-                            <Button v-else label="Disconnect Device" severity="danger" @click="disconnectDevice(client)" />
+                            <div>
+    <!-- Connect -->
+    <Button
+        v-if="connectionStatus[client.id] !== 'connected'"
+        :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'"
+        :loading="connectingDevices[client.id]"
+        :disabled="connectingDevices[client.id]"
+        @click="connectDevice(client)"
+    />
+
+    <!-- Disconnect -->
+    <Button
+        v-else
+        label="Disconnect Device"
+        severity="danger"
+        @click="disconnectDevice(client)"
+    />
+</div>
                         </div>
 
                         <!-- Show BPM and Start Session only when connected -->
-                        <div v-if="devices[client.id]">
-                            <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
+<div v-if="connectionStatus[client.id] === 'connected'">
+    <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
 
-                            <!-- Show Start or Finish based on session -->
-                            <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
-                        </div>
+    <!-- Show Start Session only if not started -->
+    <Button
+        v-if="!sessionsStarted[client.id]"
+        label="Start Session"
+        @click="startSession(client)"
+    />
+</div>
                     </div>
                 </template>
             </Card>
