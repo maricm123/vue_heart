@@ -55,10 +55,6 @@ export const useBleStore = defineStore('ble', {
       return this.connectedDevices[clientId];
     },
 
-    // removeDevice(clientId) {
-    //   delete this.devices[clientId]
-    // },
-
     setManual(clientId, value) {
       this.manuallyDisconnecting[clientId] = value
     },

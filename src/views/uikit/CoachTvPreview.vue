@@ -219,10 +219,11 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
         });
 
         console.log(`✅ Reconnected device for client ${clientId}:`, deviceId);
+        bleStore.setDevice(clientId, deviceId);
         bleStore.setConnection(clientId, 'connected');
 
         // 5️⃣ Store reference – sada uvek čuvamo minimalni objekat { deviceId }
-        devices.value[clientId] = { deviceId };
+        // devices.value[clientId] = { deviceId };
 
         await startHeartRateNotifications(clientId, deviceId);
 
