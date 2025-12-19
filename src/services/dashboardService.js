@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 
 export async function getDashboardInfo() {
   try {
-    const response = await api_coach.get('/dashboard-info', {
+    const response = await api_coach.get('/dashboard-informations', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access')}`,
       },
