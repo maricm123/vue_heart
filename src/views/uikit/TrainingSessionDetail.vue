@@ -144,15 +144,12 @@ const deleteTrainingSessionFunction = async (sessionId, clientId) => {
             <Chart v-if="hasHrZones" type="bar" :data="zoneChartData" :options="zoneChartOptions" class="mt-4" />
 
             <!-- Missing max HR message -->
-                <div v-else
-    class="mt-4 p-4 border border-cyan-300 bg-cyan-50 text-cyan-800 rounded"
->
-    <i class="pi pi-info-circle mr-2"></i>
-    For this training session, a maximum heart rate was not available, so
-    time spent in heart rate zones could not be calculated.
-    If you haven’t already, please set a maximum heart rate for this client to enable zone analysis in future sessions.
-</div>
+            <div v-else class="mt-4 p-4 border border-cyan-300 bg-cyan-50 text-cyan-800 rounded">
+                <i class="pi pi-info-circle mr-2"></i>
+                For this training session, a maximum heart rate was not available, so time spent in heart rate zones could not be calculated. If you haven’t already, please set a maximum heart rate for this client to enable zone analysis in future
+                sessions.
             </div>
+        </div>
         <div class="mt-6">
             <h3 class="text-lg font-semibold mb-2">Session Summary</h3>
             <p><strong>Max BPM:</strong> {{ summary.max_hr }}</p>
