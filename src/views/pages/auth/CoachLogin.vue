@@ -1,14 +1,17 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'
 import { api_coach, api_heart } from '@/services/api';
+import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
+const route = useRoute()
 const error = ref('')
 const email = ref('');
 const password = ref('');
 const checked = ref(false);
 import axios from 'axios'
+
+
 async function onLogin() {
     if (!email.value || !password.value) {
         error.value = 'Please enter both email and password.'
@@ -33,8 +36,8 @@ async function onLogin() {
         // Set axios default header for future requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
         
-        // Redirect to dashboard or home page after successful login
-        router.push('/')
+        const redirectTo = route.query.redirect || '/'
+        router.replace(String(redirectTo))
         
     } catch (err) {
         console.error('Login failed:', err)
