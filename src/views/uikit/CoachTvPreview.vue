@@ -116,7 +116,6 @@ async function connectDevice(client) {
         const deviceId = device.deviceId;
 
 
-        // devices.value[client.id] = { deviceId }; // local cache
         bleStore.setDevice(client.id, deviceId);  // ✅ persistent reference
 
         console.log('Requested device:', device, device.deviceId);
@@ -133,16 +132,6 @@ async function connectDevice(client) {
         });
 
         bleStore.setConnection(client.id, 'connected');
-
-        // console.log(devices.value, 'DEVICESSSS');
-        // if (devices.value[device.deviceId]) {
-        //     alert('This heart rate sensor is already connected to another client.');
-        //     return;
-        // }
-
-        // devices.value[client.id] = device;
-
-        // console.log('Connected to device:', device);
 
         await startHeartRateNotifications(clientId, deviceId);
 
@@ -222,9 +211,6 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
         bleStore.setDevice(clientId, deviceId);
         bleStore.setConnection(clientId, 'connected');
 
-        // 5️⃣ Store reference – sada uvek čuvamo minimalni objekat { deviceId }
-        // devices.value[clientId] = { deviceId };
-
         await startHeartRateNotifications(clientId, deviceId);
 
         console.log(`📡 Notifications restarted for client ${clientId}`);
@@ -274,7 +260,6 @@ async function disconnectDevice(client) {
         bleStore.clearManual(clientId);
         bleStore.setConnection(clientId, 'disconnected');
         bleStore.removeDevice?.(clientId); // optional
-        delete devices.value[clientId];    // optional local cache
         delete wsStore.bpmsFromWsCoach[clientId];
         delete sessionsStarted[clientId];
         delete bleStore.connectedDevices[clientId];
