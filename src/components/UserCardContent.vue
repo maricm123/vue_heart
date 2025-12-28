@@ -81,13 +81,21 @@ function recalcElapsed() {
     elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000);
 }
 
-// format mm:ss
-const duration = computed(() => {
-    const total = elapsedSeconds.value;
-    const mm = String(Math.floor(total / 60)).padStart(2, '0');
-    const ss = String(total % 60).padStart(2, '0');
-    return `${mm}:${ss}`;
-});
+function formatDuration(totalSec = 0) {
+  totalSec = Math.max(0, Number(totalSec) || 0);
+
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+
+  // ako želiš 1:10:12 (bez leading 0 na sat)
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  // ispod 1h ostavi mm:ss
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+const duration = computed(() => formatDuration(elapsedSeconds.value));
 
 onMounted(() => {
     recalcElapsed();

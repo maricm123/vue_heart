@@ -115,8 +115,7 @@ async function connectDevice(client) {
 
         const deviceId = device.deviceId;
 
-
-        bleStore.setDevice(client.id, deviceId);  // ✅ persistent reference
+        bleStore.setDevice(client.id, deviceId); // ✅ persistent reference
 
         console.log('Requested device:', device, device.deviceId);
         await BleClient.connect(device.deviceId, (deviceId) => {
@@ -239,11 +238,7 @@ async function disconnectDevice(client) {
     bleStore.setConnection(clientId, 'disconnected');
 
     try {
-        await BleClient.stopNotifications(
-            deviceId,
-            HEART_RATE_SERVICE,
-            HEART_RATE_MEASUREMENT_CHARACTERISTIC
-        );
+        await BleClient.stopNotifications(deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
 
         await BleClient.disconnect(deviceId);
 
@@ -333,12 +328,12 @@ onMounted(async () => {
     for (const [clientId, deviceId] of Object.entries(bleStore.connectedDevices)) {
         const isConnected = await safeIsConnected(deviceId);
         console.log(`On mount - client ${clientId} device ${deviceId} isConnected:`, isConnected);
-            if (isConnected) {
-                bleStore.setConnection(clientId, 'connected');
-            } else {
-                bleStore.clearDevice(clientId);
+        if (isConnected) {
+            bleStore.setConnection(clientId, 'connected');
+        } else {
+            bleStore.clearDevice(clientId);
         }
-  }
+    }
 });
 
 onUnmounted(() => {
@@ -441,38 +436,26 @@ onUnmounted(() => {
                         </div>
 
                         <div>
-                            <!-- Connect / Disconnect device -->
                             <div>
-    <!-- Connect -->
-    <Button
-        v-if="connectionStatus[client.id] !== 'connected'"
-        :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'"
-        :loading="connectingDevices[client.id]"
-        :disabled="connectingDevices[client.id]"
-        @click="connectDevice(client)"
-    />
+                                <Button
+                                    v-if="connectionStatus[client.id] !== 'connected'"
+                                    :label="connectingDevices[client.id] ? 'Connecting...' : 'Connect Device'"
+                                    :loading="connectingDevices[client.id]"
+                                    :disabled="connectingDevices[client.id]"
+                                    @click="connectDevice(client)"
+                                />
 
-    <!-- Disconnect -->
-    <Button
-        v-else
-        label="Disconnect Device"
-        severity="danger"
-        @click="disconnectDevice(client)"
-    />
-</div>
+                                <Button v-else label="Disconnect Device" severity="danger" @click="disconnectDevice(client)" />
+                            </div>
                         </div>
 
                         <!-- Show BPM and Start Session only when connected -->
-<div v-if="connectionStatus[client.id] === 'connected'">
-    <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
+                        <div v-if="connectionStatus[client.id] === 'connected'">
+                            <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
 
-    <!-- Show Start Session only if not started -->
-    <Button
-        v-if="!sessionsStarted[client.id]"
-        label="Start Session"
-        @click="startSession(client)"
-    />
-</div>
+                            <!-- Show Start Session only if not started -->
+                            <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
+                        </div>
                     </div>
                 </template>
             </Card>
