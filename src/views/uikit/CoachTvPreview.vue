@@ -467,8 +467,19 @@ onUnmounted(() => {
         <!-- If no active sessions -->
         <div v-if="activeSessions.length === 0" class="p-4 text-gray-500">No active sessions</div>
 
-        <!-- Each session has its own splitter -->
-        <Splitter v-for="session in activeSessions" :key="session.id" style="height: 300px" class="mb-8">
+        <div
+            v-for="session in activeSessions"
+            :key="session.id"
+            class="mb-8"
+        >
+
+        <div
+    v-for="session in activeSessions"
+    :key="session.id"
+    class="mb-8 border rounded-xl overflow-hidden bg-white shadow-sm"
+>
+    <!-- MAIN CONTENT -->
+    <Splitter style="height: 300px">
             <!-- Left panel: client info + finish button -->
             <SplitterPanel :size="30" :minSize="10">
                 <div class="p-4 flex flex-col justify-between h-full">
@@ -518,6 +529,31 @@ onUnmounted(() => {
                 </div>
             </SplitterPanel>
         </Splitter>
+
+    <!-- FOOTER / DANGER ACTION -->
+    <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
+        <div class="flex flex-col">
+            <span class="text-sm font-medium text-slate-700">
+                Session actions
+            </span>
+            <span class="text-xs text-slate-500">
+                Removing a session will immediately disconnect all participants
+            </span>
+        </div>
+
+        <Button
+            label="Delete session"
+            severity="danger"
+            outlined
+            size="small"
+            @click="deleteSession(session.id)"
+        />
+    </div>
+</div>
+        <!-- Each session has its own splitter -->
+        
+
+        </div>
     </div>
     <BelgradeClock />
 </template>
