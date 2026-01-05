@@ -123,6 +123,27 @@ export async function deleteClient(clientId) {
     return response.data;
   } catch (err) {
     console.error('❌ Error deleting client:', err);
-    throw err; // important: re-throw the error so the caller can catch it
+    throw err;
   }
 }
+
+
+export const logoutUser = async () => {
+    try {
+        await api_coach.post(
+            '/logout',
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access')}`
+                }
+            }
+        );
+    } catch (err) {
+        // čak i ako backend pukne, radimo lokalni logout
+        console.warn('Logout API failed:', err.response?.data || err);
+    } finally {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+    }
+};

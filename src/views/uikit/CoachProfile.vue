@@ -5,8 +5,17 @@ import axios from 'axios';
 import { api_coach, api_heart } from '@/services/api';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { getCurrentCoach } from '@/services/userService';
+import { useRouter } from 'vue-router';
+import { logoutUser } from '@/services/userService';
 const route = useRoute();
 const coachId = route.params.id;
+
+const router = useRouter();
+
+const logout = async () => {
+    await logoutUser();
+    router.push({ name: 'coach-login' });
+};
 
 // states
 const coach = ref({
@@ -69,6 +78,7 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
 function formatDateToYMD(date) {
     if (!date) return null;
     const d = new Date(date);
@@ -140,6 +150,14 @@ const updateCoach = async () => {
                 </div>
                 <div v-else>Loading data...</div>
             </div>
-        </div>
+                <!-- RIGHT COLUMN -->
+            <div class="md:w-1/2">
+                <div class="card flex flex-col gap-4">
+                    <h2 class="text-xl font-bold mb-4">Account Actions</h2>
+
+                    <button @click="logout" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">Logout</button>
+                </div>
+            </div>
+            </div>
     </Fluid>
 </template>
