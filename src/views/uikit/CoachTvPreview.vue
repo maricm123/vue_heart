@@ -467,92 +467,70 @@ onUnmounted(() => {
         <!-- If no active sessions -->
         <div v-if="activeSessions.length === 0" class="p-4 text-gray-500">No active sessions</div>
 
-        <div
-            v-for="session in activeSessions"
-            :key="session.id"
-            class="mb-8"
-        >
-
-        <div
-    v-for="session in activeSessions"
-    :key="session.id"
-    class="mb-8 border rounded-xl overflow-hidden bg-white shadow-sm"
->
-    <!-- MAIN CONTENT -->
-    <Splitter style="height: 300px">
-            <!-- Left panel: client info + finish button -->
-            <SplitterPanel :size="30" :minSize="10">
-                <div class="p-4 flex flex-col justify-between h-full">
-                    <div>
-                        <p class="font-medium">{{ session.client.user.first_name }} {{ session.client.user.last_name }}</p>
-                        <p class="text-sm text-gray-500">Started: {{ fmtStart(session.start) }}</p>
-                    </div>
-                    <Button label="Finish" severity="danger" size="small" @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id], timers[session.client.id])" />
-                </div>
-            </SplitterPanel>
-            <!-- Right panel: session details -->
-            <SplitterPanel :size="70">
-                <div class="h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl shadow-md p-6">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-4">🏋️ Session – {{ session.client.user.first_name }}</h2>
-
-                    <div class="flex items-center gap-8">
-                        <div class="flex flex-col items-center">
-                            <span class="text-3xl font-bold text-red-500">
-                                {{ bpmsFromWsCoach[session.client.id] ?? '-' }}
-                            </span>
-                            <span class="text-sm text-gray-500">BPM</span>
+        <div v-for="session in activeSessions" :key="session.id" class="mb-8">
+            <div v-for="session in activeSessions" :key="session.id" class="mb-8 border rounded-xl overflow-hidden bg-white shadow-sm">
+                <!-- MAIN CONTENT -->
+                <Splitter style="height: 300px">
+                    <!-- Left panel: client info + finish button -->
+                    <SplitterPanel :size="30" :minSize="10">
+                        <div class="p-4 flex flex-col justify-between h-full">
+                            <div>
+                                <p class="font-medium">{{ session.client.user.first_name }} {{ session.client.user.last_name }}</p>
+                                <p class="text-sm text-gray-500">Started: {{ fmtStart(session.start) }}</p>
+                            </div>
+                            <Button label="Finish" severity="danger" size="small" @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id], timers[session.client.id])" />
                         </div>
-                        <div class="flex flex-col items-center">
-                            <span class="text-3xl font-bold text-orange-500">
-                                {{ caloriesFromWsCoach[session.client.id] ?? 0 }}
+                    </SplitterPanel>
+                    <!-- Right panel: session details -->
+                    <SplitterPanel :size="70">
+                        <div class="h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl shadow-md p-6">
+                            <h2 class="text-xl font-semibold text-gray-700 mb-4">🏋️ Session – {{ session.client.user.first_name }}</h2>
+
+                            <div class="flex items-center gap-8">
+                                <div class="flex flex-col items-center">
+                                    <span class="text-3xl font-bold text-red-500">
+                                        {{ bpmsFromWsCoach[session.client.id] ?? '-' }}
+                                    </span>
+                                    <span class="text-sm text-gray-500">BPM</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <span class="text-3xl font-bold text-orange-500">
+                                        {{ caloriesFromWsCoach[session.client.id] ?? 0 }}
+                                    </span>
+                                    <span class="text-sm text-gray-500">kcal burned</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="text-3xl font-bold">
+                                    <p>⏱️ Time: {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}</p>
+
+                                    <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
+                                </span>
+                            </div>
+                            <span
+                                :class="{
+                                    'text-black-500': connectionStatus[session.client.id] === 'connected',
+                                    'text-yellow-500': connectionStatus[session.client.id] === 'connecting' || connectionStatus[session.client.id] === 'reconnecting',
+                                    'text-red-500': connectionStatus[session.client.id] === 'disconnected'
+                                }"
+                            >
+                                Device is: {{ connectionStatus[session.client.id] }}
                             </span>
-                            <span class="text-sm text-gray-500">kcal burned</span>
+                            <p v-if="batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
                         </div>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <span class="text-3xl font-bold">
-                            <p>⏱️ Time: {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}</p>
+                    </SplitterPanel>
+                </Splitter>
 
-                            <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
-                        </span>
+                <!-- FOOTER / DANGER ACTION -->
+                <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-medium text-slate-700"> Danger zone </span>
+                        <span class="text-xs text-slate-500"> Delete session permanently </span>
                     </div>
-                    <span
-                        :class="{
-                            'text-black-500': connectionStatus[session.client.id] === 'connected',
-                            'text-yellow-500': connectionStatus[session.client.id] === 'connecting' || connectionStatus[session.client.id] === 'reconnecting',
-                            'text-red-500': connectionStatus[session.client.id] === 'disconnected'
-                        }"
-                    >
-                        Device is: {{ connectionStatus[session.client.id] }}
-                    </span>
-                    <p v-if="batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
+
+                    <Button label="Delete session" severity="danger" outlined size="small" @click="forceDeleteSession(session.id)" />
                 </div>
-            </SplitterPanel>
-        </Splitter>
-
-    <!-- FOOTER / DANGER ACTION -->
-    <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
-        <div class="flex flex-col">
-            <span class="text-sm font-medium text-slate-700">
-                Session actions
-            </span>
-            <span class="text-xs text-slate-500">
-                Removing a session will immediately disconnect all participants
-            </span>
-        </div>
-
-        <Button
-            label="Delete session"
-            severity="danger"
-            outlined
-            size="small"
-            @click="deleteSession(session.id)"
-        />
-    </div>
-</div>
-        <!-- Each session has its own splitter -->
-        
-
+            </div>
         </div>
     </div>
     <BelgradeClock />
