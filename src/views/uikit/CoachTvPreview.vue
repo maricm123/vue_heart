@@ -60,8 +60,6 @@ const display = ref(false);
 const clients = ref([]);
 const layout = ref('list');
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3'; // placeholder image
-// const devices = ref({}); // store device per client { clientId: device }
-// selected clients (array instead of single)
 const selectedClients = ref([]);
 const wsStore = webSocketStore();
 const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore);
@@ -160,7 +158,6 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
     }
     bleStore.setConnection(clientId, 'reconnecting');
 
-    // 1️⃣ Validate input
     if (!deviceInfo?.deviceId) {
         console.warn(`Invalid deviceInfo for client ${clientId}:`, deviceInfo);
         return;
@@ -168,14 +165,14 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
 
     const deviceId = deviceInfo.deviceId; // string
 
-    // 1.1️⃣ Ako je ovo zapravo manual disconnect → ne reconnectuj
+    // Ako je ovo zapravo manual disconnect → ne reconnectuj
     if (isManualDisconnect(clientId, deviceId)) {
         console.log(`🛑 Skipping reconnect — manual disconnect for client ${clientId}, device ${deviceId}`);
         consumeManualDisconnect(clientId, deviceId);
         return;
     }
 
-    // 2️⃣ Stop if already connected
+    // Stop if already connected
     try {
         const connected = await safeIsConnected(deviceId);
         if (connected) {
@@ -186,7 +183,7 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
         console.warn(`⚠️ Error checking connection for ${deviceId}:`, err);
     }
 
-    // 3️⃣ Stop if retries are exhausted
+    // Stop if retries are exhausted
     if (retries <= 0) {
         bleStore.setConnection(clientId, 'disconnected');
         console.warn(`❌ Reconnect attempts exhausted for client ${clientId}`);
@@ -196,7 +193,6 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
     console.log(`🔄 Trying to reconnect client ${clientId}... (${retries} left)`, deviceId);
 
     try {
-        // 4️⃣ Try to reconnect
         await BleClient.connect(deviceId, (disconnectedDeviceId) => {
             console.warn(`⚠️ Device disconnected again for client ${clientId}:`, disconnectedDeviceId);
 
@@ -225,7 +221,6 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
 async function disconnectDevice(client) {
     const clientId = client.id;
 
-    // ✅ SINGLE source of truth
     const deviceId = bleStore.getDeviceId(clientId);
 
     console.log('Disconnecting device for client', clientId, 'deviceId:', deviceId);
@@ -357,7 +352,6 @@ const forceDeleteSession = async (client) => {
 };
 
 function selectClient(client) {
-    // prevent duplicates
     if (!selectedClients.value.find((c) => c.id === client.id)) {
         selectedClients.value.push(client);
     }
@@ -395,7 +389,6 @@ onUnmounted(() => {
     <div class="card">
         <div class="font-semibold text-xl mb-4">Add new session for client</div>
 
-        <!-- Clients modal -->
         <Dialog header="Clients" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
             <div v-if="loadingClients" class="flex justify-center p-8">
                 <ProgressSpinner />
@@ -431,7 +424,6 @@ onUnmounted(() => {
                     </div>
                 </template>
 
-                <!-- Grid layout -->
                 <template #grid="slotProps">
                     <div class="grid grid-cols-12 gap-4">
                         <div v-for="client in slotProps.items" :key="client.id" class="col-span-12 sm:col-span-6 lg:col-span-4 p-2">
