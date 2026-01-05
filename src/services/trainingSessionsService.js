@@ -94,7 +94,7 @@ export async function deleteTrainingSession(sessionId) {
     return response.data;
   } catch (err) {
     console.error('❌ Error deleting training session:', err);
-    throw err; // re-throw so caller can handle it
+    throw err;
   }
 }
 
@@ -112,4 +112,19 @@ export async function sendBpmToBackend(client, bpm, device, sessionId) {
     } catch (err) {
         console.error('❌ Error sending BPM:', err);
     }
+}
+
+
+export async function forceDeleteActiveTrainingSession(sessionId) {
+  try {
+    const response = await api_coach.delete(`/force-delete-training-session/${sessionId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('access')}`,
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error deleting training session:', err);
+    throw err;
+  }
 }

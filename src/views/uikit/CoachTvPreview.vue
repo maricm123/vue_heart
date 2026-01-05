@@ -1,16 +1,16 @@
 <script setup>
 import { onMounted, onUnmounted, ref, reactive } from 'vue';
-import { api_heart } from '@/services/api';
 import { formatIsoToLocal } from '@/utils/formatDate';
 import { useSessionTimers } from '@/composables/useSessionTimers';
 import { useBle } from '@/composables/useBle';
-import { getActiveTrainingSessions, finishSession, createSession } from '@/services/trainingSessionsService.js';
+import { getActiveTrainingSessions, finishSession, createSession, forceDeleteActiveTrainingSession } from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import { getClientsByCoachNotInActiveSession } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
+import { useConfirm } from "primevue/useconfirm";
 import BelgradeClock from '@/components/BelgradeClock.vue';
-
+import { useToast } from 'primevue/usetoast';
 import { useBleStore } from '@/store/useBleStore.js';
 const bleStore = useBleStore();
 const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
@@ -28,6 +28,9 @@ const { timers } = storeToRefs(timersStore);
 // When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
 const manuallyDisconnecting = reactive({});
 const manualDisconnects = reactive({});
+const toast = useToast();
+
+
 
 // kad ručno diskonektuješ
 function markManualDisconnect(clientId, deviceId) {
@@ -251,10 +254,9 @@ async function disconnectDevice(client) {
     } catch (err) {
         console.warn('Disconnect failed:', err.message);
     } finally {
-        // 🧹 CLEANUP
         bleStore.clearManual(clientId);
         bleStore.setConnection(clientId, 'disconnected');
-        bleStore.removeDevice?.(clientId); // optional
+        bleStore.removeDevice?.(clientId);
         delete wsStore.bpmsFromWsCoach[clientId];
         delete sessionsStarted[clientId];
         delete bleStore.connectedDevices[clientId];
@@ -305,6 +307,54 @@ async function onFinishSession(client, calories, seconds) {
         console.error('Failed to finish session', err);
     }
 }
+
+const confirm = useConfirm();
+const confirmDelete = (client) => {
+    confirm.require({
+        message: "This will permanently delete the session. Continue?",
+        header: "Confirm delete",
+        icon: "pi pi-exclamation-triangle",
+        acceptClass: "p-button-danger",
+        accept: () => forceDeleteSession(client),
+    });
+};
+const forceDeleteSession = async (client) => {
+    try {
+        const sessionId = bleStore.getSessionId(client.id);
+        await forceDeleteActiveTrainingSession(sessionId);
+
+        toast.add({
+            severity: "success",
+            summary: "Session deleted",
+            detail: "Session has been permanently removed",
+            life: 3000,
+        });
+
+        timersStore.stopTimerFor(client.id);
+
+        wsStore.clearClientData(client.id);
+
+        // bleStore.setManual(client.id, true);
+        // manuallyDisconnecting[client.id] = true;
+
+        bleStore.clearSession(client.id);
+
+        disconnectDevice(client);
+
+        activeSessions.value = activeSessions.value.filter(
+            (s) => s.id !== sessionId
+        );
+    } catch (error) {
+        console.error(error);
+
+        toast.add({
+            severity: "error",
+            summary: "Delete failed",
+            detail: "Unable to delete session",
+            life: 3000,
+        });
+    }
+};
 
 function selectClient(client) {
     // prevent duplicates
@@ -450,12 +500,13 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Show BPM and Start Session only when connected -->
-                        <div v-if="connectionStatus[client.id] === 'connected'">
-                            <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
+                        <!-- <div v-if="connectionStatus[client.id] === 'connected'">
+                            <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p> -->
 
                             <!-- Show Start Session only if not started -->
-                            <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
-                        </div>
+                            <!-- <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
+                        </div> -->
+                        <Button label="Start Session" @click="startSession(client)" />
                     </div>
                 </template>
             </Card>
@@ -528,7 +579,8 @@ onUnmounted(() => {
                         <span class="text-xs text-slate-500"> Delete session permanently </span>
                     </div>
 
-                    <Button label="Delete session" severity="danger" outlined size="small" @click="forceDeleteSession(session.id)" />
+                    <Button label="Delete session" severity="danger" outlined size="small" @click="confirmDelete(session.client)" />
+                    <ConfirmDialog />
                 </div>
             </div>
         </div>
