@@ -147,3 +147,24 @@ export const logoutUser = async () => {
         localStorage.removeItem('refresh');
     }
 };
+
+
+export const updateCurrentCoach = async (coach) => {
+    const payload = {
+        ...coach,
+        user: {
+            ...coach.user,
+            birth_date: formatDateToYMD(coach.user.birth_date)
+        }
+    };
+
+    return api_coach.patch(
+        '/update-current-coach',
+        payload,
+        {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('access')}`
+            }
+        }
+    );
+};

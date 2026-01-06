@@ -7,6 +7,7 @@ import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { getCurrentCoach } from '@/services/userService';
 import { useRouter } from 'vue-router';
 import { logoutUser } from '@/services/userService';
+import { updateCurrentCoach } from '@/services/userService';
 const route = useRoute();
 const coachId = route.params.id;
 
@@ -79,26 +80,10 @@ onMounted(async () => {
     }
 });
 
-function formatDateToYMD(date) {
-    if (!date) return null;
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-// 🔹 Update coach
+
 const updateCoach = async () => {
     try {
-        const payload = {
-            ...coach.value,
-            user: {
-                ...coach.value.user,
-                birth_date: formatDateToYMD(coach.value.user.birth_date)
-            }
-        };
-
-        await api_coach.patch(`/current-coach`, payload, { headers: { Authorization: `Bearer ${localStorage.getItem('access')}` } });
+        await updateCurrentCoach(coach.value);
         alert('✅ Coach updated successfully!');
     } catch (err) {
         console.error('Update failed:', err.response?.data || err);
