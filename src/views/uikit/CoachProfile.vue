@@ -10,12 +10,6 @@ const coachId = route.params.id;
 
 const router = useRouter();
 
-const logout = async () => {
-    await logoutUser();
-    router.push({ name: 'coach-login' });
-};
-
-// states
 const coach = ref({
     user: {
         first_name: '',
@@ -29,14 +23,11 @@ const coach = ref({
 const loading = ref(true);
 
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3';
-// states
-// const coach = ref(null)
 const trainingSessions = ref([]);
 const filters = ref();
 const options = ref(['Female', 'Male']);
-const gender = ref(''); // will hold selected gender
+const gender = ref('');
 
-// ✅ initialize filters for PrimeVue DataTable
 const initFilters = () => {
     filters.value = {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -47,21 +38,66 @@ const initFilters = () => {
 };
 initFilters();
 
-// 🔹 Format helpers
-const formatDate = (value) => {
-    if (!value) return '';
-    return new Date(value).toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+const goToChangePassword = () => {
+    router.push({ name: 'change-password' });
+};
+
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
+import { api_coach } from '@/services/api';
+
+const confirm = useConfirm();
+const toast = useToast();
+
+const confirmDeleteAccount = () => {
+    confirm.require({
+        message: 'This will permanently delete your account. This action cannot be undone. Continue?',
+        header: 'Confirm account deletion',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => deleteAccount()
     });
 };
 
-const clearFilter = () => {
-    initFilters();
+const deleteAccount = async () => {
+    try {
+        await api_coach.delete('/current-coach');
+
+        toast.add({
+            severity: 'success',
+            summary: 'Account deleted',
+            detail: 'Your account has been permanently removed',
+            life: 3000
+        });
+
+        await logoutUser();
+    } catch (error) {
+        console.error(error);
+
+        toast.add({
+            severity: 'error',
+            summary: 'Delete failed',
+            detail: 'Unable to delete account',
+            life: 3000
+        });
+    }
 };
 
-// Keep coach.gender in sync with SelectButton
+const confirmLogout = () => {
+    confirm.require({
+        message: 'Are you sure you want to logout?',
+        header: 'Confirm logout',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => logout()
+    });
+};
+
+const logout = async () => {
+    await logoutUser();
+    router.push({ name: 'coach-login' });
+};
+
 watch(gender, (newVal) => {
     coach.value.gender = newVal;
 });
@@ -76,7 +112,6 @@ onMounted(async () => {
         loading.value = false;
     }
 });
-
 
 const updateCoach = async () => {
     try {
@@ -132,14 +167,21 @@ const updateCoach = async () => {
                 </div>
                 <div v-else>Loading data...</div>
             </div>
-                <!-- RIGHT COLUMN -->
+            <!-- RIGHT COLUMN -->
             <div class="md:w-1/2">
                 <div class="card flex flex-col gap-4">
-                    <h2 class="text-xl font-bold mb-4">Account Actions</h2>
+                    <h2 class="text-xl font-bold mb-4">Account actions</h2>
 
-                    <button @click="logout" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">Logout</button>
+                    <button @click="confirmLogout" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg">Logout</button>
+
+                    <h2 class="text-xl font-bold mb-4">Security section</h2>
+
+                    <button @click="goToChangePassword" class="w-full bg-gray-700 hover:bg-gray-800 text-white font-semibold py-2 px-4 rounded-lg">Change Password</button>
+
+                    <button @click="confirmDeleteAccount" class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded-lg border border-red-300">Delete Account</button>
                 </div>
             </div>
-            </div>
+        </div>
     </Fluid>
+    <ConfirmDialog />
 </template>
