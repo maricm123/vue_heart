@@ -1,13 +1,10 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import axios from 'axios';
-import { api_coach, api_heart } from '@/services/api';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
-import { getCurrentCoach } from '@/services/userService';
 import { useRouter } from 'vue-router';
 import { logoutUser } from '@/services/userService';
-import { updateCurrentCoach } from '@/services/userService';
+import { updateCurrentCoach, getCurrentCoach } from '@/services/coachService';
 const route = useRoute();
 const coachId = route.params.id;
 

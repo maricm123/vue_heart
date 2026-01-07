@@ -1,14 +1,4 @@
-import { api_coach, api_heart } from './api.js'
-
-export const getCurrentCoach = async () => {
-    try {
-        const response = await api_coach.get('/current-coach');
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching current coach:', error);
-        throw error;
-    }
-};
+import { api_coach } from './api.js'
 
 export async function getClientsByCoach() {
   try {
@@ -146,25 +136,4 @@ export const logoutUser = async () => {
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
     }
-};
-
-
-export const updateCurrentCoach = async (coach) => {
-    const payload = {
-        ...coach,
-        user: {
-            ...coach.user,
-            birth_date: formatDateToYMD(coach.user.birth_date)
-        }
-    };
-
-    return api_coach.patch(
-        '/update-current-coach',
-        payload,
-        {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('access')}`
-            }
-        }
-    );
 };
