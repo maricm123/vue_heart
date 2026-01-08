@@ -1,10 +1,10 @@
-import { api_coach } from './api.js'
+import { api_coach } from './api.js';
 
 const formatDateToYMD = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-}
+    if (!date) return null;
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 export const updateCurrentCoach = async (coach) => {
     const payload = {
@@ -15,15 +15,11 @@ export const updateCurrentCoach = async (coach) => {
         }
     };
 
-    return api_coach.patch(
-        '/update-current-coach',
-        payload,
-        {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('access')}`
-            }
+    return api_coach.patch('/update-current-coach', payload, {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem('access')}`
         }
-    );
+    });
 };
 
 export const getCurrentCoach = async () => {
@@ -40,14 +36,21 @@ export async function loginCoach(email, password) {
     return api_coach.post('/login-coach', {
         email,
         password
-    })
-};
+    });
+}
 
 export const logoutCoach = async () => {
+    const refreshToken = localStorage.getItem('refresh');
+
+    if (!refreshToken) {
+        localStorage.clear();
+        return;
+    }
+
     try {
         await api_coach.post(
             '/logout-coach',
-            {refresh: refreshToken},
+            { refresh: refreshToken },
             {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('access')}`
