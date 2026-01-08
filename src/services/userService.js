@@ -116,24 +116,3 @@ export async function deleteClient(clientId) {
     throw err;
   }
 }
-
-
-export const logoutUser = async () => {
-    try {
-        await api_coach.post(
-            '/logout',
-            {},
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access')}`
-                }
-            }
-        );
-    } catch (err) {
-        // čak i ako backend pukne, radimo lokalni logout
-        console.warn('Logout API failed:', err.response?.data || err);
-    } finally {
-        localStorage.removeItem('access');
-        localStorage.removeItem('refresh');
-    }
-};

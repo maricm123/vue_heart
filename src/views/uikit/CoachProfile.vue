@@ -3,8 +3,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { useRouter } from 'vue-router';
-import { logoutUser } from '@/services/userService';
-import { updateCurrentCoach, getCurrentCoach } from '@/services/coachService';
+import { updateCurrentCoach, getCurrentCoach, logoutCoach } from '@/services/coachService';
 const route = useRoute();
 const coachId = route.params.id;
 
@@ -70,7 +69,7 @@ const deleteAccount = async () => {
             life: 3000
         });
 
-        await logoutUser();
+        await logoutCoach();
     } catch (error) {
         console.error(error);
 
@@ -89,12 +88,12 @@ const confirmLogout = () => {
         header: 'Confirm logout',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-        accept: () => logout()
+        accept: () => logoutCoachFunction()
     });
 };
 
-const logout = async () => {
-    await logoutUser();
+const logoutCoachFunction = async () => {
+    await logoutCoach();
     router.push({ name: 'coach-login' });
 };
 

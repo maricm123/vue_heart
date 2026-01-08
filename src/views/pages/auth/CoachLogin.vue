@@ -1,16 +1,17 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
-import { api_coach, api_heart } from '@/services/api';
 import { useRouter, useRoute } from 'vue-router'
+import axios from 'axios'
+import { loginCoach } from '@/services/coachService'
+
 const router = useRouter()
 const route = useRoute()
-const error = ref('')
-const email = ref('');
-const password = ref('');
-const checked = ref(false);
-import axios from 'axios'
 
+const error = ref('')
+const email = ref('')
+const password = ref('')
+const checked = ref(false)
 
 async function onLogin() {
     if (!email.value || !password.value) {
@@ -20,25 +21,20 @@ async function onLogin() {
 
     try {
         error.value = ''
-        
-        const response = await api_coach.post('/login-coach', {
-            email: email.value,
-            password: password.value
-        })
+
+        const response = await loginCoach(email.value, password.value)
 
         const { access, refresh } = response.data
         console.log('Login successful:', response.data)
-        
-        // Store tokens in localStorage
+
         localStorage.setItem('access', access)
         localStorage.setItem('refresh', refresh)
-        
-        // Set axios default header for future requests
+
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
-        
+
         const redirectTo = route.query.redirect || '/'
         router.replace(String(redirectTo))
-        
+
     } catch (err) {
         console.error('Login failed:', err)
         error.value = err.response?.data?.message || 'Login failed. Please try again.'
