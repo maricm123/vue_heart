@@ -492,13 +492,13 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Show BPM and Start Session only when connected -->
-                        <!-- <div v-if="connectionStatus[client.id] === 'connected'">
-                            <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p> -->
+                        <div v-if="connectionStatus[client.id] === 'connected'">
+                            <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
 
                             <!-- Show Start Session only if not started -->
-                            <!-- <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
-                        </div> -->
-                        <Button label="Start Session" @click="startSession(client)" />
+                            <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
+                        </div>
+                        <!-- <Button label="Start Session" @click="startSession(client)" /> -->
                     </div>
                 </template>
             </Card>
