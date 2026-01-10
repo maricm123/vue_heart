@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { loginCoach } from '@/services/coachService'
-
+import { useAuthStore } from '@/store/auth';
 const router = useRouter()
 const route = useRoute()
 
@@ -27,8 +27,9 @@ async function onLogin() {
         const { access, refresh } = response.data
         console.log('Login successful:', response.data)
 
-        localStorage.setItem('access', access)
-        localStorage.setItem('refresh', refresh)
+        const authStore = useAuthStore();
+        authStore.setToken(access);
+        authStore.setRefresh(refresh);
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
 
