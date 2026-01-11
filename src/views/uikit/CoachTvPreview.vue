@@ -527,7 +527,7 @@ onUnmounted(() => {
                     <!-- Right panel: session details -->
                     <SplitterPanel :size="70">
                         <div class="h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl shadow-md p-6">
-                            <h2 class="text-xl font-semibold text-gray-700 mb-4">🏋️ Session – {{ session.client.user.first_name }}</h2>
+                            <!-- <h2 class="text-xl font-semibold text-gray-700 mb-4">{{ session.client.user.first_name }} {{ session.client.user.last_name }}</h2> -->
 
                             <div class="flex items-center gap-8">
                                 <div class="flex flex-col items-center">
@@ -545,7 +545,7 @@ onUnmounted(() => {
                             </div>
                             <div class="flex flex-col items-center">
                                 <span class="text-3xl font-bold">
-                                    <p>⏱️ Time: {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}</p>
+                                    <p>Time: {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}</p>
 
                                     <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
                                 </span>
@@ -557,9 +557,9 @@ onUnmounted(() => {
                                     'text-red-500': connectionStatus[session.client.id] === 'disconnected'
                                 }"
                             >
-                                Device is: {{ connectionStatus[session.client.id] }}
+                                Device status: {{ connectionStatus[session.client.id] }}
                             </span>
-                            <p v-if="batteryLevel[session.client.id] !== undefined">🔋 Device battery: {{ batteryLevel[session.client.id] }}%</p>
+                            <p v-if="batteryLevel[session.client.id] !== undefined">Device battery: {{ batteryLevel[session.client.id] }}%</p>
                         </div>
                     </SplitterPanel>
                 </Splitter>
@@ -567,8 +567,17 @@ onUnmounted(() => {
                 <!-- FOOTER / DANGER ACTION -->
                 <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
                     <div class="flex flex-col">
-                        <span class="text-sm font-medium text-slate-700"> Danger zone </span>
-                        <span class="text-xs text-slate-500"> Delete session permanently </span>
+                        <!-- <span class="text-sm font-medium text-slate-700"> Danger zone </span> -->
+                        <span class="text-m text-slate-500"> Start/stop session </span>
+                    </div>
+
+                    <Button label="Start stop session" severity="danger" outlined size="small" @click="" />
+                    <ConfirmDialog />
+                </div>
+                <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
+                    <div class="flex flex-col">
+                        <!-- <span class="text-sm font-medium text-slate-700"> Danger zone </span> -->
+                        <span class="text-m text-slate-500"> Delete session permanently </span>
                     </div>
 
                     <Button label="Delete session" severity="danger" outlined size="small" @click="confirmDelete(session.client)" />
