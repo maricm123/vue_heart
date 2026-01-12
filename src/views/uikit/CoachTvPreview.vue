@@ -12,6 +12,9 @@ import { useConfirm } from "primevue/useconfirm";
 import BelgradeClock from '@/components/BelgradeClock.vue';
 import { useToast } from 'primevue/usetoast';
 import { useBleStore } from '@/store/useBleStore.js';
+import { useSessionControlStore } from '@/store/sessionControlStore'
+
+const sessionControlStore = useSessionControlStore()
 const bleStore = useBleStore();
 const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
 
@@ -30,7 +33,14 @@ const manuallyDisconnecting = reactive({});
 const manualDisconnects = reactive({});
 const toast = useToast();
 
+async function toggleSession(client) {
+    const clientId = client.id
 
+    // kasnije:
+    // await backend call
+
+    sessionControlStore.toggleSession(clientId)
+}
 
 // kad ručno diskonektuješ
 function markManualDisconnect(clientId, deviceId) {
@@ -334,6 +344,8 @@ const forceDeleteSession = async (client) => {
 
         bleStore.clearSession(client.id);
 
+        sessionControlStore.clear(client.id)
+
         disconnectDevice(client);
 
         activeSessions.value = activeSessions.value.filter(
@@ -571,7 +583,20 @@ onUnmounted(() => {
                         <span class="text-m text-slate-500"> Start/stop session </span>
                     </div>
 
-                    <Button label="Start stop session" severity="danger" outlined size="small" @click="" />
+                    <!-- <Button label="Start stop session" severity="danger" outlined size="small" @click="" /> -->
+                     <Button
+                        :label="sessionControlStore.isPaused(session.client.id) 
+                            ? 'Start session' 
+                            : 'Stop session'"
+
+                        :severity="sessionControlStore.isPaused(session.client.id) 
+                            ? 'success' 
+                            : 'danger'"
+
+                        outlined
+                        size="small"
+                        @click="toggleSession(session.client)"
+                    />
                     <ConfirmDialog />
                 </div>
                 <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
