@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref, reactive } from 'vue';
 import { formatIsoToLocal } from '@/utils/formatDate';
-import { useSessionTimers } from '@/composables/useSessionTimers';
 import { useBle } from '@/composables/useBle';
 import { getActiveTrainingSessions, finishSession, createSession, forceDeleteActiveTrainingSession } from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
