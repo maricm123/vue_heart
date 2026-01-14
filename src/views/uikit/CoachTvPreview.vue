@@ -19,10 +19,9 @@ const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice }
 
 const { safeIsConnected } = useBle();
 
-import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, parseHeartRate, startHeartRateNotifications } from '@/utils/bluetooth.js';
+import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications } from '@/utils/bluetooth.js';
 
 const { connect, disconnect, isNative } = useBle();
-// const { timers, startTimerFor, stopTimerFor, formatDuration } = useSessionTimers()
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
 const { timers } = storeToRefs(timersStore);
@@ -68,7 +67,7 @@ const connectingDevices = ref({});
 const display = ref(false);
 const clients = ref([]);
 const layout = ref('list');
-const defaultAvatar = 'https://i.pravatar.cc/150?img=3'; // placeholder image
+const defaultAvatar = 'https://i.pravatar.cc/150?img=3';
 const selectedClients = ref([]);
 const wsStore = webSocketStore();
 const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore);
@@ -93,7 +92,6 @@ async function open() {
     }
 }
 
-// Remove client & disconnect if needed
 function removeClient(client) {
     const index = selectedClients.value.findIndex((c) => c.id === client.id);
     if (index !== -1) selectedClients.value.splice(index, 1);
