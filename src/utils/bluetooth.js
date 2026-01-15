@@ -47,4 +47,18 @@ async function startHeartRateNotifications(clientId, deviceId) {
       );
     }
 
-export { BATTERY_SERVICE, BATTERY_CHARACTERISTIC, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, parseHeartRate, startHeartRateNotifications };
+async function stopHeartRateNotificationsSafe(deviceId) {
+  try {
+    await BleClient.stopNotifications(
+      deviceId,
+      HEART_RATE_SERVICE,
+      HEART_RATE_MEASUREMENT_CHARACTERISTIC
+    );
+    console.log("⏸️ HR notifications stopped:", deviceId);
+  } catch (e) {
+    // Some stacks throw if notifications weren't running — treat as OK
+    console.warn("Stop notifications failed (often harmless):", e?.message || e);
+  }
+}
+
+export { BATTERY_SERVICE, BATTERY_CHARACTERISTIC, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, parseHeartRate, startHeartRateNotifications, stopHeartRateNotificationsSafe };

@@ -19,7 +19,7 @@ const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice }
 
 const { safeIsConnected } = useBle();
 
-import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications } from '@/utils/bluetooth.js';
+import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications, stopHeartRateNotificationsSafe } from '@/utils/bluetooth.js';
 
 const { connect, disconnect, isNative } = useBle();
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
@@ -32,12 +32,26 @@ const manualDisconnects = reactive({});
 const toast = useToast();
 
 async function toggleSession(client) {
-    const clientId = client.id
+  const clientId = client.id;
+  const deviceId = bleStore.getDeviceId(clientId);
 
-    // kasnije:
-    // await backend call
+  if (!deviceId) {
+    console.warn("No device for client", clientId);
+    return;
+  }
 
-    sessionControlStore.toggleSession(clientId)
+  const paused = sessionControlStore.isPaused(clientId);
+
+  // If currently paused -> START, else -> STOP
+  if (paused) {
+    await startHeartRateNotificationsSafe(clientId, deviceId);
+    // (later) resume timer + calories
+    sessionControlStore.toggleSession(clientId); // flip to running
+  } else {
+    await stopHeartRateNotificationsSafe(deviceId);
+    // (later) pause timer + calories
+    sessionControlStore.toggleSession(clientId); // flip to paused
+  }
 }
 
 // kad ručno diskonektuješ
