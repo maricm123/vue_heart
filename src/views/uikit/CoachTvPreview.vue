@@ -24,7 +24,7 @@ import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERV
 const { connect, disconnect, isNative } = useBle();
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
-const { timers } = storeToRefs(timersStore);
+const { timers, pauseTimerFor, resumeTimerFor } = storeToRefs(timersStore);
 
 // When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
 const manuallyDisconnecting = reactive({});
@@ -34,23 +34,18 @@ const toast = useToast();
 async function toggleSession(client) {
   const clientId = client.id;
   const deviceId = bleStore.getDeviceId(clientId);
-
-  if (!deviceId) {
-    console.warn("No device for client", clientId);
-    return;
-  }
+  if (!deviceId) return;
 
   const paused = sessionControlStore.isPaused(clientId);
 
-  // If currently paused -> START, else -> STOP
   if (paused) {
-    await startHeartRateNotificationsSafe(clientId, deviceId);
-    // (later) resume timer + calories
-    sessionControlStore.toggleSession(clientId); // flip to running
+    await startHeartRateNotifications(clientId, deviceId);
+    resumeTimerFor(clientId);
+    sessionControlStore.toggleSession(clientId);
   } else {
-    await stopHeartRateNotificationsSafe(deviceId);
-    // (later) pause timer + calories
-    sessionControlStore.toggleSession(clientId); // flip to paused
+    await stopHeartRateNotificationsSafe(clientId, deviceId);
+    pauseTimerFor(clientId);
+    sessionControlStore.toggleSession(clientId);
   }
 }
 
