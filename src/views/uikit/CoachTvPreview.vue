@@ -24,7 +24,9 @@ import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERV
 const { connect, disconnect, isNative } = useBle();
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
-const { timers, pauseTimerFor, resumeTimerFor } = storeToRefs(timersStore);
+const { timers } = storeToRefs(timersStore);
+// actions directly from store (no storeToRefs)
+const { pauseTimerFor, resumeTimerFor } = timersStore;
 
 // When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
 const manuallyDisconnecting = reactive({});
