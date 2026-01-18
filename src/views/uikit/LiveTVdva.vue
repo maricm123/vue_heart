@@ -1,45 +1,31 @@
 <template>
     <div class="h-screen bg-white text-slate-900 flex flex-col overflow-hidden">
         <!-- HEADER -->
-        <header
-  class="flex justify-between items-center px-10 py-5 shadow-lg"
-  :style="headerStyle"
->
-  <!-- LEFT: Logo + Title -->
-  <div class="flex items-center gap-4">
-    <div>
-      <h1 class="text-2xl text-white font-bold">HeartApp</h1>
-      <p v-if="!isLoggedIn" class="text-white/80 text-sm">
-        Not logged in
-      </p>
-    </div>
-  </div>
+        <header class="flex justify-between items-center px-10 py-5 shadow-lg" :style="headerStyle">
+            <!-- LEFT: Logo + Title -->
+            <div class="flex items-center gap-4">
+                <div>
+                    <h1 class="text-2xl text-white font-bold">HeartApp</h1>
+                    <p v-if="!isLoggedIn" class="text-white/80 text-sm">Not logged in</p>
+                </div>
+            </div>
 
-  <!-- RIGHT -->
-  <div class="flex items-center gap-6">
-    <!-- Login button when NOT logged in -->
-    <button
-      v-if="!isLoggedIn"
-      type="button"
-      class="bg-white/15 hover:bg-white/25 text-white font-semibold px-6 py-3 rounded-2xl shadow-sm border border-white/30 transition"
-      @click="goToLogin"
-    >
-      Login
-    </button>
+            <!-- RIGHT -->
+            <div class="flex items-center gap-6">
+                <button v-if="!isLoggedIn" type="button" class="bg-white/15 hover:bg-white/25 text-white font-semibold px-6 py-3 rounded-2xl shadow-sm border border-white/30 transition" @click="goToLogin">Login</button>
 
-    <!-- Clock -->
-    <div class="flex flex-col items-end text-white">
-      <div class="text-4xl font-bold leading-none">
-        {{ time }}
-      </div>
-      <div class="text-2xl opacity-90 -mt-1">
-        {{ date }}
-      </div>
-    </div>
-  </div>
-</header>
+                <!-- Clock -->
+                <div class="flex flex-col items-end text-white">
+                    <div class="text-4xl font-bold leading-none">
+                        {{ time }}
+                    </div>
+                    <div class="text-2xl opacity-90 -mt-1">
+                        {{ date }}
+                    </div>
+                </div>
+            </div>
+        </header>
 
-        <!-- MAIN CONTENT / GRID -->
         <main class="flex-1 px-8 py-6 overflow-hidden">
             <!-- No users -->
             <div v-if="activeUsers === 0" class="h-full flex items-center justify-center">
@@ -63,48 +49,37 @@ import { computed, onMounted, watchEffect, ref, onBeforeUnmount } from 'vue';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import UserCardContent from '@/components/UserCardContent.vue';
-import { useRouter, useRoute } from 'vue-router'
-const router = useRouter()
-const route = useRoute()
+import { useRouter, useRoute } from 'vue-router';
+const router = useRouter();
+const route = useRoute();
 const wsStore = webSocketStore();
 const { bpmsForGym } = storeToRefs(wsStore);
-// entries like before
 const bpmsEntries = computed(() => Object.entries(bpmsForGym.value));
 
-// number of active users
 const activeUsers = computed(() => bpmsEntries.value.length);
 
-// dynamic grid style
 const gridStyle = ref({});
 
-// base class for card
 const cardBaseClass = 'bg-white border border-slate-200 rounded-3xl p-6 shadow-xl flex flex-col justify-between';
 
-const ACCESS_TOKEN_KEY = 'access'; // promeni ako se kod tebe zove drugacije
+const ACCESS_TOKEN_KEY = 'access';
 
 const isLoggedIn = computed(() => {
-  const t = localStorage.getItem(ACCESS_TOKEN_KEY);
-  return !!t && t !== 'null' && t !== 'undefined';
+    const t = localStorage.getItem(ACCESS_TOKEN_KEY);
+    return !!t && t !== 'null' && t !== 'undefined';
 });
 
 const headerStyle = computed(() => {
-  // siva kad nije ulogovan
-  if (!isLoggedIn.value) {
-    return { backgroundColor: '#64748b', color: 'white' }; // slate-500
-  }
-  // crvena kad jeste
-  return { backgroundColor: '#ff474c', color: 'white' };
+    if (!isLoggedIn.value) {
+        return { backgroundColor: '#64748b', color: 'white' }; // slate-500
+    }
+    return { backgroundColor: '#ff474c', color: 'white' };
 });
 
 function goToLogin() {
-  // 1) ako imas rutu
-  router.push({ name: 'coach-login', query: { redirect: route.fullPath } })
-
-  // 2) ili hard redirect
-//   window.location.href = '/auth/coach-login';
+    router.push({ name: 'coach-login', query: { redirect: route.fullPath } });
 }
 
-// adjust grid according to number of users
 watchEffect(() => {
     const count = activeUsers.value;
 
@@ -141,7 +116,6 @@ watchEffect(() => {
     }
 });
 
-// HEADER clock
 const time = ref('');
 const date = ref('');
 let intervalId = null;
@@ -165,11 +139,11 @@ function updateClock() {
 }
 
 onMounted(() => {
-  if (isLoggedIn.value) {
-    wsStore.connectWholeGym();
-  }
-  updateClock();
-  intervalId = setInterval(updateClock, 1000);
+    if (isLoggedIn.value) {
+        wsStore.connectWholeGym();
+    }
+    updateClock();
+    intervalId = setInterval(updateClock, 1000);
 });
 
 onBeforeUnmount(() => {

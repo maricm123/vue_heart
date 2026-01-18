@@ -88,10 +88,8 @@ function formatDuration(totalSec = 0) {
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
 
-  // ako želiš 1:10:12 (bez leading 0 na sat)
   if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 
-  // ispod 1h ostavi mm:ss
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
