@@ -588,13 +588,13 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
                     <div class="flex flex-col">
                         <!-- <span class="text-sm font-medium text-slate-700"> Danger zone </span> -->
-                        <span class="text-m text-slate-500"> Start/stop session </span>
+                        <span class="text-m text-slate-500"> Stop/Resume session </span>
                     </div>
 
                     <!-- <Button label="Start stop session" severity="danger" outlined size="small" @click="" /> -->
-                     <Button
+                    <Button
                         :label="sessionControlStore.isPaused(session.client.id) 
-                            ? 'Start session' 
+                            ? 'Resume session' 
                             : 'Stop session'"
 
                         :severity="sessionControlStore.isPaused(session.client.id) 
@@ -605,7 +605,6 @@ onUnmounted(() => {
                         size="small"
                         @click="toggleSession(session.client)"
                     />
-                    <ConfirmDialog />
                 </div>
                 <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
                     <div class="flex flex-col">

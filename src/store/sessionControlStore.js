@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export const useSessionControlStore = defineStore('sessionControl', {
     state: () => ({
         pausedSessions: {
-            // clientId: true/false
+            clientId: true/false
         }
     }),
 

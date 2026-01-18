@@ -45,6 +45,10 @@
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
+import { useSessionControlStore } from '@/store/sessionControlStore';
+
+const sessionControlStore = useSessionControlStore();
+const paused = computed(() => sessionControlStore.isPaused(props.clientId));
 
 const props = defineProps({
     clientId: { type: String, required: true }
@@ -63,6 +67,17 @@ const max_heart_rate_value = computed(() => max_heart_rate.value[props.clientId]
 // lokalni timer u sekundama
 const elapsedSeconds = ref(0);
 let intervalId = null;
+
+function startTicking() {
+  if (intervalId) return;
+  intervalId = setInterval(recalcElapsed, 1000);
+}
+
+function stopTicking() {
+  if (!intervalId) return;
+  clearInterval(intervalId);
+  intervalId = null;
+}
 
 function recalcElapsed() {
     const start = started_at.value;
@@ -96,18 +111,27 @@ function formatDuration(totalSec = 0) {
 const duration = computed(() => formatDuration(elapsedSeconds.value));
 
 onMounted(() => {
-    recalcElapsed();
-    intervalId = setInterval(recalcElapsed, 1000);
+  recalcElapsed();
+  if (!paused.value) startTicking();
 });
 
+
 // ako se started_at promeni (npr. novi trening) – reset i ponovni izračun
-watch(started_at, () => {
-    recalcElapsed();
+watch(paused, (isPaused) => {
+    console.log("pausedSessions snapshot:", JSON.stringify(sessionControlStore.pausedSessions));
+  if (isPaused) {
+    stopTicking();          // ✅ timer staje
+  } else {
+    recalcElapsed();        // ✅ odmah osveži
+    startTicking();         // ✅ nastavlja
+  }
 });
 
 onBeforeUnmount(() => {
-    if (intervalId) clearInterval(intervalId);
+    // if (intervalId) clearInterval(intervalId);
+    stopTicking();
 });
+
 
 function getPercentOfMax(bpm, max) {
     if (!max || max <= 0) return 0;
