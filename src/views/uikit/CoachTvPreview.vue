@@ -2,7 +2,16 @@
 import { onMounted, onUnmounted, ref, reactive } from 'vue';
 import { formatIsoToLocal } from '@/utils/formatDate';
 import { useBle } from '@/composables/useBle';
-import { getActiveTrainingSessions, finishSession, createSession, forceDeleteActiveTrainingSession } from '@/services/trainingSessionsService.js';
+import 
+{ 
+    getActiveTrainingSessions,
+    finishSession,
+    createSession,
+    forceDeleteActiveTrainingSession,
+    resumeActiveTrainingSession,
+    pauseActiveTrainingSession,
+}
+from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import { getClientsByCoachNotInActiveSession } from '@/services/userService.js';
@@ -33,7 +42,9 @@ const manuallyDisconnecting = reactive({});
 const manualDisconnects = reactive({});
 const toast = useToast();
 
-async function toggleSession(client) {
+async function toggleSession(session, client) {
+    console.log(session, client);
+  const sessionId = session.id;
   const clientId = client.id;
   const deviceId = bleStore.getDeviceId(clientId);
   if (!deviceId) return;
@@ -41,10 +52,12 @@ async function toggleSession(client) {
   const paused = sessionControlStore.isPaused(clientId);
 
   if (paused) {
+    await resumeActiveTrainingSession(sessionId);
     await startHeartRateNotifications(clientId, deviceId);
     resumeTimerFor(clientId);
     sessionControlStore.toggleSession(clientId);
   } else {
+    await pauseActiveTrainingSession(sessionId);
     await stopHeartRateNotificationsSafe(clientId, deviceId);
     pauseTimerFor(clientId);
     sessionControlStore.toggleSession(clientId);
@@ -603,7 +616,7 @@ onUnmounted(() => {
 
                         outlined
                         size="small"
-                        @click="toggleSession(session.client)"
+                        @click="toggleSession(session, session.client)"
                     />
                 </div>
                 <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
