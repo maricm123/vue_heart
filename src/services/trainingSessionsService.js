@@ -128,3 +128,40 @@ export async function forceDeleteActiveTrainingSession(sessionId) {
     throw err;
   }
 }
+
+
+export async function pauseActiveTrainingSession(sessionId) {
+  try {
+    const response = await api_coach.post(
+      `/training-sessions/${sessionId}/pause`,
+      {}, // no body needed
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access')}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error pausing training session:', err);
+    throw err;
+  }
+}
+
+export async function resumeActiveTrainingSession(sessionId) {
+  try {
+    const response = await api_coach.post(
+      `/training-sessions/${sessionId}/resume`,
+      {}, // no body needed
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access')}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    console.error('❌ Error resuming training session:', err);
+    throw err;
+  }
+}

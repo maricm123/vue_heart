@@ -179,7 +179,6 @@ import { defineStore } from 'pinia';
 import { ref, reactive } from 'vue';
 
 export const webSocketStore = defineStore('ws', () => {
-    // WebSocket objects
     const wsCoach = ref(null);
     const wsGym = ref(null);
 
