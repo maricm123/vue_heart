@@ -195,7 +195,11 @@ export const webSocketStore = defineStore('ws', () => {
     const client_name = reactive({});
     const max_heart_rate = reactive({});
     const coach = reactive({});
-    const startedAt = reactive({}); // store start timestamp locally
+    const startedAt = reactive({});
+
+    const pausedByClient = reactive({});     // { [clientId]: true/false }
+    const pausedAtByClient = reactive({});   // { [clientId]: Date|null }
+    const pausedSecondsByClient = reactive({}); // { [clientId]: number }
 
     // Keep track of which client metadata has been received
     const receivedGymMetadata = reactive({});
@@ -254,6 +258,19 @@ export const webSocketStore = defineStore('ws', () => {
             const data = JSON.parse(event.data);
             console.log('Gym WS data:', data);
             if (!data.client_id) return;
+
+            // ✅ pause/resume broadcast
+            if (data.event === 'session_pause') {
+                pausedByClient[data.client_id] = !!data.paused;
+
+                pausedAtByClient[data.client_id] = data.paused_at
+                ? new Date(data.paused_at)
+                : null;
+
+                pausedSecondsByClient[data.client_id] = Number(data.paused_seconds || 0);
+
+                return; // optional: ako ne želiš da ide dalje kroz bpm/calories logiku
+            }
 
             if (data.event === 'initial') {
                 console.log('INITIAL METADATA RECEIVED FOR CLIENT:', data.client_id);
@@ -356,6 +373,9 @@ export const webSocketStore = defineStore('ws', () => {
         disconnectCoach,
         connectWholeGym,
         disconnectWholeGym,
-        clearClientData
+        clearClientData,
+        pausedByClient,
+        pausedAtByClient,
+        pausedSecondsByClient,
     };
 });
