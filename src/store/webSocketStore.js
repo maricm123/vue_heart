@@ -261,6 +261,7 @@ export const webSocketStore = defineStore('ws', () => {
 
             // ✅ pause/resume broadcast
             if (data.event === 'session_pause') {
+                console.log('PAUSE/RESUME EVENT RECEIVED FOR CLIENT:', data.client_id, 'Paused:', data.paused);
                 pausedByClient[data.client_id] = !!data.paused;
 
                 pausedAtByClient[data.client_id] = data.paused_at

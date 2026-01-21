@@ -45,17 +45,13 @@
 import { computed, ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
-import { useSessionControlStore } from '@/store/sessionControlStore';
-
-const sessionControlStore = useSessionControlStore();
-const paused = computed(() => sessionControlStore.isPaused(props.clientId));
 
 const props = defineProps({
     clientId: { type: String, required: true }
 });
 
 const wsStore = webSocketStore();
-const { bpmsForGym, caloriesForGym, client_name, startedAt, max_heart_rate } = storeToRefs(wsStore);
+const { bpmsForGym, caloriesForGym, client_name, startedAt, max_heart_rate, pausedForGym, secondsForGym } = storeToRefs(wsStore);
 
 // osnovni podaci
 const bpm = computed(() => bpmsForGym.value[props.clientId] || 0);
@@ -63,6 +59,7 @@ const calories = computed(() => caloriesForGym.value[props.clientId] || 0);
 const name = computed(() => client_name.value[props.clientId] || 'Client Name');
 const started_at = computed(() => startedAt.value[props.clientId] || null);
 const max_heart_rate_value = computed(() => max_heart_rate.value[props.clientId] || null);
+const paused = computed(() => pausedForGym?.[props.clientId] ?? false);
 
 // lokalni timer u sekundama
 const elapsedSeconds = ref(0);
@@ -93,7 +90,9 @@ function recalcElapsed() {
         return;
     }
 
-    elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000);
+    // elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000);
+    elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000) - (wsStore.pausedSecondsForGym?.[props.clientId] ?? 0)
+
 }
 
 function formatDuration(totalSec = 0) {

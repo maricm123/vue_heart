@@ -133,8 +133,7 @@ export async function forceDeleteActiveTrainingSession(sessionId) {
 export async function pauseActiveTrainingSession(sessionId) {
   try {
     const response = await api_coach.post(
-      `/training-sessions/${sessionId}/pause`,
-      {},
+      `/training-session/${sessionId}/pause`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access')}`,
@@ -151,8 +150,7 @@ export async function pauseActiveTrainingSession(sessionId) {
 export async function resumeActiveTrainingSession(sessionId) {
   try {
     const response = await api_coach.post(
-      `/training-sessions/${sessionId}/resume`,
-      {},
+      `/training-session/${sessionId}/resume`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('access')}`,
