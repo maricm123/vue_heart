@@ -115,14 +115,12 @@ onMounted(() => {
 });
 
 
-// ako se started_at promeni (npr. novi trening) – reset i ponovni izračun
 watch(paused, (isPaused) => {
-    console.log("pausedSessions snapshot:", JSON.stringify(sessionControlStore.pausedSessions));
   if (isPaused) {
-    stopTicking();          // ✅ timer staje
+    stopTicking();
   } else {
-    recalcElapsed();        // ✅ odmah osveži
-    startTicking();         // ✅ nastavlja
+    recalcElapsed();
+    startTicking();
   }
 });
 
