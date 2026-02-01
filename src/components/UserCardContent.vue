@@ -1,6 +1,6 @@
-<template>
+<!-- OLD LOOK -->
+<!-- <template>
     <div class="flex flex-col h-full justify-between">
-        <!-- TOP SECTION -->
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-4">
                 <img src="https://ui-avatars.com/api/?name=Client" alt="avatar" class="w-14 h-14 rounded-full border-2 border-slate-200" />
@@ -13,11 +13,9 @@
                 {{ zoneLabel(bpm, max_heart_rate_value) }}
             </span>
 
-            <!-- Ako nema max HR, prikaži neutralni badge -->
             <span v-else class="px-4 py-1 rounded-full text-sm font-semibold bg-slate-300 text-slate-700 shadow-sm opacity-90 backdrop-blur-sm"> NO MAX HR </span>
         </div>
 
-        <!-- DATA SECTION -->
         <div class="space-y-3 text-sm">
             <div class="flex items-center justify-between">
                 <span class="text-slate-500 text-2xl">Heart Rate</span>
@@ -39,6 +37,81 @@
             </div>
         </div>
     </div>
+</template> -->
+<template>
+  <div class="h-full w-full flex items-center justify-center">
+    <div
+      class="w-full h-full flex flex-col items-center justify-center text-center
+             rounded-3xl bg-white/85 backdrop-blur-md border border-slate-200
+             shadow-md px-12 py-10"
+    >
+      <!-- Header -->
+      <div class="flex flex-col items-center gap-5 mb-10">
+        <img
+          src="https://ui-avatars.com/api/?name=Client"
+          alt="avatar"
+          class="w-28 h-28 rounded-full border-4 border-slate-200 shadow-md"
+        />
+
+        <h2 class="text-5xl font-extrabold text-slate-900 leading-tight">
+          {{ name }}
+        </h2>
+
+        <!-- Zone badge -->
+        <span
+          v-if="max_heart_rate_value"
+          :class="[
+            'px-8 py-3 rounded-full text-2xl font-extrabold uppercase tracking-wide shadow-md opacity-95',
+            zoneColor(bpm),
+          ]"
+        >
+          {{ zoneLabel(bpm, max_heart_rate_value) }}
+        </span>
+
+        <span
+          v-else
+          class="px-8 py-3 rounded-full text-2xl font-extrabold bg-slate-200 text-slate-700 shadow-md opacity-95"
+        >
+          NO MAX HR
+        </span>
+      </div>
+
+      <!-- Hero HR -->
+      <div class="mb-12">
+        <div class="text-slate-500 text-2xl font-semibold uppercase tracking-wide mb-4">
+          Heart Rate
+        </div>
+
+        <div class="flex items-baseline justify-center gap-6">
+          <span class="text-9xl font-black leading-none" :class="bpmTextColor(bpm)">
+            {{ bpm }}
+          </span>
+          <span class="text-4xl text-slate-400 font-bold">BPM</span>
+        </div>
+      </div>
+
+      <!-- Secondary metrics -->
+      <div class="w-full grid grid-cols-2 gap-8">
+        <div class="rounded-2xl border border-slate-200 bg-white/75 p-8 shadow-md">
+          <div class="text-slate-500 text-xl font-semibold uppercase tracking-wide mb-4">
+            Calories Burned
+          </div>
+          <div class="text-orange-500 text-6xl font-black leading-none tabular-nums">
+            {{ calories }}
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white/75 p-8 shadow-md">
+          <div class="text-slate-500 text-xl font-semibold uppercase tracking-wide mb-4">
+            Training Time
+          </div>
+          <div class="text-blue-600 text-6xl font-black leading-none tabular-nums">
+            {{ duration }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -51,7 +124,8 @@ const props = defineProps({
 });
 
 const wsStore = webSocketStore();
-const { bpmsForGym, caloriesForGym, client_name, startedAt, max_heart_rate, pausedForGym, secondsForGym } = storeToRefs(wsStore);
+const { bpmsForGym, caloriesForGym, client_name, startedAt, max_heart_rate } = storeToRefs(wsStore);
+const { pausedByClient, pausedAtByClient, pausedSecondsByClient } = storeToRefs(wsStore);
 
 // osnovni podaci
 const bpm = computed(() => bpmsForGym.value[props.clientId] || 0);
@@ -59,7 +133,11 @@ const calories = computed(() => caloriesForGym.value[props.clientId] || 0);
 const name = computed(() => client_name.value[props.clientId] || 'Client Name');
 const started_at = computed(() => startedAt.value[props.clientId] || null);
 const max_heart_rate_value = computed(() => max_heart_rate.value[props.clientId] || null);
-const paused = computed(() => pausedForGym?.[props.clientId] ?? false);
+const paused = computed(() => pausedByClient.value?.[props.clientId] ?? false);
+const pausedAt = computed(() => pausedAtByClient.value?.[props.clientId] ?? null);
+const pausedSeconds = computed(() => pausedSecondsByClient.value?.[props.clientId] ?? 0);
+
+
 
 // lokalni timer u sekundama
 const elapsedSeconds = ref(0);
@@ -77,22 +155,21 @@ function stopTicking() {
 }
 
 function recalcElapsed() {
-    const start = started_at.value;
-    if (!start) {
-        elapsedSeconds.value = 0;
-        return;
-    }
+  const start = started_at.value;
+  if (!start) { elapsedSeconds.value = 0; return; }
 
-    // u storu verovatno već čuvaš Date, ali budimo sigurni
-    const startDate = start instanceof Date ? start : new Date(start);
-    if (isNaN(startDate.getTime())) {
-        elapsedSeconds.value = 0;
-        return;
-    }
+  const startMs = (start instanceof Date ? start : new Date(start)).getTime();
+  if (Number.isNaN(startMs)) { elapsedSeconds.value = 0; return; }
 
-    // elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000);
-    elapsedSeconds.value = Math.floor((Date.now() - startDate.getTime()) / 1000) - (wsStore.pausedSecondsForGym?.[props.clientId] ?? 0)
+  const pausedTotal = Number(pausedSeconds.value || 0);
 
+  if (pausedAt.value) {
+    const pauseMs = new Date(pausedAt.value).getTime();
+    elapsedSeconds.value = Math.max(0, Math.floor((pauseMs - startMs) / 1000) - pausedTotal);
+    return;
+  }
+
+  elapsedSeconds.value = Math.max(0, Math.floor((Date.now() - startMs) / 1000) - pausedTotal);
 }
 
 function formatDuration(totalSec = 0) {
@@ -115,13 +192,10 @@ onMounted(() => {
 });
 
 
-watch(paused, (isPaused) => {
-  if (isPaused) {
-    stopTicking();
-  } else {
-    recalcElapsed();
-    startTicking();
-  }
+watch([paused, pausedAt, pausedSeconds, started_at], () => {
+  recalcElapsed();
+  if (paused.value) stopTicking();
+  else startTicking();
 });
 
 onBeforeUnmount(() => {
