@@ -57,9 +57,9 @@ async function toggleSession(session, client) {
     resumeTimerFor(clientId);
     sessionControlStore.toggleSession(clientId);
   } else {
+    pauseTimerFor(clientId);
     await pauseActiveTrainingSession(sessionId);
     await stopHeartRateNotificationsSafe(clientId, deviceId);
-    pauseTimerFor(clientId);
     sessionControlStore.toggleSession(clientId);
   }
 }

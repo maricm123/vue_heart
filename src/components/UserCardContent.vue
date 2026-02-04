@@ -138,7 +138,6 @@ const pausedAt = computed(() => pausedAtByClient.value?.[props.clientId] ?? null
 const pausedSeconds = computed(() => pausedSecondsByClient.value?.[props.clientId] ?? 0);
 
 
-
 // lokalni timer u sekundama
 const elapsedSeconds = ref(0);
 let intervalId = null;
@@ -202,7 +201,6 @@ onBeforeUnmount(() => {
     // if (intervalId) clearInterval(intervalId);
     stopTicking();
 });
-
 
 function getPercentOfMax(bpm, max) {
     if (!max || max <= 0) return 0;

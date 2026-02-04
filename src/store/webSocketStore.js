@@ -197,8 +197,8 @@ export const webSocketStore = defineStore('ws', () => {
     const coach = reactive({});
     const startedAt = reactive({});
 
-    const pausedByClient = reactive({});     // { [clientId]: true/false }
-    const pausedAtByClient = reactive({});   // { [clientId]: Date|null }
+    const pausedByClient = reactive({}); // { [clientId]: true/false }
+    const pausedAtByClient = reactive({}); // { [clientId]: Date|null }
     const pausedSecondsByClient = reactive({}); // { [clientId]: number }
 
     // Keep track of which client metadata has been received
@@ -243,7 +243,7 @@ export const webSocketStore = defineStore('ws', () => {
         }
     }
 
-    // ---------- GYM WS ----------
+
     function connectWholeGym() {
         if (wsGym.value) return;
         const token = localStorage.getItem('access');
@@ -264,13 +264,18 @@ export const webSocketStore = defineStore('ws', () => {
                 console.log('PAUSE/RESUME EVENT RECEIVED FOR CLIENT:', data.client_id, 'Paused:', data.paused);
                 pausedByClient[data.client_id] = !!data.paused;
 
-                pausedAtByClient[data.client_id] = data.paused_at
-                ? new Date(data.paused_at)
-                : null;
+                pausedAtByClient[data.client_id] = data.paused_at ? new Date(data.paused_at) : null;
 
                 pausedSecondsByClient[data.client_id] = Number(data.paused_seconds || 0);
 
                 return; // optional: ako ne želiš da ide dalje kroz bpm/calories logiku
+            }
+
+            // ✅ session finished broadcast
+            if (data.event === 'training_session_finished') {
+                console.log('SESSION FINISHED:', data.client_id, 'session:', data.training_session_id);
+                clearClientData(data.client_id);
+                return;
             }
 
             if (data.event === 'initial') {
@@ -287,11 +292,10 @@ export const webSocketStore = defineStore('ws', () => {
                 if (data.client_name) client_name[data.client_id] = data.client_name;
                 if (data.coach_id) coach[data.client_id] = data.coach_id;
                 if (data.max_heart_rate) max_heart_rate[data.client_id] = data.max_heart_rate;
-                
             }
 
             client[data.client_id] = data.client_id;
-            console.log(data.max_heart_rate)
+            console.log(data.max_heart_rate);
 
             // ---------- METADATA (send once) ----------
             if (!receivedGymMetadata[data.client_id]) {
@@ -354,6 +358,9 @@ export const webSocketStore = defineStore('ws', () => {
         safeDelete(coach);
         safeDelete(startedAt);
         safeDelete(receivedGymMetadata);
+        safeDelete(pausedByClient);
+        safeDelete(pausedAtByClient);
+        safeDelete(pausedSecondsByClient);
     }
 
     return {
@@ -377,6 +384,6 @@ export const webSocketStore = defineStore('ws', () => {
         clearClientData,
         pausedByClient,
         pausedAtByClient,
-        pausedSecondsByClient,
+        pausedSecondsByClient
     };
 });
