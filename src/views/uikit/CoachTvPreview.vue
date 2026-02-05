@@ -240,45 +240,74 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
     }
 }
 
+// async function disconnectDevice(client) {
+//     const clientId = client.id;
+
+//     const deviceId = bleStore.getDeviceId(clientId);
+
+//     console.log('Disconnecting device for client', clientId, 'deviceId:', deviceId);
+
+//     if (!deviceId) {
+//         console.warn('No stored deviceId for client', clientId);
+//         return;
+//     }
+
+//     markManualDisconnect(clientId, deviceId);
+
+//     bleStore.removeDevice(clientId);
+//     bleStore.setConnection(clientId, 'disconnected');
+
+//     try {
+//         await BleClient.stopNotifications(deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
+
+//         await BleClient.disconnect(deviceId);
+
+//         try {
+//             const stillConnected = await safeIsConnected(deviceId);
+//             console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
+//         } catch (e) {
+//             // safeIsConnected may throw — this is OK
+//         }
+//     } catch (err) {
+//         console.warn('Disconnect failed:', err.message);
+//     } finally {
+//         bleStore.clearManual(clientId);
+//         bleStore.setConnection(clientId, 'disconnected');
+//         bleStore.removeDevice?.(clientId);
+//         delete wsStore.bpmsFromWsCoach[clientId];
+//         delete sessionsStarted[clientId];
+//         delete bleStore.connectedDevices[clientId];
+//     }
+// }
+
+
 async function disconnectDevice(client) {
-    const clientId = client.id;
+  const clientId = client.id;
+  const deviceId = bleStore.getDeviceId(clientId);
+  if (!deviceId) return;
 
-    const deviceId = bleStore.getDeviceId(clientId);
+  markManualDisconnect(clientId, deviceId);
 
-    console.log('Disconnecting device for client', clientId, 'deviceId:', deviceId);
+  try {
+    // ✅ THIS is what you're missing
+    await stopHeartRateNotificationsSafe(clientId, deviceId);
 
-    if (!deviceId) {
-        console.warn('No stored deviceId for client', clientId);
-        return;
-    }
+    await BleClient.disconnect(deviceId);
 
-    markManualDisconnect(clientId, deviceId);
-
-    bleStore.removeDevice(clientId);
+    const stillConnected = await safeIsConnected(deviceId);
+    console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
+  } catch (err) {
+    console.warn('Disconnect failed:', err?.message || err);
+  } finally {
+    bleStore.clearManual(clientId);
     bleStore.setConnection(clientId, 'disconnected');
-
-    try {
-        await BleClient.stopNotifications(deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
-
-        await BleClient.disconnect(deviceId);
-
-        try {
-            const stillConnected = await safeIsConnected(deviceId);
-            console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
-        } catch (e) {
-            // safeIsConnected may throw — this is OK
-        }
-    } catch (err) {
-        console.warn('Disconnect failed:', err.message);
-    } finally {
-        bleStore.clearManual(clientId);
-        bleStore.setConnection(clientId, 'disconnected');
-        bleStore.removeDevice?.(clientId);
-        delete wsStore.bpmsFromWsCoach[clientId];
-        delete sessionsStarted[clientId];
-        delete bleStore.connectedDevices[clientId];
-    }
+    bleStore.removeDevice?.(clientId);
+    delete wsStore.bpmsFromWsCoach[clientId];
+    delete sessionsStarted[clientId];
+    delete bleStore.connectedDevices[clientId];
+  }
 }
+
 
 async function startSession(client) {
     try {
@@ -320,6 +349,8 @@ async function onFinishSession(client, calories, seconds) {
         disconnectDevice(client);
 
         activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
+
+        await stopHeartRateNotificationsSafe(client.id, bleStore.getDeviceId(client.id));
     } catch (err) {
         console.error('Failed to finish session', err);
     }
