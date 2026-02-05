@@ -2,27 +2,18 @@
 import { onMounted, onUnmounted, ref, reactive } from 'vue';
 import { formatIsoToLocal } from '@/utils/formatDate';
 import { useBle } from '@/composables/useBle';
-import 
-{ 
-    getActiveTrainingSessions,
-    finishSession,
-    createSession,
-    forceDeleteActiveTrainingSession,
-    resumeActiveTrainingSession,
-    pauseActiveTrainingSession,
-}
-from '@/services/trainingSessionsService.js';
+import { getActiveTrainingSessions, finishSession, createSession, forceDeleteActiveTrainingSession, resumeActiveTrainingSession, pauseActiveTrainingSession } from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
 import { getClientsByCoachNotInActiveSession } from '@/services/userService.js';
 import { BleClient } from '@capacitor-community/bluetooth-le';
-import { useConfirm } from "primevue/useconfirm";
+import { useConfirm } from 'primevue/useconfirm';
 import BelgradeClock from '@/components/BelgradeClock.vue';
 import { useToast } from 'primevue/usetoast';
 import { useBleStore } from '@/store/useBleStore.js';
-import { useSessionControlStore } from '@/store/sessionControlStore'
+import { useSessionControlStore } from '@/store/sessionControlStore';
 
-const sessionControlStore = useSessionControlStore()
+const sessionControlStore = useSessionControlStore();
 const bleStore = useBleStore();
 const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
 
@@ -44,24 +35,24 @@ const toast = useToast();
 
 async function toggleSession(session, client) {
     console.log(session, client);
-  const sessionId = session.id;
-  const clientId = client.id;
-  const deviceId = bleStore.getDeviceId(clientId);
-  if (!deviceId) return;
+    const sessionId = session.id;
+    const clientId = client.id;
+    const deviceId = bleStore.getDeviceId(clientId);
+    if (!deviceId) return;
 
-  const paused = sessionControlStore.isPaused(clientId);
+    const paused = sessionControlStore.isPaused(clientId);
 
-  if (paused) {
-    await resumeActiveTrainingSession(sessionId);
-    await startHeartRateNotifications(clientId, deviceId);
-    resumeTimerFor(clientId);
-    sessionControlStore.toggleSession(clientId);
-  } else {
-    pauseTimerFor(clientId);
-    await pauseActiveTrainingSession(sessionId);
-    await stopHeartRateNotificationsSafe(clientId, deviceId);
-    sessionControlStore.toggleSession(clientId);
-  }
+    if (paused) {
+        await resumeActiveTrainingSession(sessionId);
+        await startHeartRateNotifications(clientId, deviceId);
+        resumeTimerFor(clientId);
+        sessionControlStore.toggleSession(clientId);
+    } else {
+        pauseTimerFor(clientId);
+        await pauseActiveTrainingSession(sessionId);
+        await stopHeartRateNotificationsSafe(clientId, deviceId);
+        sessionControlStore.toggleSession(clientId);
+    }
 }
 
 // kad ručno diskonektuješ
@@ -104,7 +95,7 @@ function fmtStart(iso) {
     // return formatIsoToLocal(iso)
 }
 
-async function open() {
+async function openSelectClientModal() {
     display.value = true;
     loadingClients.value = true;
     try {
@@ -337,11 +328,11 @@ async function onFinishSession(client, calories, seconds) {
 const confirm = useConfirm();
 const confirmDelete = (client) => {
     confirm.require({
-        message: "This will permanently delete the session. Continue?",
-        header: "Confirm delete",
-        icon: "pi pi-exclamation-triangle",
-        acceptClass: "p-button-danger",
-        accept: () => forceDeleteSession(client),
+        message: 'This will permanently delete the session. Continue?',
+        header: 'Confirm delete',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => forceDeleteSession(client)
     });
 };
 const forceDeleteSession = async (client) => {
@@ -350,10 +341,10 @@ const forceDeleteSession = async (client) => {
         await forceDeleteActiveTrainingSession(sessionId);
 
         toast.add({
-            severity: "success",
-            summary: "Session deleted",
-            detail: "Session has been permanently removed",
-            life: 3000,
+            severity: 'success',
+            summary: 'Session deleted',
+            detail: 'Session has been permanently removed',
+            life: 3000
         });
 
         timersStore.stopTimerFor(client.id);
@@ -365,21 +356,19 @@ const forceDeleteSession = async (client) => {
 
         bleStore.clearSession(client.id);
 
-        sessionControlStore.clear(client.id)
+        sessionControlStore.clear(client.id);
 
         disconnectDevice(client);
 
-        activeSessions.value = activeSessions.value.filter(
-            (s) => s.id !== sessionId
-        );
+        activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
     } catch (error) {
         console.error(error);
 
         toast.add({
-            severity: "error",
-            summary: "Delete failed",
-            detail: "Unable to delete session",
-            life: 3000,
+            severity: 'error',
+            summary: 'Delete failed',
+            detail: 'Unable to delete session',
+            life: 3000
         });
     }
 };
@@ -420,7 +409,7 @@ onUnmounted(() => {
 
 <template>
     <div class="card">
-        <div class="font-semibold text-xl mb-4">Add new session for client</div>
+        <div class="font-semibold text-xl mb-4">Add new training session for client</div>
 
         <Dialog header="Clients" v-model:visible="display" :breakpoints="{ '960px': '75vw' }" :style="{ width: '50vw' }" :modal="true">
             <div v-if="loadingClients" class="flex justify-center p-8">
@@ -436,7 +425,7 @@ onUnmounted(() => {
                             class="flex flex-col sm:flex-row sm:items-center p-4 border-b border-surface-200 gap-4"
                             :class="{
                                 'opacity-50 cursor-not-allowed': isSelected(client),
-                                'cursor-pointer hover:bg-primary-50': !isSelected(client)
+                                'cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-800': !isSelected(client)
                             }"
                             @click="!isSelected(client) && selectClient(client)"
                         >
@@ -464,7 +453,7 @@ onUnmounted(() => {
                                 class="p-4 border border-surface-200 bg-surface-0 rounded flex flex-col gap-4"
                                 :class="{
                                     'opacity-50 cursor-not-allowed': isSelected(client),
-                                    'cursor-pointer hover:border-primary hover:border-2': !isSelected(client)
+                                    'cursor-pointer hover:border-surface-200 hover:border-2': !isSelected(client)
                                 }"
                                 @click="!isSelected(client) && selectClient(client)"
                             >
@@ -484,7 +473,7 @@ onUnmounted(() => {
         </Dialog>
 
         <!-- Button to open modal -->
-        <Button label="Select Clients" style="width: auto" @click="open" class="mt-4" />
+        <Button label="Select Clients" style="width: auto" @click="openSelectClientModal" class="mt-4" />
 
         <!-- Show selected clients -->
         <!-- for grid use this -->
@@ -543,90 +532,82 @@ onUnmounted(() => {
         <!-- If no active sessions -->
         <div v-if="activeSessions.length === 0" class="p-4 text-gray-500">No active sessions</div>
 
-        <div class="mb-8">
-            <div v-for="session in activeSessions" :key="session.id" class="mb-8 border rounded-xl overflow-hidden bg-white shadow-sm">
-                <!-- MAIN CONTENT -->
-                <Splitter style="height: 300px">
-                    <!-- Left panel: client info + finish button -->
-                    <SplitterPanel :size="30" :minSize="10">
-                        <div class="p-4 flex flex-col justify-between h-full">
-                            <div>
-                                <p class="font-medium">{{ session.client.user.first_name }} {{ session.client.user.last_name }}</p>
-                                <p class="text-sm text-gray-500">Started: {{ fmtStart(session.start) }}</p>
-                            </div>
-                            <Button label="Finish" severity="danger" size="small" @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id], timers[session.client.id])" />
+        <div v-for="session in activeSessions" :key="session.id" class="mb-8 border rounded-xl overflow-hidden bg-white text-slate-900 shadow-sm dark:bg-surface-900 dark:text-surface-0 dark:border-surface-700">
+            <Splitter style="height: 300px">
+                <SplitterPanel :size="30" :minSize="10">
+                    <div class="p-4 flex flex-col justify-between h-full">
+                        <div>
+                            <p class="font-medium">{{ session.client.user.first_name }} {{ session.client.user.last_name }}</p>
+                            <p class="text-sm text-slate-500 dark:text-surface-300">Started: {{ fmtStart(session.start) }}</p>
                         </div>
-                    </SplitterPanel>
-                    <!-- Right panel: session details -->
-                    <SplitterPanel :size="70">
-                        <div class="h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl shadow-md p-6">
-                            <!-- <h2 class="text-xl font-semibold text-gray-700 mb-4">{{ session.client.user.first_name }} {{ session.client.user.last_name }}</h2> -->
 
-                            <div class="flex items-center gap-8">
-                                <div class="flex flex-col items-center">
-                                    <span class="text-3xl font-bold text-red-500">
-                                        {{ bpmsFromWsCoach[session.client.id] ?? '-' }}
-                                    </span>
-                                    <span class="text-sm text-gray-500">BPM</span>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <span class="text-3xl font-bold text-orange-500">
-                                        {{ caloriesFromWsCoach[session.client.id] ?? 0 }}
-                                    </span>
-                                    <span class="text-sm text-gray-500">kcal burned</span>
-                                </div>
-                            </div>
+                        <Button label="Finish" severity="danger" size="small" @click="onFinishSession(session.client, caloriesFromWsCoach[session.client.id], timers[session.client.id])" />
+                    </div>
+                </SplitterPanel>
+
+                <SplitterPanel :size="70">
+                    <div class="h-full flex flex-col items-center justify-center rounded-xl shadow-md p-6 bg-surface-50 text-surface-900 dark:bg-surface-800 dark:text-surface-0">
+                        <div class="flex items-center gap-8">
                             <div class="flex flex-col items-center">
-                                <span class="text-3xl font-bold">
-                                    <p>Time: {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}</p>
-
-                                    <!-- {{ formatDuration(timers[session.client.id] ?? 0) }} -->
+                                <span class="text-3xl font-bold text-red-500">
+                                    {{ bpmsFromWsCoach[session.client.id] ?? '-' }}
                                 </span>
+                                <span class="text-sm text-slate-500 dark:text-surface-300">BPM</span>
                             </div>
-                            <span
-                                :class="{
-                                    'text-black-500': connectionStatus[session.client.id] === 'connected',
-                                    'text-yellow-500': connectionStatus[session.client.id] === 'connecting' || connectionStatus[session.client.id] === 'reconnecting',
-                                    'text-red-500': connectionStatus[session.client.id] === 'disconnected'
-                                }"
-                            >
-                                Device status: {{ connectionStatus[session.client.id] }}
-                            </span>
-                            <p v-if="batteryLevel[session.client.id] !== undefined">Device battery: {{ batteryLevel[session.client.id] }}%</p>
+
+                            <div class="flex flex-col items-center">
+                                <span class="text-3xl font-bold text-orange-500">
+                                    {{ caloriesFromWsCoach[session.client.id] ?? 0 }}
+                                </span>
+                                <span class="text-sm text-slate-500 dark:text-surface-300">kcal burned</span>
+                            </div>
                         </div>
-                    </SplitterPanel>
-                </Splitter>
 
-                <!-- FOOTER / DANGER ACTION -->
-                <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
-                    <div class="flex flex-col">
-                        <!-- <span class="text-sm font-medium text-slate-700"> Danger zone </span> -->
-                        <span class="text-m text-slate-500"> Stop/Resume session </span>
+                        <div class="flex flex-col items-center">
+                            <span class="text-3xl font-bold">
+                                <p>
+                                    Time:
+                                    {{ timers[session.client.id] ? timersStore.formatDuration(timers[session.client.id]) : '00:00' }}
+                                </p>
+                            </span>
+                        </div>
+
+                        <span
+                            :class="{
+                                'text-emerald-400': connectionStatus[session.client.id] === 'connected',
+                                'text-yellow-400': connectionStatus[session.client.id] === 'connecting' || connectionStatus[session.client.id] === 'reconnecting',
+                                'text-red-400': connectionStatus[session.client.id] === 'disconnected'
+                            }"
+                        >
+                            Device status: {{ connectionStatus[session.client.id] }}
+                        </span>
+
+                        <p v-if="batteryLevel[session.client.id] !== undefined" class="text-slate-500 dark:text-surface-300">Device battery: {{ batteryLevel[session.client.id] }}%</p>
                     </div>
+                </SplitterPanel>
+            </Splitter>
 
-                    <!-- <Button label="Start stop session" severity="danger" outlined size="small" @click="" /> -->
-                    <Button
-                        :label="sessionControlStore.isPaused(session.client.id) 
-                            ? 'Resume session' 
-                            : 'Stop session'"
-
-                        :severity="sessionControlStore.isPaused(session.client.id) 
-                            ? 'success' 
-                            : 'danger'"
-
-                        outlined
-                        size="small"
-                        @click="toggleSession(session, session.client)"
-                    />
+            <!-- FOOTERS -->
+            <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50 dark:bg-surface-800 dark:border-surface-700">
+                <div class="flex flex-col">
+                    <span class="text-m text-slate-500 dark:text-surface-300">Stop/Resume session</span>
                 </div>
-                <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50">
-                    <div class="flex flex-col">
-                        <!-- <span class="text-sm font-medium text-slate-700"> Danger zone </span> -->
-                        <span class="text-m text-slate-500"> Delete session permanently </span>
-                    </div>
 
-                    <Button label="Delete session" severity="danger" outlined size="small" @click="confirmDelete(session.client)" />
+                <Button
+                    :label="sessionControlStore.isPaused(session.client.id) ? 'Resume session' : 'Stop session'"
+                    :severity="sessionControlStore.isPaused(session.client.id) ? 'success' : 'danger'"
+                    outlined
+                    size="small"
+                    @click="toggleSession(session, session.client)"
+                />
+            </div>
+
+            <div class="flex items-center justify-between px-4 py-3 border-t bg-slate-50 dark:bg-surface-800 dark:border-surface-700">
+                <div class="flex flex-col">
+                    <span class="text-m text-slate-500 dark:text-surface-300">Delete session permanently</span>
                 </div>
+
+                <Button label="Delete session" severity="danger" outlined size="small" @click="confirmDelete(session.client)" />
             </div>
         </div>
     </div>
