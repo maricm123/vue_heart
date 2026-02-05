@@ -201,10 +201,11 @@ export const webSocketStore = defineStore('ws', () => {
     const pausedAtByClient = reactive({}); // { [clientId]: Date|null }
     const pausedSecondsByClient = reactive({}); // { [clientId]: number }
 
+    const activeClients = reactive({}); // { [clientId]: true }
+
     // Keep track of which client metadata has been received
     const receivedGymMetadata = reactive({});
 
-    // ---------- COACH WS ----------
     function connectCoach() {
         if (wsCoach.value) return;
         const token = localStorage.getItem('access');
@@ -274,12 +275,14 @@ export const webSocketStore = defineStore('ws', () => {
             // ✅ session finished broadcast
             if (data.event === 'training_session_finished') {
                 console.log('SESSION FINISHED:', data.client_id, 'session:', data.training_session_id);
+                delete activeClients[data.client_id];
                 clearClientData(data.client_id);
                 return;
             }
 
             if (data.event === 'initial') {
                 console.log('INITIAL METADATA RECEIVED FOR CLIENT:', data.client_id);
+                activeClients[data.client_id] = true;
                 receivedGymMetadata[data.client_id] = true;
 
                 if (data.started_at) {
@@ -341,27 +344,21 @@ export const webSocketStore = defineStore('ws', () => {
 
     // ---------- CLEAR CLIENT DATA ----------
     function clearClientData(clientId) {
-        const safeDelete = (obj) => {
-            if (obj[clientId] !== undefined) {
-                const { [clientId]: _, ...rest } = obj;
-                Object.keys(obj).forEach((key) => delete obj[key]);
-                Object.assign(obj, rest);
-            }
-        };
+  const del = (obj) => { delete obj[clientId]; };
 
-        safeDelete(bpmsFromWsCoach);
-        safeDelete(caloriesFromWsCoach);
-        safeDelete(bpmsForGym);
-        safeDelete(caloriesForGym);
-        safeDelete(client);
-        safeDelete(client_name);
-        safeDelete(coach);
-        safeDelete(startedAt);
-        safeDelete(receivedGymMetadata);
-        safeDelete(pausedByClient);
-        safeDelete(pausedAtByClient);
-        safeDelete(pausedSecondsByClient);
-    }
+  del(bpmsFromWsCoach);
+  del(caloriesFromWsCoach);
+  del(bpmsForGym);
+  del(caloriesForGym);
+  del(client);
+  del(client_name);
+  del(coach);
+  del(startedAt);
+  del(receivedGymMetadata);
+  del(pausedByClient);
+  del(pausedAtByClient);
+  del(pausedSecondsByClient);
+}
 
     return {
         wsCoach,
@@ -384,6 +381,7 @@ export const webSocketStore = defineStore('ws', () => {
         clearClientData,
         pausedByClient,
         pausedAtByClient,
-        pausedSecondsByClient
+        pausedSecondsByClient,
+        activeClients,
     };
 });

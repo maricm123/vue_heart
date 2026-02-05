@@ -35,8 +35,8 @@
             <!-- 1+ users → single dynamic grid -->
             <div v-else class="h-full">
                 <div class="grid h-full gap-6" :style="gridStyle">
-                    <div v-for="[clientId] in bpmsEntries" :key="clientId" :class="[cardBaseClass, { 'h-full': activeUsers === 1 }]">
-                        <UserCardContent :client-id="clientId" />
+                    <div v-for="clientId in activeClientIds" :key="clientId" class="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
+                        <UserCardContent :client-id="clientId" class="h-full" />
                     </div>
                 </div>
             </div>
@@ -53,10 +53,10 @@ import { useRouter, useRoute } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 const wsStore = webSocketStore();
-const { bpmsForGym } = storeToRefs(wsStore);
-const bpmsEntries = computed(() => Object.entries(bpmsForGym.value));
+const { activeClients } = storeToRefs(wsStore);
 
-const activeUsers = computed(() => bpmsEntries.value.length);
+const activeClientIds = computed(() => Object.keys(activeClients.value));
+const activeUsers = computed(() => activeClientIds.value.length);
 
 const gridStyle = ref({});
 
@@ -88,32 +88,16 @@ watchEffect(() => {
         return;
     }
 
-    if (count === 1) {
-        gridStyle.value = {
-            gridTemplateColumns: '1fr',
-            gridTemplateRows: '1fr'
-        };
-    } else if (count === 2) {
-        gridStyle.value = {
-            gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr'
-        };
-    } else if (count <= 4) {
-        gridStyle.value = {
-            gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr 1fr'
-        };
-    } else if (count <= 6) {
-        gridStyle.value = {
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gridTemplateRows: '1fr 1fr'
-        };
-    } else {
-        gridStyle.value = {
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gridTemplateRows: '1fr 1fr 1fr'
-        };
-    }
+    // TV-friendly: 1 row for 1-3, then 2 rows if more
+    const cols = count === 1 ? 1 : count === 2 ? 2 : count === 3 ? 3 : 3; // 3 columns max for TV
+
+    const rows = Math.ceil(count / cols);
+
+    gridStyle.value = {
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`
+    };
 });
 
 const time = ref('');

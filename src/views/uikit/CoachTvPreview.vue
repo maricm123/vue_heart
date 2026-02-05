@@ -543,7 +543,7 @@ onUnmounted(() => {
         <!-- If no active sessions -->
         <div v-if="activeSessions.length === 0" class="p-4 text-gray-500">No active sessions</div>
 
-        <div v-for="session in activeSessions" :key="session.id" class="mb-8">
+        <div class="mb-8">
             <div v-for="session in activeSessions" :key="session.id" class="mb-8 border rounded-xl overflow-hidden bg-white shadow-sm">
                 <!-- MAIN CONTENT -->
                 <Splitter style="height: 300px">
@@ -626,10 +626,10 @@ onUnmounted(() => {
                     </div>
 
                     <Button label="Delete session" severity="danger" outlined size="small" @click="confirmDelete(session.client)" />
-                    <ConfirmDialog />
                 </div>
             </div>
         </div>
     </div>
     <BelgradeClock />
+    <ConfirmDialog />
 </template>
