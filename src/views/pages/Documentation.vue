@@ -1,136 +1,399 @@
 <template>
     <div class="card">
-        <div class="font-semibold text-2xl mb-4">Documentation</div>
-        <div class="font-semibold text-xl mb-4">Get Started</div>
-        <p class="text-lg mb-4">
-            Sakai is an application template for Vue based on the <a href="https://github.com/vuejs/create-vue" class="font-medium text-primary hover:underline">create-vue</a>, the recommended way to start a <strong>Vite-powered</strong> Vue
-            projects. To get started, clone the <a href="https://github.com/primefaces/sakai-vue" class="font-medium text-primary hover:underline">repository</a> from GitHub and install the dependencies with npm or yarn.
-        </p>
-        <pre class="app-code">
-<code>git clone https://github.com/primefaces/sakai-vue
-npm install
-npm run dev</code></pre>
+        <div class="flex items-start justify-between gap-6 mb-6">
+            <div>
+                <div class="font-semibold text-2xl mb-1">Feature overview</div>
+                <div class="text-lg opacity-80">Application Documentation</div>
+            </div>
 
-        <p class="text-lg mb-4">Navigate to <i class="bg-highlight px-2 py-1 rounded-border not-italic text-base">http://localhost:5173/</i> to view the application in your local environment.</p>
+            <!-- Quick badges -->
+            <div class="hidden md:flex gap-2">
+                <span class="doc-badge doc-badge-info">Coach / Manager</span>
+                <span class="doc-badge doc-badge-success">BLE Ready</span>
+                <span class="doc-badge doc-badge-warn">Danger Zone</span>
+            </div>
+        </div>
 
-        <pre class="app-code"><code>npm run dev</code></pre>
+        <div class="doc-grid">
+            <!-- TOC -->
+            <aside class="doc-toc hidden lg:block">
+                <div class="doc-toc-inner">
+                    <div class="font-semibold text-base mb-3">On this page</div>
+                    <ul class="text-sm leading-7">
+                        <li><a class="doc-link" href="#overview">Overview</a></li>
+                        <li><a class="doc-link" href="#roles">User Roles</a></li>
+                        <li><a class="doc-link" href="#profile">Coach Profile</a></li>
+                        <li><a class="doc-link" href="#coach-tv">Coach TV Preview</a></li>
+                        <li><a class="doc-link" href="#livetv">Live TV</a></li>
+                        <li><a class="doc-link" href="#clients">Client List</a></li>
+                        <li><a class="doc-link" href="#history">Training History</a></li>
+                        <li><a class="doc-link" href="#add-client">Add New Client</a></li>
+                        <li><a class="doc-link" href="#danger">Danger Zone</a></li>
+                    </ul>
+                </div>
+            </aside>
 
-        <div class="font-semibold text-xl mb-4">Structure</div>
-        <p class="text-lg mb-4">Templates consists of a couple folders, demos and layout have been separated so that you can easily remove what is not necessary for your application.</p>
-        <ul class="leading-normal list-disc pl-8 text-lg mb-4">
-            <li><span class="text-primary font-medium">src/layout</span>: Main layout files, needs to be present.</li>
-            <li><span class="text-primary font-medium">src/views</span>: Demo pages like Dashboard.</li>
-            <li><span class="text-primary font-medium">public/demo</span>: Assets used in demos</li>
-            <li><span class="text-primary font-medium">src/assets/demo</span>: Styles used in demos</li>
-            <li><span class="text-primary font-medium">src/assets/layout</span>: SCSS files of the main layout</li>
-        </ul>
+            <!-- CONTENT -->
+            <main class="doc-content">
+                <!-- Overview -->
+                <section id="overview" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Overview</div>
+                        <div class="text-sm opacity-70">What this app is for</div>
+                    </div>
 
-        <div class="font-semibold text-xl mb-4">Menu</div>
-        <p class="text-lg mb-4">
-            Main menu is defined at <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">src/layout/AppMenu.vue</span> file. Update the <i class="bg-highlight px-2 py-1 rounded-border not-italic text-base">model</i> property to
-            define your own menu items.
-        </p>
+                    <p class="text-lg leading-relaxed mb-4">
+                        This application is designed <strong>exclusively for gym professionals</strong> and is intended to be used only by
+                        <strong>Coaches</strong> and <strong>Gym Managers</strong>. Its main purpose is to support
+                        <strong>live training sessions</strong>, <strong>client management</strong>, and <strong>real-time performance monitoring</strong>
+                        using BLE-enabled devices.
+                    </p>
+                    <p class="text-lg leading-relaxed">
+                        The system focuses on simplicity, real-time feedback, and clear separation between training execution and client data management.
+                    </p>
+                </section>
 
-        <div class="font-semibold text-xl mb-4">Layout Composable</div>
-        <p class="text-lg mb-4">
-            The <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">src/layout/composables/layout.js</span> is a composable that manages the layout state changes including dark mode, PrimeVue theme, menu modes and states. If you
-            change the initial values like the preset or colors, make sure to apply them at PrimeVue config at main.js as well.
-        </p>
+                <!-- Roles -->
+                <section id="roles" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">User Roles</div>
+                        <div class="text-sm opacity-70">Who can use the system</div>
+                    </div>
 
-        <div class="font-semibold text-xl mb-4">Tailwind CSS</div>
-        <p class="text-lg mb-4">The demo pages are developed with Tailwind CSS however the core application shell mainly uses custom CSS.</p>
+                    <p class="text-lg mb-4">Currently, the application supports <strong>two user roles</strong>:</p>
 
-        <div class="font-semibold text-xl mb-4">Variables</div>
-        <p class="text-lg mb-4">
-            CSS variables used in the template derive their values from the PrimeVue styled mode presets, use the files under <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">assets/layout/_variables.scss</span> to customize
-            according to your requirements.
-        </p>
+                    <div class="doc-split">
+                        <div class="doc-subcard">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-semibold text-base">Coach</div>
+                                <span class="doc-pill">Primary role</span>
+                            </div>
+                            <ul class="leading-normal list-disc pl-6 text-lg">
+                                <li>Manage and update their personal profile</li>
+                                <li>Change their password at any time</li>
+                                <li>Log out from the system</li>
+                                <li>Permanently delete their profile if needed</li>
+                                <li>Start and manage training sessions for clients</li>
+                                <li>View live training metrics in real time</li>
+                            </ul>
+                        </div>
 
-        <div class="font-semibold text-xl mb-4">Add Sakai-Vue to a Nuxt Project</div>
-        <p class="text-lg mb-4">To get started, create a Nuxt project.</p>
-        <pre class="app-code">
-<code>npx nuxi@latest init sakai-nuxt</code></pre>
+                        <div class="doc-subcard">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-semibold text-base">Manager</div>
+                                <span class="doc-pill">Oversight</span>
+                            </div>
+                            <p class="text-lg leading-relaxed mb-3">
+                                Managers have access to all coaching features and are typically responsible for overseeing client data and training history across the gym.
+                            </p>
 
-        <p class="text-lg mb-4">Add Prime related libraries to the project.</p>
-        <pre class="app-code">
-<code>npm install primevue @primevue/themes tailwindcss-primeui primeicons
-npm install --save-dev @primevue/nuxt-module</code></pre>
+                            <div class="doc-callout doc-callout-info">
+                                <div class="font-semibold mb-1">Note</div>
+                                <div class="text-sm leading-relaxed">
+                                    Only coaches and managers can access this application. There are no client-side user accounts.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-        <p class="text-lg mb-4">Add PrimeVue-Nuxt module to <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">nuxt.config.js</span></p>
-        <pre class="app-code">
-<code>modules: [
-    '@primevue/nuxt-module',
-]</code></pre>
+                <!-- Profile -->
+                <section id="profile" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Coach Profile Management</div>
+                        <div class="text-sm opacity-70">Account & security</div>
+                    </div>
 
-        <p class="text-lg mb-4">Install <a href="https://tailwindcss.com/docs/guides/nuxtjs" class="font-medium text-primary hover:underline">Tailwind CSS</a> with Nuxt using official documentation.</p>
+                    <p class="text-lg mb-4">Each coach has a dedicated profile page where they can:</p>
+                    <ul class="leading-normal list-disc pl-8 text-lg mb-4">
+                        <li>Update personal information</li>
+                        <li>Change their account password</li>
+                        <li>Log out from the system</li>
+                        <li>Permanently delete their account</li>
+                    </ul>
 
-        <p class="text-lg mb-4">
-            Add <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">tailwindcss-primeui</span> package as a plugin to <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">tailwind.config.js</span>
-        </p>
-        <pre class="app-code">
-<code>plugins: [require('tailwindcss-primeui')]</code></pre>
+                    <div class="doc-callout doc-callout-warn">
+                        <div class="font-semibold mb-1">Warning</div>
+                        <div class="text-sm leading-relaxed">
+                            Deleting a profile is irreversible and should be done with caution.
+                        </div>
+                    </div>
+                </section>
 
-        <p class="text-lg mb-4">Add PrimeVue to in <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">nuxt.config.js</span></p>
-        <pre class="app-code">
-<code>import Aura from '@primevue/themes/aura';
+                <!-- Coach TV -->
+                <section id="coach-tv" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Coach TV Preview</div>
+                        <div class="text-sm opacity-70">Connect to a BLE device</div>
+                    </div>
 
-primevue: {
-    options: {
-        theme: {
-            preset: Aura,
-            options: {
-                darkModeSelector: '.app-dark'
-            }
-        }
-    }
-}</code></pre>
+                    <p class="text-lg mb-4">
+                        The <strong>Coach TV Preview</strong> tab is used to connect the application to a client’s training device.
+                    </p>
 
-        <p class="text-lg mb-4">
-            Copy <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">src/assets</span> folder and paste them to <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">assets</span> folder to your Nuxt project.
-            And add to <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">nuxt.config.js</span>
-        </p>
-        <pre class="app-code">
-<code>css: ['~/assets/tailwind.css', '~/assets/styles.scss']</code></pre>
+                    <ul class="leading-normal list-disc pl-8 text-lg mb-4">
+                        <li>The client device <strong>must support BLE (Bluetooth Low Energy)</strong></li>
+                        <li>Once connected, you can start a <strong>training session</strong> for that client</li>
+                        <li>During the session, real-time data (such as heart rate) is streamed to the system</li>
+                    </ul>
 
-        <p class="text-lg mb-4">Change <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">app.vue</span></p>
-        <pre class="app-code">
-<code>&lt;template&gt;
-    &lt;NuxtLayout&gt;
-        &lt;NuxtPage /&gt;
-    &lt;/NuxtLayout&gt;
-&lt;/template&gt;</code></pre>
+                    <div class="doc-callout doc-callout-success">
+                        <div class="font-semibold mb-1">Tip</div>
+                        <div class="text-sm leading-relaxed">
+                            Use Coach TV Preview for setup/control and open Live TV on a second screen for a clean, big-display view.
+                        </div>
+                    </div>
+                </section>
 
-        <p class="text-lg mb-4">Create <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">layouts/default.vue</span> and paste this code:</p>
-        <pre class="app-code">
-<code>&lt;script setup&gt;
-import AppLayout from './AppLayout.vue';
-&lt;/script&gt;
+                <!-- Live TV -->
+                <section id="livetv" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Live TV (Big Screen View)</div>
+                        <div class="text-sm opacity-70">Distraction-free metrics</div>
+                    </div>
 
-&lt;template&gt;
-    &lt;AppLayout /&gt;
-&lt;/template&gt;</code></pre>
+                    <p class="text-lg mb-3">The <strong>Live TV</strong> view is available at:</p>
+                    <pre class="app-code mb-4"><code>/livetv</code></pre>
 
-        <p class="text-lg mb-4">
-            Create <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">layouts</span> folder and copy <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">src/layout</span> folder and paste them. And then
-            create <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">composables/use-layout.vue</span> and replace it with
-            <span class="bg-highlight px-2 py-1 rounded-border not-italic text-base">src/layout/composables/layout.js</span>. Then remove this line:
-        </p>
-        <pre class="app-code">
-<code>import { useLayout } from '@/layout/composables/layout';</code></pre>
+                    <p class="text-lg mb-4">This screen is designed for large displays (TVs or external monitors).</p>
+                    <ul class="leading-normal list-disc pl-8 text-lg">
+                        <li>Shows live training metrics for the active client</li>
+                        <li>Clean, distraction-free UI</li>
+                        <li>Ideal for coaches to monitor performance during workouts</li>
+                        <li>Intended to be used on a <strong>second screen</strong> while Coach TV Preview is used for control</li>
+                    </ul>
+                </section>
 
-        <p class="text-lg mb-4">As a final step, copy the following folders:</p>
-        <ul class="leading-normal list-disc pl-8 text-lg mb-4">
-            <li><span class="text-primary font-medium">public/demo</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">public</span></li>
-            <li><span class="text-primary font-medium">src/components</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">components</span></li>
-            <li><span class="text-primary font-medium">src/service</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">service</span></li>
-            <li><span class="text-primary font-medium">src/views/uikit</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">pages/uikit</span></li>
-            <li><span class="text-primary font-medium">src/views/pages</span> <i class="pi pi-arrow-right !text-sm mr-1"></i> <span class="text-primary font-medium">pages</span></li>
-        </ul>
+                <!-- Clients -->
+                <section id="clients" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Client List</div>
+                        <div class="text-sm opacity-70">Client management</div>
+                    </div>
+
+                    <p class="text-lg mb-4">
+                        The <strong>Client List</strong> tab allows you to manage all your clients in one place.
+                    </p>
+
+                    <p class="text-lg mb-2">For each client, you can view:</p>
+                    <ul class="leading-normal list-disc pl-8 text-lg">
+                        <li>Personal information</li>
+                        <li>Training history</li>
+                        <li>Detailed metrics from previous sessions</li>
+                        <li>Charts and performance data for each training session</li>
+                    </ul>
+                </section>
+
+                <!-- History -->
+                <section id="history" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Training History & Details</div>
+                        <div class="text-sm opacity-70">Review progress</div>
+                    </div>
+
+                    <p class="text-lg mb-4">Each client’s training session includes:</p>
+                    <ul class="leading-normal list-disc pl-8 text-lg mb-4">
+                        <li>Session duration</li>
+                        <li>Heart rate metrics</li>
+                        <li>Charts and visualized performance data</li>
+                    </ul>
+
+                    <p class="text-lg">
+                        You can review past sessions at any time to track progress and performance trends.
+                    </p>
+                </section>
+
+                <!-- Add client -->
+                <section id="add-client" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Adding a New Client</div>
+                        <div class="text-sm opacity-70">Required info & Max HR</div>
+                    </div>
+
+                    <p class="text-lg mb-4">
+                        When adding a new client, you should enter their personal and training-relevant information.
+                    </p>
+
+                    <div class="doc-subcard">
+                        <div class="font-semibold text-base mb-2">Maximum Heart Rate (Max HR)</div>
+                        <p class="text-lg mb-3">
+                            A very important parameter is the client’s <strong>Maximum Heart Rate (Max HR)</strong>.
+                        </p>
+                        <ul class="leading-normal list-disc pl-6 text-lg mb-3">
+                            <li>If the client’s Max Heart Rate is known, it should be entered manually</li>
+                            <li>If it is not known, you can calculate it using the standard formula:</li>
+                        </ul>
+                        <pre class="app-code mb-0"><code>Max Heart Rate = 220 − age</code></pre>
+                    </div>
+
+                    <p class="text-lg mt-4">
+                        This value is crucial for accurate heart-rate zones and training analysis.
+                    </p>
+                </section>
+
+                <!-- Danger -->
+                <section id="danger" class="doc-section">
+                    <div class="doc-section-header">
+                        <div class="font-semibold text-xl">Danger Zone</div>
+                        <div class="text-sm opacity-70">Irreversible actions</div>
+                    </div>
+
+                    <p class="text-lg mb-4">
+                        Both <strong>clients</strong> and <strong>training sessions</strong> can be permanently deleted.
+                    </p>
+
+                    <div class="doc-callout doc-callout-danger">
+                        <div class="font-semibold mb-1">Warning</div>
+                        <div class="text-sm leading-relaxed mb-2">
+                            Actions in the Danger Zone are irreversible:
+                        </div>
+                        <ul class="list-disc pl-6 text-sm leading-relaxed">
+                            <li>Deleting a client will remove all associated training data</li>
+                            <li>Deleting a training session cannot be undone</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-lg mt-4">Proceed with caution.</p>
+                </section>
+            </main>
+        </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
+/* Offset for anchor jumps (top navigation / sticky header) */
+
+/* Bonus: ako koristis native smooth scroll */
+:global(html) {
+    scroll-behavior: smooth;
+    scroll-padding-top: 90px;
+}
+
+/* Layout */
+.doc-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.5rem;
+}
+
+.doc-toc-inner {
+    position: sticky;
+    top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    background: var(--surface-card, #fff);
+}
+
+.doc-link {
+    display: inline-flex;
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    opacity: 0.85;
+}
+.doc-link:hover {
+    opacity: 1;
+    background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+}
+
+/* Sections */
+.doc-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.doc-section {
+    scroll-margin-top: 90px; /* povecaj/smanji po visini tvoje top navigacije */
+    border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.08));
+    border-radius: 14px;
+    background: var(--surface-card, #fff);
+    padding: 1.25rem;
+}
+
+.doc-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px dashed var(--surface-border, rgba(0, 0, 0, 0.12));
+}
+
+/* Split cards */
+.doc-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.doc-subcard {
+    border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    padding: 1rem;
+    background: var(--surface-ground, rgba(0, 0, 0, 0.02));
+}
+
+/* Pills / badges */
+.doc-pill {
+    font-size: 12px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.12));
+    opacity: 0.85;
+}
+
+.doc-badge {
+    font-size: 12px;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.12));
+    background: var(--surface-ground, rgba(0, 0, 0, 0.02));
+}
+.doc-badge-info {
+    border-left: 4px solid #3b82f6;
+}
+.doc-badge-success {
+    border-left: 4px solid #22c55e;
+}
+.doc-badge-warn {
+    border-left: 4px solid #f59e0b;
+}
+
+/* Callouts */
+.doc-callout {
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.12));
+    background: var(--surface-ground, rgba(0, 0, 0, 0.02));
+}
+.doc-callout-info {
+    border-left: 4px solid #3b82f6;
+}
+.doc-callout-success {
+    border-left: 4px solid #22c55e;
+}
+.doc-callout-warn {
+    border-left: 4px solid #f59e0b;
+}
+.doc-callout-danger {
+    border-left: 4px solid #ef4444;
+}
+
+/* Responsive */
+@media screen and (max-width: 1024px) {
+    .doc-grid {
+        grid-template-columns: 1fr;
+    }
+}
 @media screen and (max-width: 991px) {
+    .doc-split {
+        grid-template-columns: 1fr;
+    }
+
     .video-container {
         position: relative;
         width: 100%;

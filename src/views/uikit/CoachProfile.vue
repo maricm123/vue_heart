@@ -154,11 +154,14 @@ const updateCoach = async () => {
                             <label class="mb-1 font-medium">Last Name</label>
                             <input v-model="coach.user.last_name" type="text" placeholder="Last Name" class="border rounded-lg p-2 bg-white-100 dark:bg-black dark:text-gray-100" />
 
+                            <label class="mb-1 font-medium">Birth Date</label>
+                            <Calendar v-model="coach.user.birth_date" dateFormat="yy-mm-dd" showIcon class="dark:bg-black dark:text-gray-100" />
+                            
                             <label class="mb-1 font-medium">Email (cannot update)</label>
                             <input v-model="coach.user.email" type="email" placeholder="Email" readonly class="border rounded-lg p-2 bg-white-100 dark:bg-black dark:text-gray-100" />
 
-                            <label class="mb-1 font-medium">Birth Date</label>
-                            <Calendar v-model="coach.user.birth_date" dateFormat="yy-mm-dd" showIcon class="dark:bg-black dark:text-gray-100" />
+                            <label class="mb-1 font-medium">Role (cannot update)</label>
+                            <label class="border rounded-lg p-2 bg-white-100 dark:bg-black dark:text-gray-100">Coach</label>
                         </div>
                         <button @click="updateCoach" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Update</button>
                     </div>
