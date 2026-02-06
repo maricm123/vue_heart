@@ -130,11 +130,6 @@ const model = ref([
                 label: 'How to use this app',
                 icon: 'pi pi-fw pi-book',
                 to: '/documentation'
-            },
-            {
-                label: 'FAQ',
-                icon: 'pi pi-fw pi-book',
-                // url: 'https://mygymheart.netlify.app/',
             }
         ]
     }

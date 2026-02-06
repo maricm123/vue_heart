@@ -306,7 +306,7 @@
 }
 
 .doc-section {
-    scroll-margin-top: 90px; /* povecaj/smanji po visini tvoje top navigacije */
+    scroll-margin-top: 10px; /* povecaj/smanji po visini tvoje top navigacije */
     border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.08));
     border-radius: 14px;
     background: var(--surface-card, #fff);
