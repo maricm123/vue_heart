@@ -41,7 +41,7 @@ onMounted(async () => {
             </div>
         </div>
 
-        <StatsWidget />
+        <!-- <StatsWidget />
 
         <div class="col-span-12 xl:col-span-6">
             <RecentSalesWidget />
@@ -50,6 +50,6 @@ onMounted(async () => {
         <div class="col-span-12 xl:col-span-6">
             <RevenueStreamWidget />
             <NotificationsWidget />
-        </div>
+        </div> -->
     </div>
 </template>

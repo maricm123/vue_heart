@@ -14,31 +14,31 @@ const router = createRouter({
                     component: () => import('@/views/Dashboard.vue')
                 },
                 {
-                    path: '/uikit/coachTvPreview',
+                    path: '/coachTvPreview',
                     name: 'coachTvPreview',
                     component: () => import('@/views/uikit/CoachTvPreview.vue'),
                     // meta: { requiresAuth: true }
                 },
                 {
-                    path: '/uikit/clientDetail/:id',
+                    path: '/clientDetail/:id',
                     name: 'clientDetail',
                     component: () => import('@/views/uikit/ClientDetail.vue'),
                     // meta: { requiresAuth: true }
                 },
                 {
-                    path: '/uikit/createClient',
+                    path: '/createClient',
                     name: 'createClient',
                     component: () => import('@/views/uikit/CreateClient.vue'),
                     // meta: { requiresAuth: true }
                 },
                 {
-                    path: '/uikit/trainingSessionDetail/:id',
+                    path: '/trainingSessionDetail/:id',
                     name: 'trainingSessionDetail',
                     component: () => import('@/views/uikit/TrainingSessionDetail.vue'),
                     // meta: { requiresAuth: true }
                 },
                 {
-                    path: '/uikit/formlayout',
+                    path: '/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
                 },
@@ -64,7 +64,7 @@ const router = createRouter({
                     component: () => import('@/views/uikit/ListDoc.vue')
                 },
                 {
-                    path: '/uikit/clientListOfCoach',
+                    path: '/clientListOfCoach',
                     name: 'clientListOfCoach',
                     component: () => import('@/views/uikit/ClientListOfCoach.vue')
                 },
