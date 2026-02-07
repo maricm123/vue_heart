@@ -1,27 +1,3 @@
-<!-- <script setup lang="ts">
-import FeaturesWidget from '@/components/landing/FeaturesWidget.vue';
-import FooterWidget from '@/components/landing/FooterWidget.vue';
-import HeroWidget from '@/components/landing/HeroWidget.vue';
-import HighlightsWidget from '@/components/landing/HighlightsWidget.vue';
-import PricingWidget from '@/components/landing/PricingWidget.vue';
-import TopbarWidget from '@/components/landing/TopbarWidget.vue';
-</script>
-
-<template>
-    <div class="bg-surface-0 dark:bg-surface-900">
-        <div id="home" class="landing-wrapper overflow-hidden">
-            <div class="py-6 px-6 mx-0 md:mx-12 lg:mx-20 lg:px-20 flex items-center justify-between relative lg:static">
-                <TopbarWidget />
-            </div>
-            <HeroWidget />
-            <FeaturesWidget />
-            <HighlightsWidget />
-            <PricingWidget />
-            <FooterWidget />
-        </div>
-    </div>
-</template> -->
-
 <template>
   <!-- HERO SECTION -->
   <section
@@ -37,6 +13,12 @@ import TopbarWidget from '@/components/landing/TopbarWidget.vue';
         HeartApp is an advanced real-time monitoring system for group workouts.
         Track heart rate, intensity zones, and performance of every member — all on one screen.
       </p>
+
+      <!-- Added: short role/usage context (no style change, just text) -->
+      <p class="font-normal text-2xl leading-normal mt-4 text-gray-700">
+        Designed for <strong>coaches</strong> and <strong>gym managers</strong> to run classes, connect BLE devices, and display live metrics on a big screen.
+      </p>
+
       <button
         class="mt-8 px-6 py-3 text-xl rounded-lg shadow-lg"
         style="background-color:#ff474c; color:white;"
@@ -119,6 +101,60 @@ import TopbarWidget from '@/components/landing/TopbarWidget.vue';
           </p>
         </div>
       </div>
+
+      <!-- Added: Feature 4 -->
+      <div class="col-span-12 lg:col-span-4">
+        <div class="p-6 rounded-xl shadow-lg bg-white">
+          <div
+            class="flex items-center justify-center mb-6"
+            style="background-color:#ffe0e1; width:4rem; height:4rem; border-radius:12px;"
+          >
+            <i class="pi pi-users text-3xl" style="color:#ff474c;"></i>
+          </div>
+          <h3 class="text-2xl font-semibold mb-2">
+            Client Profiles & History
+          </h3>
+          <p class="text-surface-600 text-xl">
+            View client details, previous sessions, and performance charts — all in one place.
+          </p>
+        </div>
+      </div>
+
+      <!-- Added: Feature 5 -->
+      <div class="col-span-12 lg:col-span-4">
+        <div class="p-6 rounded-xl shadow-lg bg-white">
+          <div
+            class="flex items-center justify-center mb-6"
+            style="background-color:#ffe0e1; width:4rem; height:4rem; border-radius:12px;"
+          >
+            <i class="pi pi-bluetooth text-3xl" style="color:#ff474c;"></i>
+          </div>
+          <h3 class="text-2xl font-semibold mb-2">
+            BLE Device Pairing
+          </h3>
+          <p class="text-surface-600 text-xl">
+            Connect BLE-enabled devices, start a session, and stream live metrics instantly.
+          </p>
+        </div>
+      </div>
+
+      <!-- Added: Feature 6 -->
+      <div class="col-span-12 lg:col-span-4">
+        <div class="p-6 rounded-xl shadow-lg bg-white">
+          <div
+            class="flex items-center justify-center mb-6"
+            style="background-color:#ffe0e1; width:4rem; height:4rem; border-radius:12px;"
+          >
+            <i class="pi pi-shield text-3xl" style="color:#ff474c;"></i>
+          </div>
+          <h3 class="text-2xl font-semibold mb-2">
+            Coach Account Controls
+          </h3>
+          <p class="text-surface-600 text-xl">
+            Coaches can update their profile, change password, log out, or delete their account anytime.
+          </p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -126,10 +162,10 @@ import TopbarWidget from '@/components/landing/TopbarWidget.vue';
   <section id="highlights" class="py-20 px-6 lg:px-20 mx-0 my-12 lg:mx-20">
     <div class="text-center mb-16">
       <h2 class="text-5xl font-semibold text-surface-900">
-        Built for Professional Gyms
+        How It Works in a Real Class
       </h2>
-      <p class="text-muted-color text-2xl max-w-2xl mx-auto">
-        HeartApp is specifically designed for coaches running group programs.
+      <p class="text-muted-color text-2xl max-w-3xl mx-auto">
+        A simple flow for coaches: connect the client device, start the session, and show metrics on the big screen.
       </p>
     </div>
 
@@ -149,18 +185,56 @@ import TopbarWidget from '@/components/landing/TopbarWidget.vue';
         >
           <i class="pi pi-mobile text-3xl" style="color:#ff474c;"></i>
         </div>
+
         <h3 class="text-4xl font-semibold text-surface-900">
-          Real-Time Client Data
+          Coach Screen + Live TV Screen
         </h3>
+
         <p class="text-surface-700 text-2xl max-w-xl">
-          Instantly see heart rate, calories, zones, and workout duration for all members.
+          Use <strong>Coach TV Preview</strong> to connect BLE devices and start a session. Then open <strong>/livetv</strong> on a TV or projector
+          for a clean, distraction-free view of live metrics.
         </p>
+
+        <!-- Added: simple steps, same style (no new components) -->
+        <div class="w-full max-w-xl">
+          <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-12">
+              <div class="p-5 rounded-xl shadow-lg bg-white">
+                <h4 class="text-2xl font-semibold mb-2">1) Connect</h4>
+                <p class="text-surface-600 text-xl">
+                  Pair the client’s <strong>BLE device</strong> inside Coach TV Preview.
+                </p>
+              </div>
+            </div>
+            <div class="col-span-12">
+              <div class="p-5 rounded-xl shadow-lg bg-white">
+                <h4 class="text-2xl font-semibold mb-2">2) Start Session</h4>
+                <p class="text-surface-600 text-xl">
+                  Start a training session and stream live heart rate and zones instantly.
+                </p>
+              </div>
+            </div>
+            <div class="col-span-12">
+              <div class="p-5 rounded-xl shadow-lg bg-white">
+                <h4 class="text-2xl font-semibold mb-2">3) Display</h4>
+                <p class="text-surface-600 text-xl">
+                  Open <strong>/livetv</strong> on a big screen to monitor the entire class in real time.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- <p class="text-surface-700 text-2xl max-w-xl">
+          Client profiles include previous sessions and charts, while important training accuracy relies on setting a client’s <strong>Max Heart Rate</strong>
+          (or using the standard formula <strong>220 − age</strong>).
+        </p> -->
       </div>
     </div>
   </section>
 
   <!-- PRICING SECTION -->
-  <section id="pricing" class="py-20 px-6 lg:px-20 my-6">
+  <!-- <section id="pricing" class="py-20 px-6 lg:px-20 my-6">
     <div class="text-center mb-10">
       <h2 class="text-5xl font-semibold text-surface-900">
         Simple Pricing
@@ -170,64 +244,10 @@ import TopbarWidget from '@/components/landing/TopbarWidget.vue';
       </p>
     </div>
 
-    <div class="grid grid-cols-12 gap-10 justify-between">
-      <!-- Free -->
-      <!-- <div class="col-span-12 lg:col-span-4">
-        <div class="p-6 rounded-xl border-2 shadow-sm hover:shadow-xl transition-all bg-white">
-          <h3 class="text-center text-3xl mt-4 mb-6">Free</h3>
-          <img src="/demo/images/landing/free.svg" class="w-9/12 mx-auto" />
-          <div class="text-center my-6">
-            <div class="text-5xl font-bold">$0</div>
-            <div class="text-surface-600">per month</div>
-          </div>
-          <button
-            class="w-full py-3 rounded-lg text-xl mb-6"
-            style="background-color:#ff474c;color:white;"
-          >
-            Get Started
-          </button>
-        </div>
-      </div> -->
-
-      <!-- Gym -->
-      <!-- <div class="col-span-12 lg:col-span-4">
-        <div class="p-6 rounded-xl border-2 shadow-sm hover:shadow-xl transition-all bg-white">
-          <h3 class="text-center text-3xl mt-4 mb-6">Gym</h3>
-          <img src="/demo/images/landing/startup.svg" class="w-9/12 mx-auto" />
-          <div class="text-center my-6">
-            <div class="text-5xl font-bold">$19</div>
-            <div class="text-surface-600">per month</div>
-          </div>
-          <button
-            class="w-full py-3 rounded-lg text-xl mb-6"
-            style="background-color:#ff474c;color:white;"
-          >
-            Choose Plan
-          </button>
-        </div>
-      </div> -->
-
-      <!-- Studio / Enterprise -->
-      <!-- <div class="col-span-12 lg:col-span-4">
-        <div class="p-6 rounded-xl border-2 shadow-sm hover:shadow-xl transition-all bg-white">
-          <h3 class="text-center text-3xl mt-4 mb-6">
-            Studio / Enterprise
-          </h3>
-          <img src="/demo/images/landing/enterprise.svg" class="w-9/12 mx-auto" />
-          <div class="text-center my-6">
-            <div class="text-5xl font-bold">$49</div>
-            <div class="text-surface-600">per month</div>
-          </div>
-          <button
-            class="w-full py-3 rounded-lg text-xl mb-6"
-            style="background-color:#ff474c;color:white;"
-          >
-            Contact Sales
-          </button>
-        </div>
-      </div> -->
-    </div>
-  </section>
+    <div class="grid grid-cols-12 gap-10 justify-between"> -->
+      <!-- pricing cards intentionally left commented out -->
+    <!-- </div>
+  </section> -->
 
   <!-- FOOTER SECTION -->
   <footer class="py-20 px-6 mx-0 mt-20 lg:mx-20 border-t border-surface-200">
@@ -252,4 +272,3 @@ import TopbarWidget from '@/components/landing/TopbarWidget.vue';
     </div>
   </footer>
 </template>
-
