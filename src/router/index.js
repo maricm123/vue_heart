@@ -38,6 +38,11 @@ const router = createRouter({
                     // meta: { requiresAuth: true }
                 },
                 {
+                    path: '/all-training-sessions',
+                    name: 'allTrainingSessions',
+                    component: () => import('@/views/uikit/AllTrainingSessions.vue')
+                },
+                {
                     path: '/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
