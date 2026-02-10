@@ -163,3 +163,26 @@ export async function resumeActiveTrainingSession(sessionId) {
     throw err;
   }
 }
+
+
+export async function getTrainingSessionsPerCoach() {
+  try {
+    const response = await api_coach.get(
+      '/get-training-sessions-per-coach',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('access')}`,
+        },
+      }
+    )
+
+    console.log('✅ Fetched training sessions per coach:', response.data)
+    return response.data
+  } catch (err) {
+    console.error(
+      '❌ Failed to fetch training sessions per coach',
+      err.response?.data || err
+    )
+    throw err
+  }
+}

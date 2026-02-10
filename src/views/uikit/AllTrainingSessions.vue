@@ -1,6 +1,8 @@
 <script setup>
 import { CustomerService } from '@/service/CustomerService';
 import { ProductService } from '@/service/ProductService';
+import { getTrainingSessionsPerCoach } from '@/services/trainingSessionsService';
+
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { onBeforeMount, reactive, ref } from 'vue';
 
@@ -80,17 +82,51 @@ function getStockSeverity(product) {
     }
 }
 
-onBeforeMount(() => {
-    ProductService.getProductsWithOrdersSmall().then((data) => (products.value = data));
-    CustomerService.getCustomersLarge().then((data) => {
-        customers1.value = data;
-        loading1.value = false;
-        customers1.value.forEach((customer) => (customer.date = new Date(customer.date)));
-    });
-    CustomerService.getCustomersLarge().then((data) => (customers2.value = data));
-    CustomerService.getCustomersMedium().then((data) => (customers3.value = data));
+// onBeforeMount(() => {
+//     ProductService.getProductsWithOrdersSmall().then((data) => (products.value = data));
+//     CustomerService.getCustomersLarge().then((data) => {
+//         customers1.value = data;
+//         loading1.value = false;
+//         customers1.value.forEach((customer) => (customer.date = new Date(customer.date)));
+//     });
+//     CustomerService.getCustomersLarge().then((data) => (customers2.value = data));
+//     CustomerService.getCustomersMedium().then((data) => (customers3.value = data));
 
+//     initFilters1();
+// });
+
+onBeforeMount(async () => {
     initFilters1();
+
+    try {
+        loading1.value = true;
+
+        const data = await getTrainingSessionsPerCoach();
+
+        // Ako backend vrati array
+        customers1.value = data.map(training_session => ({
+            id: training_session.id,
+            name: training_session.title,               // ili session.name
+            date: new Date(training_session.start_time), // prilagodi backend poljima
+            client: training_session.client, // ili session.client.name
+            calories_burned: training_session.calories_burned || 0,
+            // status: training_session.status,
+            // balance: training_session.price || 0,
+            // activity: training_session.activity || 0,
+            // verified: training_session.is_verified ?? true,
+
+            // dummy da DataTable ne pukne dok ne refaktorišeš kolone
+            // country: { name: session.start_time, code: 'rs' },
+            // representative: {
+            //     name: session.coach_name,
+            //     image: 'amyelsner.png'
+            // }
+        }));
+    } catch (err) {
+        console.error('Failed to load training sessions', err);
+    } finally {
+        loading1.value = false;
+    }
 });
 
 function initFilters1() {
@@ -143,7 +179,7 @@ function calculateCustomerTotal(name) {
 
 <template>
     <div class="card">
-        <div class="font-semibold text-xl mb-4">Filtering</div>
+        <div class="font-semibold text-xl mb-4">Your Training Sessions</div>
         <DataTable
             :value="customers1"
             :paginator="true"
@@ -168,17 +204,17 @@ function calculateCustomerTotal(name) {
                     </IconField>
                 </div>
             </template>
-            <template #empty> No customers found. </template>
-            <template #loading> Loading customers data. Please wait. </template>
-            <Column field="name" header="Name" style="min-width: 12rem">
-                <template #body="{ data }">
-                    {{ data.name }}
+            <template #empty> No training sessions found. </template>
+            <template #loading> Loading training sessions data. Please wait. </template>
+            <Column field="name" header="Training Session" style="min-width: 12rem">
+                <template #body="{ training_session }">
+                    {{ training_session.title }}
                 </template>
                 <template #filter="{ filterModel }">
                     <InputText v-model="filterModel.value" type="text" placeholder="Search by name" />
                 </template>
             </Column>
-            <Column header="Country" filterField="country.name" style="min-width: 12rem">
+            <Column header="Date and time" filterField="country.name" style="min-width: 12rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <img alt="flag" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${data.country.code}`" style="width: 24px" />
