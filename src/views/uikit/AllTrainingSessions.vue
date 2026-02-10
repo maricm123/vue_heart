@@ -7,7 +7,6 @@ import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import { onBeforeMount, reactive, ref } from 'vue';
 
 const customers1 = ref(null);
-const customers2 = ref(null);
 const customers3 = ref(null);
 const filters1 = ref(null);
 const loading1 = ref(null);
@@ -106,9 +105,9 @@ onBeforeMount(async () => {
         // Ako backend vrati array
         customers1.value = data.map(training_session => ({
             id: training_session.id,
-            name: training_session.title,               // ili session.name
-            date: new Date(training_session.start_time), // prilagodi backend poljima
-            client: training_session.client, // ili session.client.name
+            title: training_session.title,
+            date_and_time: new Date(training_session.start),
+            client: training_session.client,
             calories_burned: training_session.calories_burned || 0,
             // status: training_session.status,
             // balance: training_session.price || 0,
@@ -132,14 +131,17 @@ onBeforeMount(async () => {
 function initFilters1() {
     filters1.value = {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
-        representative: { value: null, matchMode: FilterMatchMode.IN },
-        date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-        balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-        status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-        activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
-        verified: { value: null, matchMode: FilterMatchMode.EQUALS }
+        // name: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        // 'country.name': { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        // representative: { value: null, matchMode: FilterMatchMode.IN },
+        // date: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+        // balance: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+        // status: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+        // activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
+        // verified: { value: null, matchMode: FilterMatchMode.EQUALS }
+        title: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] },
+        date_and_time: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+        client: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }] }
     };
 }
 
@@ -180,6 +182,39 @@ function calculateCustomerTotal(name) {
 <template>
     <div class="card">
         <div class="font-semibold text-xl mb-4">Your Training Sessions</div>
+        <!-- <DataTable
+    :value="customers1"
+    :loading="loading1"
+    dataKey="id"
+    paginator
+    :rows="10"
+>
+    <template #empty> No training sessions found. </template>
+
+    <Column field="title" header="Training">
+        <template #body="{ data }">
+            {{ data.title }}
+        </template>
+    </Column>
+
+    <Column field="date_and_time" header="Date">
+        <template #body="{ data }">
+            {{ formatDate(data.date_and_time) }}
+        </template>
+    </Column>
+
+    <Column field="client" header="Client">
+        <template #body="{ data }">
+            {{ data.client?.name || data.client }}
+        </template>
+    </Column>
+
+    <Column field="calories_burned" header="Calories">
+        <template #body="{ data }">
+            {{ data.calories_burned }} kcal
+        </template>
+    </Column>
+</DataTable> -->
         <DataTable
             :value="customers1"
             :paginator="true"
@@ -190,7 +225,7 @@ function calculateCustomerTotal(name) {
             filterDisplay="menu"
             :loading="loading1"
             :filters="filters1"
-            :globalFilterFields="['name', 'country.name', 'representative.name', 'balance', 'status']"
+            :globalFilterFields="['global','title', 'date_and_time', 'client']"
             showGridlines
         >
             <template #header>
@@ -206,19 +241,27 @@ function calculateCustomerTotal(name) {
             </template>
             <template #empty> No training sessions found. </template>
             <template #loading> Loading training sessions data. Please wait. </template>
-            <Column field="name" header="Training Session" style="min-width: 12rem">
-                <template #body="{ training_session }">
-                    {{ training_session.title }}
+            <Column field="title" header="Title" style="min-width: 12rem">
+                <template #body="{ data }">
+                    {{ data.title }}
                 </template>
                 <template #filter="{ filterModel }">
-                    <InputText v-model="filterModel.value" type="text" placeholder="Search by name" />
+                    <InputText v-model="filterModel.value" type="text" placeholder="Search by title" />
                 </template>
             </Column>
-            <Column header="Date and time" filterField="country.name" style="min-width: 12rem">
+            <Column field="client" header="Client name" style="min-width: 12rem">
+                <template #body="{ data }">
+                    {{ data.client }}
+                </template>
+                <template #filter="{ filterModel }">
+                    <InputText v-model="filterModel.value" type="text" placeholder="Search by client name" />
+                </template>
+            </Column>
+            <!-- <Column header="Date and time" filterField="date_and_time" style="min-width: 12rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <img alt="flag" src="https://primefaces.org/cdn/primevue/images/flag/flag_placeholder.png" :class="`flag flag-${data.country.code}`" style="width: 24px" />
-                        <span>{{ data.country.name }}</span>
+                        <span>{{ formatDate(data.date_and_time) }}</span>
                     </div>
                 </template>
                 <template #filter="{ filterModel }">
@@ -230,8 +273,16 @@ function calculateCustomerTotal(name) {
                 <template #filterapply="{ filterCallback }">
                     <Button type="button" icon="pi pi-check" @click="filterCallback()" severity="success"></Button>
                 </template>
+            </Column> -->
+            <Column header="Date and time" filterField="date_and_time" dataType="date" style="min-width: 10rem">
+                <template #body="{ data }">
+                    {{ formatDate(data.date_and_time) }}
+                </template>
+                <template #filter="{ filterModel }">
+                    <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" />
+                </template>
             </Column>
-            <Column header="Agent" filterField="representative" :showFilterMatchModes="false" :filterMenuStyle="{ width: '14rem' }" style="min-width: 14rem">
+            <!-- <Column header="Agent" filterField="representative" :showFilterMatchModes="false" :filterMenuStyle="{ width: '14rem' }" style="min-width: 14rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
                         <img :alt="data.representative.name" :src="`https://primefaces.org/cdn/primevue/images/avatar/${data.representative.image}`" style="width: 32px" />
@@ -249,14 +300,7 @@ function calculateCustomerTotal(name) {
                     </MultiSelect>
                 </template>
             </Column>
-            <Column header="Date" filterField="date" dataType="date" style="min-width: 10rem">
-                <template #body="{ data }">
-                    {{ formatDate(data.date) }}
-                </template>
-                <template #filter="{ filterModel }">
-                    <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" />
-                </template>
-            </Column>
+            
             <Column header="Balance" filterField="balance" dataType="numeric" style="min-width: 10rem">
                 <template #body="{ data }">
                     {{ formatCurrency(data.balance) }}
@@ -297,7 +341,7 @@ function calculateCustomerTotal(name) {
                     <label for="verified-filter" class="font-bold"> Verified </label>
                     <Checkbox v-model="filterModel.value" :indeterminate="filterModel.value === null" binary inputId="verified-filter" />
                 </template>
-            </Column>
+            </Column> -->
         </DataTable>
     </div>
 
