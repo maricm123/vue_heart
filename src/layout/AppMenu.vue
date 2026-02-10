@@ -14,7 +14,7 @@ const model = ref([
             // { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
             { label: 'Coach TV preview', icon: 'pi pi-fw pi-id-card', to: '/coachTvPreview' },
             { label: 'Client list', icon: 'pi pi-fw pi-user', to: '/ClientListOfCoach' },
-            { label: 'Add new client', icon: 'pi pi-fw pi-user', to: '/CreateClient' },
+            { label: 'Add new client', icon: 'pi pi-fw pi-plus', to: '/CreateClient' },
             // { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
             // { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
             // { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
