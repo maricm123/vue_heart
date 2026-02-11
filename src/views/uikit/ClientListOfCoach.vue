@@ -66,9 +66,9 @@ function goToClientDetail(clientId) {
                     <div class="flex flex-col">
                         <div v-for="(client, index) in slotProps.items" :key="client.id" class="flex flex-col sm:flex-row sm:items-center p-4 border-b border-surface-200 gap-4">
                             <!-- Photo -->
-                            <div class="w-16 h-16 flex-shrink-0">
+                            <!-- <div class="w-16 h-16 flex-shrink-0">
                                 <img :src="client.user.avatar || defaultAvatar" alt="Avatar" class="w-full h-full rounded-full object-cover" />
-                            </div>
+                            </div> -->
                             <!-- Client info -->
                             <div class="flex-1">
                                 <div class="text-lg font-medium">{{ client.user.first_name }} {{ client.user.last_name }}</div>
