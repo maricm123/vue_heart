@@ -460,9 +460,9 @@ onUnmounted(() => {
                             }"
                             @click="!isSelected(client) && selectClient(client)"
                         >
-                            <div class="w-16 h-16 flex-shrink-0">
+                            <!-- <div class="w-16 h-16 flex-shrink-0">
                                 <img :src="client.user.avatar || defaultAvatar" alt="Avatar" class="w-full h-full rounded-full object-cover" />
-                            </div>
+                            </div> -->
                             <div class="flex-1">
                                 <div class="text-lg font-medium">{{ client.user.first_name }} {{ client.user.last_name }}</div>
                                 <div class="text-sm text-surface-600">{{ client.user.email }}</div>
