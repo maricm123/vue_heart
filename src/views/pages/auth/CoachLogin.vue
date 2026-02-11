@@ -2,8 +2,11 @@
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
+import { useAppState } from '@/layout/composables/useAppState'
+
 import axios from 'axios'
 import { loginCoach } from '@/services/coachService'
+import { getDashboardInfo } from '@/services/dashboardService'
 import { useAuthStore } from '@/store/auth';
 const router = useRouter()
 const route = useRoute()
@@ -11,7 +14,10 @@ const route = useRoute()
 const error = ref('')
 const email = ref('')
 const password = ref('')
+const gym_code = ref('')
 const checked = ref(false)
+
+const { userInfo, loadingUserInfo } = useAppState()
 
 async function onLogin() {
     if (!email.value || !password.value) {
@@ -22,7 +28,7 @@ async function onLogin() {
     try {
         error.value = ''
 
-        const response = await loginCoach(email.value, password.value)
+        const response = await loginCoach(email.value, password.value, gym_code.value)
 
         const { access, refresh } = response.data
         console.log('Login successful:', response.data)
@@ -32,6 +38,10 @@ async function onLogin() {
         authStore.setRefresh(refresh);
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
+
+        loadingUserInfo.value = true
+        userInfo.value = await getDashboardInfo()
+        loadingUserInfo.value = false
 
         const redirectTo = route.query.redirect || '/'
         router.replace(String(redirectTo))
@@ -50,7 +60,7 @@ async function onLogin() {
             <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
                 <div class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20" style="border-radius: 53px">
                     <div class="text-center mb-8">
-                        <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-8 w-16 shrink-0 mx-auto">
+                        <!-- <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-8 w-16 shrink-0 mx-auto">
                             <path
                                 fill-rule="evenodd"
                                 clip-rule="evenodd"
@@ -66,7 +76,7 @@ async function onLogin() {
                                     fill="var(--primary-color)"
                                 />
                             </g>
-                        </svg>
+                        </svg> -->
                         <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to HeartApp!</div>
                         <span class="text-muted-color font-medium">Sign in to continue</span>
                     </div>
@@ -78,8 +88,8 @@ async function onLogin() {
                         <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
                         <Password id="password1" v-model="password" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
 
-                        <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Gym Code</label>
-                        <InputText id="email1" type="text" placeholder="Gym code" class="w-full md:w-[30rem] mb-8" v-model="gym_code" />
+                        <label for="gymcode" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Gym Code</label>
+                        <InputText id="gymcode" type="text" placeholder="Gym code" class="w-full md:w-[30rem] mb-8" v-model="gym_code" />
 
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                             <!-- <div class="flex items-center">
