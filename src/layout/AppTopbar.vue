@@ -3,6 +3,13 @@ import { useLayout } from '@/layout/composables/layout';
 import AppConfigurator from './AppConfigurator.vue';
 
 const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
+
+import { useTenant } from '@/layout/composables/useTenant'
+import { computed } from 'vue'
+
+const { tenant } = useTenant()
+
+const gymName = computed(() => tenant.value?.tenant.name || '')
 </script>
 
 <template>
@@ -30,7 +37,7 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
                     </g>
                 </svg> -->
 
-                <span>HEARTAPP</span>
+                <span>HEARTAPP</span> {{ gymName }}
             </router-link>
         </div>
 
