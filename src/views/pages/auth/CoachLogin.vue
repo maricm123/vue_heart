@@ -2,11 +2,9 @@
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
-import { useAppState } from '@/layout/composables/useAppState'
 
 import axios from 'axios'
 import { loginCoach } from '@/services/coachService'
-import { getDashboardInfo } from '@/services/dashboardService'
 import { useAuthStore } from '@/store/auth';
 const router = useRouter()
 const route = useRoute()
@@ -17,7 +15,6 @@ const password = ref('')
 const gym_code = ref('')
 const checked = ref(false)
 
-const { userInfo, loadingUserInfo } = useAppState()
 
 async function onLogin() {
     if (!email.value || !password.value) {
@@ -38,10 +35,6 @@ async function onLogin() {
         authStore.setRefresh(refresh);
 
         axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
-
-        loadingUserInfo.value = true
-        userInfo.value = await getDashboardInfo()
-        loadingUserInfo.value = false
 
         const redirectTo = route.query.redirect || '/'
         router.replace(String(redirectTo))
