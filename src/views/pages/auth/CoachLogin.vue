@@ -17,32 +17,40 @@ const checked = ref(false)
 
 
 async function onLogin() {
-    if (!email.value || !password.value) {
-        error.value = 'Please enter both email and password.'
-        return
-    }
+  if (!email.value || !password.value) {
+    error.value = 'Please enter both email and password.'
+    return
+  }
 
-    try {
-        error.value = ''
+  const tenant = gym_code.value.trim().toLowerCase();
+  if (!tenant) {
+    error.value = 'Please enter gym code.'
+    return
+  }
 
-        const response = await loginCoach(email.value, password.value, gym_code.value)
+  try {
+    error.value = ''
 
-        const { access, refresh } = response.data
-        console.log('Login successful:', response.data)
+    // ✅ store tenant first
+    localStorage.setItem('tenant', tenant)
 
-        const authStore = useAuthStore();
-        authStore.setToken(access);
-        authStore.setRefresh(refresh);
+    const response = await loginCoach(email.value, password.value, tenant)
 
-        axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
+    const { access, refresh } = response.data
 
-        const redirectTo = route.query.redirect || '/'
-        router.replace(String(redirectTo))
+    const authStore = useAuthStore();
+    authStore.setToken(access);
+    authStore.setRefresh(refresh);
 
-    } catch (err) {
-        console.error('Login failed:', err)
-        error.value = err.response?.data?.message || 'Login failed. Please try again.'
-    }
+    axios.defaults.headers.common['Authorization'] = `Bearer ${access}`
+
+    const redirectTo = route.query.redirect || '/'
+    router.replace(String(redirectTo))
+
+  } catch (err) {
+    console.error('Login failed:', err)
+    error.value = err.response?.data?.message || 'Login failed. Please try again.'
+  }
 }
 </script>
 

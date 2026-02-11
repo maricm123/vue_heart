@@ -1,17 +1,28 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
 
-const api_coach = axios.create({
-    baseURL: import.meta.env.VITE_COACH_API_URL
-});
+const getTenant = () => localStorage.getItem('tenant');
 
-const api_heart = axios.create({
-    baseURL: import.meta.env.VITE_HEART_API_URL
-});
+const getBase = (template) => {
+    const tenant = getTenant();
+    console.log(tenant, 'tenant in getBase');
+    if (!tenant) return null;
+    return template.replace('{tenant}', tenant);
+};
+
+const api_coach = axios.create();
+api_coach.defaults.__baseTemplate = import.meta.env.VITE_API_BASE_COACH_TEMPLATE;
+
+const api_heart = axios.create();
+api_heart.defaults.__baseTemplate = import.meta.env.VITE_API_BASE_HEART_TEMPLATE;
+
 
 const addAuthInterceptor = (instance) => {
     instance.interceptors.request.use((config) => {
         const authStore = useAuthStore();
+
+        const base = getBase(config.__baseTemplate);
+        if (base) config.baseURL = base;
 
         if (authStore.token) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -24,7 +35,6 @@ const addAuthInterceptor = (instance) => {
 addAuthInterceptor(api_coach);
 addAuthInterceptor(api_heart);
 
-// Refresh token logic
 let isRefreshing = false;
 let failedQueue = [];
 

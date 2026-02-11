@@ -32,10 +32,11 @@ export const getCurrentCoach = async () => {
     }
 };
 
-export async function loginCoach(email, password) {
+export async function loginCoach(email, password, tenant) {
     return api_coach.post('/login-coach', {
         email,
-        password
+        password,
+        tenant
     });
 }
 
@@ -63,5 +64,6 @@ export const logoutCoach = async () => {
     } finally {
         localStorage.removeItem('access');
         localStorage.removeItem('refresh');
+        localStorage.removeItem('tenant');
     }
 };
