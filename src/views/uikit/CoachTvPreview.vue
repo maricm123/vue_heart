@@ -521,12 +521,12 @@ onUnmounted(() => {
                 <template #content>
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center gap-4">
-                            <img :src="client.user.avatar || defaultAvatar" alt="Avatar" class="w-20 h-20 rounded-full object-cover" />
+                            <!-- <img :src="client.user.avatar || defaultAvatar" alt="Avatar" class="w-20 h-20 rounded-full object-cover" /> -->
                             <div>
-                                <p class="m-0">Email: {{ client.user.email }}</p>
+                                <!-- <p class="m-0">Email: {{ client.user.email }}</p>
                                 <p class="m-0">Height: {{ client.height }} cm</p>
                                 <p class="m-0">Weight: {{ client.weight }} kg</p>
-                                <p class="m-0">Gender: {{ client.gender }}</p>
+                                <p class="m-0">Gender: {{ client.gender }}</p> -->
                             </div>
                         </div>
 

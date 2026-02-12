@@ -5,7 +5,6 @@ const getTenant = () => localStorage.getItem('tenant');
 
 const getBase = (template) => {
     const tenant = getTenant();
-    console.log(tenant, 'tenant in getBase');
     if (!tenant) return null;
     return template.replace('{tenant}', tenant);
 };
@@ -18,18 +17,20 @@ api_heart.defaults.__baseTemplate = import.meta.env.VITE_API_BASE_HEART_TEMPLATE
 
 
 const addAuthInterceptor = (instance) => {
-    instance.interceptors.request.use((config) => {
-        const authStore = useAuthStore();
+  instance.interceptors.request.use((config) => {
+    const authStore = useAuthStore();
 
-        const base = getBase(config.__baseTemplate);
-        if (base) config.baseURL = base;
+    const base = getBase(instance.defaults.__baseTemplate);
+    if (!base) throw new Error('Missing tenant_code');
 
-        if (authStore.token) {
-            config.headers.Authorization = `Bearer ${authStore.token}`;
-        }
+    config.baseURL = base;
 
-        return config;
-    });
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`;
+    }
+
+    return config;
+  });
 };
 
 addAuthInterceptor(api_coach);
@@ -48,58 +49,47 @@ const processQueue = (error, token = null) => {
 };
 
 const addRefreshInterceptor = (instance) => {
-    instance.interceptors.response.use(
-        (res) => res,
-        async (error) => {
-            const originalRequest = error.config;
-            const authStore = useAuthStore();
+  instance.interceptors.response.use(
+    (res) => res,
+    async (error) => {
+      const originalRequest = error.config;
+      const authStore = useAuthStore();
 
-            if (error.response?.status === 401 && !originalRequest._retry) {
-                if (isRefreshing) {
-                    return new Promise((resolve, reject) => {
-                        failedQueue.push({ resolve, reject });
-                    }).then((token) => {
-                        originalRequest.headers.Authorization = 'Bearer ' + token;
-                        return instance(originalRequest);
-                    });
-                }
+      if (error.response?.status === 401 && !originalRequest._retry) {
 
-                originalRequest._retry = true;
-                isRefreshing = true;
-
-                try {
-                    const refresh = authStore.refreshToken;
-
-                    if (!refresh || refresh === 'null' || refresh === 'undefined') {
-                        console.log('No refresh token in store/localStorage:', refresh);
-                        authStore.logout();
-                        return Promise.reject(error);
-                    }
-
-                    const res = await axios.post(`${import.meta.env.VITE_COACH_API_URL}/refresh-token`, { refresh });
-
-                    const newAccess = res.data.access;
-                    authStore.setToken(newAccess);
-
-                    // if backend rotates refresh tokens, save it too
-                    if (res.data.refresh) authStore.setRefresh(res.data.refresh);
-
-                    processQueue(null, newAccess);
-                    return instance(originalRequest);
-                } catch (err) {
-                    console.log('Refresh failed status:', err.response?.status);
-                    console.log('Refresh failed data:', err.response?.data); // <-- super important
-                    processQueue(err, null);
-                    authStore.logout();
-                    return Promise.reject(err);
-                } finally {
-                    isRefreshing = false;
-                }
-            }
-
+        try {
+          const refresh = authStore.refreshToken;
+          if (!refresh || refresh === 'null' || refresh === 'undefined') {
+            authStore.logout();
             return Promise.reject(error);
+          }
+
+          const coachBase = getBase(import.meta.env.VITE_API_BASE_COACH_TEMPLATE);
+          if (!coachBase) { 
+            authStore.logout();
+            return Promise.reject(error);
+          }
+
+          const res = await axios.post(`${coachBase}/refresh-token`, { refresh });
+
+          const newAccess = res.data.access;
+          authStore.setToken(newAccess);
+          if (res.data.refresh) authStore.setRefresh(res.data.refresh);
+
+          processQueue(null, newAccess);
+          return instance(originalRequest);
+        } catch (err) {
+          processQueue(err, null);
+          authStore.logout();
+          return Promise.reject(err);
+        } finally {
+          isRefreshing = false;
         }
-    );
+      }
+
+      return Promise.reject(error);
+    }
+  );
 };
 
 addRefreshInterceptor(api_coach);
