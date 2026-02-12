@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref, reactive } from 'vue';
 import { formatIsoToLocal } from '@/utils/formatDate';
-import { useBle } from '@/composables/useBle';
 import { getActiveTrainingSessions, finishSession, createSession, forceDeleteActiveTrainingSession, resumeActiveTrainingSession, pauseActiveTrainingSession } from '@/services/trainingSessionsService.js';
 import { webSocketStore } from '@/store/webSocketStore';
 import { storeToRefs } from 'pinia';
@@ -17,11 +16,8 @@ const sessionControlStore = useSessionControlStore();
 const bleStore = useBleStore();
 const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
 
-const { safeIsConnected } = useBle();
+import { markHrNotifsStopped, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications, stopHeartRateNotificationsSafe, safeIsConnected } from '@/utils/bluetooth.js';
 
-import { HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications, stopHeartRateNotificationsSafe } from '@/utils/bluetooth.js';
-
-const { connect, disconnect, isNative } = useBle();
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
 const { timers } = storeToRefs(timersStore);
@@ -144,11 +140,13 @@ async function connectDevice(client) {
         await BleClient.connect(device.deviceId, (deviceId) => {
             console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
 
+            markHrNotifsStopped(client.id, deviceId);
             if (isManualDisconnect(client.id, deviceId)) {
                 console.log(`ℹ️ Manual disconnect for client ${client.id}, skipping reconnect.`);
                 consumeManualDisconnect(client.id, deviceId);
                 return;
             }
+
             // Unexpected disconnect → auto-reconnect
             onDeviceDisconnected(client.id, deviceId);
         });
@@ -224,6 +222,8 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
                 return;
             }
 
+            markHrNotifsStopped(clientId, disconnectedDeviceId); // or stop flag
+
             reconnectDevice(clientId, { deviceId: disconnectedDeviceId }, retries - 1);
         });
 
@@ -231,6 +231,7 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
         bleStore.setDevice(clientId, deviceId);
         bleStore.setConnection(clientId, 'connected');
 
+        await stopHeartRateNotificationsSafe(clientId, deviceId);
         await startHeartRateNotifications(clientId, deviceId);
 
         console.log(`📡 Notifications restarted for client ${clientId}`);
@@ -289,7 +290,6 @@ async function disconnectDevice(client) {
   markManualDisconnect(clientId, deviceId);
 
   try {
-    // ✅ THIS is what you're missing
     await stopHeartRateNotificationsSafe(clientId, deviceId);
 
     await BleClient.disconnect(deviceId);
@@ -349,8 +349,6 @@ async function onFinishSession(client, calories, seconds) {
         disconnectDevice(client);
 
         activeSessions.value = activeSessions.value.filter((s) => s.id !== sessionId);
-
-        await stopHeartRateNotificationsSafe(client.id, bleStore.getDeviceId(client.id));
     } catch (err) {
         console.error('Failed to finish session', err);
     }
@@ -428,7 +426,7 @@ onMounted(async () => {
         if (isConnected) {
             bleStore.setConnection(clientId, 'connected');
         } else {
-            bleStore.clearDevice(clientId);
+            bleStore.removeDevice(clientId);
         }
     }
 });

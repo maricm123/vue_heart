@@ -82,4 +82,30 @@ async function stopHeartRateNotificationsSafe(clientId, deviceId) {
   }
 }
 
-export { BATTERY_SERVICE, BATTERY_CHARACTERISTIC, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, parseHeartRate, startHeartRateNotifications, stopHeartRateNotificationsSafe };
+async function safeIsConnected(deviceId) {
+    try {
+      if (typeof BleClient.isConnected === 'function') {
+        return await BleClient.isConnected(deviceId);
+      }
+      return false; // On web, treat as disconnected
+    } catch (err) {
+      console.warn('safeIsConnected failed:', err);
+      return false;
+    }
+  }
+
+function markHrNotifsStopped(clientId, deviceId) {
+  hrNotifsRunning[`${clientId}:${deviceId}`] = false;
+}
+
+export { 
+  BATTERY_SERVICE,
+  BATTERY_CHARACTERISTIC,
+  HEART_RATE_SERVICE,
+  HEART_RATE_MEASUREMENT_CHARACTERISTIC,
+  parseHeartRate,
+  startHeartRateNotifications,
+  stopHeartRateNotificationsSafe,
+  safeIsConnected,
+  markHrNotifsStopped
+};
