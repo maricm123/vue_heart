@@ -16,7 +16,7 @@ const sessionControlStore = useSessionControlStore();
 const bleStore = useBleStore();
 const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
 
-import { markHrNotifsStopped, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications, stopHeartRateNotificationsSafe, safeIsConnected } from '@/utils/bluetooth.js';
+import { markHrNotifsStopped, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications, stopHeartRateNotificationsSafe, safeIsConnected } from '@/utils/bluetooth.js';
 
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
@@ -371,8 +371,8 @@ const forceDeleteSession = async (client) => {
 
         toast.add({
             severity: 'success',
-            summary: 'Session deleted',
-            detail: 'Session has been permanently removed',
+            summary: 'Training Session deleted',
+            detail: 'Training Session has been permanently removed',
             life: 3000
         });
 

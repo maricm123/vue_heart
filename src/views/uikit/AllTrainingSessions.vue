@@ -282,6 +282,19 @@ function calculateCustomerTotal(name) {
                     <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" />
                 </template>
             </Column>
+            <!-- <Column field="calories_burned" header="Calories burned" dataType="numeric" style="min-width: 10rem">
+                <template #body="{ data }">
+                    {{ data.calories_burned }} kcal
+                </template>
+                <template #filter="{ filterModel }">
+                    <InputNumber v-model="filterModel.value" placeholder="Search by calories burned" />
+                </template>
+            </Column> -->
+            <Column header = "Actions" style="min-width: 8rem">
+                <template #body="{ data }">
+                    <Button label="Detail" size="small" icon="pi pi-arrow-right" @click="$router.push({ name: 'trainingSessionDetail', params: { id: data.id } })" />
+                </template>
+            </Column>
             <!-- <Column header="Agent" filterField="representative" :showFilterMatchModes="false" :filterMenuStyle="{ width: '14rem' }" style="min-width: 14rem">
                 <template #body="{ data }">
                     <div class="flex items-center gap-2">
