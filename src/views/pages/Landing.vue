@@ -431,7 +431,7 @@ const submitDemo = async () => {
             </button>
 
             <div class="text-lg text-surface-600">
-              We typically reply within <span class="font-semibold text-surface-900">24 hours</span>.
+              We typically reply within <span class="font-semibold text-surface-900">6 hours</span>.
             </div>
           </div>
 
