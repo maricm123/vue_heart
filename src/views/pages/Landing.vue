@@ -1,3 +1,43 @@
+<script setup lang="ts">
+import { reactive, ref } from 'vue';
+
+const scrollToContact = () => {
+  const el = document.getElementById("contact");
+  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const form = reactive({
+  name: "",
+  email: "",
+  company: "",
+  classSize: "",
+  message: "",
+});
+
+const isSubmitting = ref(false);
+const isSubmitted = ref(false);
+
+const submitDemo = async () => {
+  isSubmitting.value = true;
+  isSubmitted.value = false;
+
+  try {
+    // TODO: replace with your real API call (server route, Formspree, etc.)
+    await new Promise((r) => setTimeout(r, 600));
+
+    isSubmitted.value = true;
+    form.name = "";
+    form.email = "";
+    form.company = "";
+    form.classSize = "";
+    form.message = "";
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+</script>
+
+
 <template>
   <!-- HERO SECTION -->
   <section
@@ -20,11 +60,12 @@
       </p>
 
       <button
-        class="mt-8 px-6 py-3 text-xl rounded-lg shadow-lg"
-        style="background-color:#ff474c; color:white;"
-      >
-        Book a Demo
-      </button>
+  class="mt-8 px-6 py-3 text-xl rounded-lg shadow-lg"
+  style="background-color:#ff474c; color:white;"
+  @click="scrollToContact"
+>
+  Book a Demo
+</button>
     </div>
 
     <div class="flex justify-center md:justify-end mt-10">
@@ -248,6 +289,162 @@
       <!-- pricing cards intentionally left commented out -->
     <!-- </div>
   </section> -->
+
+  <!-- CONTACT / DEMO SECTION (before footer) -->
+<section id="contact" class="py-20 px-6 lg:px-20 mx-0 lg:mx-20">
+  <div class="grid grid-cols-12 gap-10 items-start">
+    <!-- Left: premium pitch -->
+    <div class="col-span-12 lg:col-span-5">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-surface-200 bg-white">
+        <span class="w-2 h-2 rounded-full" style="background-color:#ff474c;"></span>
+        <span class="text-base text-surface-700">Request a demo</span>
+      </div>
+
+      <h2 class="text-5xl font-semibold text-surface-900 mt-6 leading-tight">
+        See HeartApp in action for your studio
+      </h2>
+
+      <p class="text-2xl text-surface-600 mt-4 leading-relaxed">
+        We’ll walk you through the Coach screen, BLE pairing flow, and the Live TV view — tailored to your class format.
+      </p>
+
+      <div class="mt-8 space-y-4">
+        <div class="flex gap-4 items-start">
+          <div class="flex items-center justify-center shrink-0"
+               style="background-color:#ffe0e1; width:3rem; height:3rem; border-radius:12px;">
+            <i class="pi pi-clock text-2xl" style="color:#ff474c;"></i>
+          </div>
+          <div>
+            <div class="text-xl font-semibold text-surface-900">15–30 minutes</div>
+            <div class="text-lg text-surface-600">Quick walkthrough, no fluff.</div>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="flex items-center justify-center shrink-0"
+               style="background-color:#ffe0e1; width:3rem; height:3rem; border-radius:12px;">
+            <i class="pi pi-desktop text-2xl" style="color:#ff474c;"></i>
+          </div>
+          <div>
+            <div class="text-xl font-semibold text-surface-900">Big-screen ready</div>
+            <div class="text-lg text-surface-600">Perfect for group classes and coaching.</div>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="flex items-center justify-center shrink-0"
+               style="background-color:#ffe0e1; width:3rem; height:3rem; border-radius:12px;">
+            <i class="pi pi-shield text-2xl" style="color:#ff474c;"></i>
+          </div>
+          <div>
+            <div class="text-xl font-semibold text-surface-900">Professional setup</div>
+            <div class="text-lg text-surface-600">We’ll advise on devices and class sizing.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: form card -->
+    <div class="col-span-12 lg:col-span-7">
+      <div class="bg-white rounded-2xl shadow-lg border border-surface-200 p-8">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h3 class="text-3xl font-semibold text-surface-900">Book a demo</h3>
+            <p class="text-xl text-surface-600 mt-2">
+              Tell us a bit about your studio — we’ll reply with next steps.
+            </p>
+          </div>
+        </div>
+
+        <form class="mt-8 grid grid-cols-12 gap-5" @submit.prevent="submitDemo">
+          <div class="col-span-12 md:col-span-6">
+            <label class="text-lg text-surface-700">Full name</label>
+            <input
+              v-model="form.name"
+              required
+              type="text"
+              class="mt-2 w-full rounded-xl border border-surface-200 px-4 py-3 text-lg outline-none focus:ring-2"
+              style="--tw-ring-color: rgba(255,71,76,0.35);"
+              placeholder="John Smith"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-6">
+            <label class="text-lg text-surface-700">Work email</label>
+            <input
+              v-model="form.email"
+              required
+              type="email"
+              class="mt-2 w-full rounded-xl border border-surface-200 px-4 py-3 text-lg outline-none focus:ring-2"
+              style="--tw-ring-color: rgba(255,71,76,0.35);"
+              placeholder="you@studio.com"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-7">
+            <label class="text-lg text-surface-700">Gym / Studio</label>
+            <input
+              v-model="form.company"
+              required
+              type="text"
+              class="mt-2 w-full rounded-xl border border-surface-200 px-4 py-3 text-lg outline-none focus:ring-2"
+              style="--tw-ring-color: rgba(255,71,76,0.35);"
+              placeholder="Studio name"
+            />
+          </div>
+
+          <div class="col-span-12 md:col-span-5">
+            <label class="text-lg text-surface-700">Typical class size</label>
+            <select
+              v-model="form.classSize"
+              class="mt-2 w-full rounded-xl border border-surface-200 px-4 py-3 text-lg outline-none focus:ring-2 bg-white"
+              style="--tw-ring-color: rgba(255,71,76,0.35);"
+            >
+              <option value="">Select</option>
+              <option value="1-5">1–5</option>
+              <option value="6-10">6–10</option>
+              <option value="11-20">11–20</option>
+              <option value="21-35">21–35</option>
+              <option value="36+">36+</option>
+            </select>
+          </div>
+
+          <div class="col-span-12">
+            <label class="text-lg text-surface-700">Message (optional)</label>
+            <textarea
+              v-model="form.message"
+              rows="4"
+              class="mt-2 w-full rounded-xl border border-surface-200 px-4 py-3 text-lg outline-none focus:ring-2"
+              style="--tw-ring-color: rgba(255,71,76,0.35);"
+              placeholder="What devices do you use? Any specific requirements?"
+            />
+          </div>
+
+          <div class="col-span-12 flex flex-col md:flex-row md:items-center gap-4 mt-2">
+            <button
+              type="submit"
+              class="px-6 py-3 text-xl rounded-xl shadow-lg disabled:opacity-60"
+              style="background-color:#ff474c; color:white;"
+              :disabled="isSubmitting"
+            >
+              {{ isSubmitting ? "Sending…" : "Request demo" }}
+            </button>
+
+            <div class="text-lg text-surface-600">
+              We typically reply within <span class="font-semibold text-surface-900">24 hours</span>.
+            </div>
+          </div>
+
+          <div v-if="isSubmitted" class="col-span-12 mt-2">
+            <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-lg text-green-900">
+              Thanks — your request was sent. We’ll get back to you shortly.
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
 
   <!-- FOOTER SECTION -->
   <footer class="py-20 px-6 mx-0 mt-20 lg:mx-20 border-t border-surface-200">
