@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { toClientId } from "@/utils/id";
 
 export const useBleStore = defineStore('ble', {
   state: () => ({
@@ -13,54 +14,73 @@ export const useBleStore = defineStore('ble', {
 
   getters: {
     getSessionId: (state) => (clientId) => {
-      return state.sessionIds[clientId] || null
+      const id = toClientId(clientId);
+      return id == null ? null : (state.sessionIds[id] || null);
     },
     isSessionStarted: (state) => (clientId) => {
-      return !!state.sessionsStarted[clientId]
-    }
+      const id = toClientId(clientId);
+      return id == null ? false : !!state.sessionsStarted[id];
+    },
+    getDeviceId: (state) => (clientId) => {
+      const id = toClientId(clientId);
+      return id == null ? null : state.connectedDevices[id];
+    },
   },
 
   actions: {
-    // 🟢 SESSION STATE
     setSessionId(clientId, sessionId) {
-      this.sessionIds[clientId] = sessionId
+      const id = toClientId(clientId);
+      if (id == null) return;
+      this.sessionIds[id] = sessionId;
     },
 
     setSessionStarted(clientId, value) {
-      this.sessionsStarted[clientId] = value
+      const id = toClientId(clientId);
+      if (id == null) return;
+      this.sessionsStarted[id] = value;
     },
 
     clearSession(clientId) {
-      delete this.sessionIds[clientId]
-      delete this.sessionsStarted[clientId]
+      const id = toClientId(clientId);
+      if (id == null) return;
+      delete this.sessionIds[id];
+      delete this.sessionsStarted[id];
     },
 
-    // 🟢 DEVICE STATE
     setConnection(clientId, status) {
-      this.connectionStatus[clientId] = status
+      const id = toClientId(clientId);
+      if (id == null) return;
+      this.connectionStatus[id] = status;
     },
 
     setBattery(clientId, percent) {
-      this.batteryLevel[clientId] = percent
+      const id = toClientId(clientId);
+      if (id == null) return;
+      this.batteryLevel[id] = percent;
     },
 
     setDevice(clientId, deviceId) {
-      this.connectedDevices[clientId] = deviceId;
-    },
-    removeDevice(clientId) {
-      delete this.connectedDevices[clientId];
+      const id = toClientId(clientId);
+      if (id == null) return;
+      this.connectedDevices[id] = deviceId;
     },
 
-    getDeviceId(clientId) {
-      return this.connectedDevices[clientId];
+    removeDevice(clientId) {
+      const id = toClientId(clientId);
+      if (id == null) return;
+      delete this.connectedDevices[id];
     },
 
     setManual(clientId, value) {
-      this.manuallyDisconnecting[clientId] = value
+      const id = toClientId(clientId);
+      if (id == null) return;
+      this.manuallyDisconnecting[id] = value;
     },
 
     clearManual(clientId) {
-      delete this.manuallyDisconnecting[clientId]
-    }
-  }
-})
+      const id = toClientId(clientId);
+      if (id == null) return;
+      delete this.manuallyDisconnecting[id];
+    },
+  },
+});
