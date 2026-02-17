@@ -135,6 +135,8 @@ async function connectDevice(client) {
         const deviceId = device.deviceId;
 
         bleStore.setDevice(client.id, deviceId); // ✅ persistent reference
+        console.log("✅ [AFTER CONNECT] connectedDevices:", bleStore.connectedDevices);
+        console.log("✅ [AFTER CONNECT] stored device:", bleStore.connectedDevices[client.id]);     
 
         console.log('Requested device:', device, device.deviceId);
         await BleClient.connect(device.deviceId, (deviceId) => {
@@ -420,15 +422,20 @@ onMounted(async () => {
     } catch (err) {
         // već je logovano u servisu, ovde možeš prikazati poruku korisniku
     }
-    for (const [clientId, deviceId] of Object.entries(bleStore.connectedDevices)) {
-        const isConnected = await safeIsConnected(deviceId);
-        console.log(`On mount - client ${clientId} device ${deviceId} isConnected:`, isConnected);
-        if (isConnected) {
-            bleStore.setConnection(clientId, 'connected');
-        } else {
-            bleStore.removeDevice(clientId);
-        }
+    console.log("🧠 [MOUNT] bleStore.connectedDevices:", bleStore.connectedDevices);
+  console.log("🧠 [MOUNT] keys:", Object.keys(bleStore.connectedDevices));
+  console.log("🧠 [MOUNT] key types:", Object.keys(bleStore.connectedDevices).map(k => [k, typeof k]));
+
+  for (const [clientIdRaw, deviceId] of Object.entries(bleStore.connectedDevices)) {
+    console.log("🔎 [MOUNT] checking", { clientId, clientIdType: typeof clientId, deviceId });
+    const clientId = Number(clientIdRaw); // ✅ sad je number
+    try {
+      const isConnected = await safeIsConnected(deviceId);
+      console.log(`✅ [MOUNT] isConnected(${clientId} -> ${deviceId}):`, isConnected);
+    } catch (e) {
+      console.warn("⚠️ [MOUNT] safeIsConnected threw", { clientId, deviceId, err: e?.message || e });
     }
+  }
 });
 
 onUnmounted(() => {
