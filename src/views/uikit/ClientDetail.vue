@@ -20,6 +20,15 @@ const displayConfirmation = ref(false);
 
 const hrZones = [540, 325, 702, 421, 237];
 
+const activeTab = ref(0);
+
+const TAB_MAP = {
+  overview: 0,
+  sessions: 1,
+  metrics: 2,
+  danger: 3,
+};
+
 const client = ref({
     user: { first_name: '', last_name: '', email: '', birth_date: null },
     height: null,
@@ -48,6 +57,8 @@ const options = [
 const router = useRouter();
 
 onMounted(async () => {
+    const tab = route.query.tab;
+  if (tab && TAB_MAP[tab] !== undefined) activeTab.value = TAB_MAP[tab];
     try {
         const res = await getClientDetail(clientId);
         client.value = res;
@@ -134,7 +145,7 @@ const deleteClientFunction = async () => {
 
             <!-- Content -->
             <div class="client-page">
-                <TabView>
+                <TabView v-model:activeIndex="activeTab">
                     <!-- OVERVIEW -->
                     <TabPanel header="Overview">
                         <div class="grid gap-4">
