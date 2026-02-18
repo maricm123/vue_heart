@@ -37,7 +37,7 @@ watch([getPrimary, getSurface, isDarkTheme], () => setPieData());
 
 <template>
   <div class="card flex flex-col items-center">
-    <h3 class="mb-4 font-semibold text-lg">Heart Rate Zones</h3>
+    <h3 class="mb-4 font-semibold text-lg">Soon ...</h3>
     <Chart type="doughnut" :data="pieData" :options="pieOptions" />
   </div>
 </template>
