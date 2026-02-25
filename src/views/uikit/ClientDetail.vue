@@ -11,9 +11,7 @@ import { deleteClient } from '@/services/userService';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import MaxHeartRateField from '@/components/MaxHeartRateField.vue';
-// Toast for notifications
 const toast = useToast();
-// route + base state
 const route = useRoute();
 const clientId = route.params.id;
 const displayConfirmation = ref(false);
