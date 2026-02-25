@@ -195,6 +195,16 @@ const deleteClientFunction = async () => {
                             <ClientHeartRateChart :clientId="clientId" />
                         </div>
                     </TabPanel>
+                    <TabPanel header="Analyses">
+                        <div class="card">
+                            Soon...
+                        </div>
+                    </TabPanel>
+                    <TabPanel header="Emails">
+                        <div class="card">
+                            Soon...
+                        </div>
+                    </TabPanel>
                     <TabPanel header="Danger zone">
                         <div class="card danger-card">
                             <h3 class="section-title">Delete client</h3>
