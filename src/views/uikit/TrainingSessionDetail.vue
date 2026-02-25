@@ -20,14 +20,11 @@ const router = useRouter();
 
 const sessionId = route.params.id;
 
-// UI
 const loading = ref(true);
 const displayConfirmation = ref(false);
 
-// ✅ client je samo ID
 const clientId = ref(null);
 
-// (optional) ako backend vrati ime/prezime kao stringove
 const clientLabel = ref(null);
 
 const summary = ref({});
@@ -104,8 +101,6 @@ onMounted(async () => {
       response?.clientId ??
       null;
 
-    // OPTIONAL: ako backend nekad šalje ime/prezime kao string
-    // (ako nema — ostaće null i nećemo prikazati)
     clientLabel.value =
       response?.client_name ??
       response?.client_full_name ??
@@ -119,7 +114,6 @@ onMounted(async () => {
     zones.value = summaryData?.hr_zones_seconds ?? null;
     hasHrZones.value = !!summaryData?.has_max_hr;
 
-    // ✅ LINE chart BPM — STARE BOJE
     if (points.length) {
       const bpm = points.map((p) => p.bpm);
       const labels = points.map((p) => {
@@ -143,7 +137,6 @@ onMounted(async () => {
       chartData.value = { labels: [], datasets: [] };
     }
 
-    // ✅ ZONES chart — STARE BOJE
     if (zones.value) {
       zoneChartData.value = {
         labels: ["Z1", "Z2", "Z3", "Z4", "Z5"],
