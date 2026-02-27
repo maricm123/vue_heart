@@ -131,7 +131,7 @@ const deleteClientFunction = async () => {
         <Fluid>
             <!-- Sticky header -->
             <div class="client-header">
-                <button class="client-back" @click="router.back()" aria-label="Back">
+                <button class="client-back" @click="router.push('/ClientListOfCoach')" aria-label="Back">
                     <i class="pi pi-arrow-left"></i>
                 </button>
 

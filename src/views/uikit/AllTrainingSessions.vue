@@ -292,7 +292,7 @@ function calculateCustomerTotal(name) {
             </Column> -->
             <Column header = "Actions" style="min-width: 8rem">
                 <template #body="{ data }">
-                    <Button label="Detail" size="small" icon="pi pi-arrow-right" @click="$router.push({ name: 'trainingSessionDetail', params: { id: data.id } })" />
+                    <Button label="Detail" size="small" icon="pi pi-arrow-right" @click="$router.push({ name: 'trainingSessionDetail', params: { id: data.id }, query: { from: 'allSessions' } })" />
                 </template>
             </Column>
             <!-- <Column header="Agent" filterField="representative" :showFilterMatchModes="false" :filterMenuStyle="{ width: '14rem' }" style="min-width: 14rem">

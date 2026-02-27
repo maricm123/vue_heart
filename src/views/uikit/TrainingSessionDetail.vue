@@ -8,6 +8,7 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import Chart from "primevue/chart";
 import Skeleton from "primevue/skeleton";
+import Tooltip from "primevue/tooltip";
 
 import {
   getTrainingSessionDetailsAndMetrics,
@@ -28,6 +29,7 @@ const clientId = ref(null);
 const clientLabel = ref(null);
 
 const summary = ref({});
+const trainingSession = ref({});
 const zones = ref(null);
 const hasHrZones = ref(false);
 
@@ -37,6 +39,19 @@ const chartOptions = ref({ responsive: true, maintainAspectRatio: false });
 const zoneChartData = ref({ labels: [], datasets: [] });
 const zoneChartOptions = ref({ responsive: true, maintainAspectRatio: false });
 
+function formatSessionDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('de-DE', { 
+    year: 'numeric', 
+    day: '2-digit', 
+    month: '2-digit', 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false
+  });
+}
+
 function openConfirmation() {
   displayConfirmation.value = true;
 }
@@ -45,11 +60,18 @@ function closeConfirmation() {
 }
 
 function goBack() {
-  if (clientId.value) {
+  const from = route.query.from;
+  const qClientId = route.query.clientId;
+  
+  if (from === 'client' && qClientId) {
+    router.push(`/clientDetail/${qClientId}?tab=sessions`);
+  } else if (from === 'allSessions') {
+    router.push('/all-training-sessions');
+  } else if (clientId.value) {
     router.push(`/clientDetail/${clientId.value}?tab=sessions`);
-    return;
+  } else {
+    router.back();
   }
-  router.back();
 }
 
 function goToClientMetrics() {
@@ -106,11 +128,18 @@ onMounted(async () => {
       response?.client_full_name ??
       null;
 
+    const data = response ?? {};
     const summaryMetrics = response?.summary_metrics ?? {};
     const points = summaryMetrics?.points ?? [];
     const summaryData = summaryMetrics?.summary ?? {};
 
+    console.log("RESPONSE FULL:", response);
+    console.log("TRAINING SESSION OBJ:", data);
+    console.log("TITLE:", data?.title);
+    console.log("START:", data?.start);
+
     summary.value = summaryData;
+    trainingSession.value = data;
     zones.value = summaryData?.hr_zones_seconds ?? null;
     hasHrZones.value = !!summaryData?.has_max_hr;
 
@@ -222,13 +251,79 @@ onMounted(async () => {
         <TabView>
           <TabPanel header="Overview">
             <div class="card">
-              <h3 class="section-title">Session Summary</h3>
+              <h3 class="section-title">Training session summary</h3>
 
-              <div class="grid gap-2">
-                <p><strong>Max BPM:</strong> {{ summary.max_hr }}</p>
-                <p><strong>Avg BPM:</strong> {{ summary.avg_hr }}</p>
-                <p><strong>Duration:</strong> {{ summary.duration_seconds }} sec</p>
-                <p><strong>Calories:</strong> {{ summary.calories }}</p>
+              <div class="summary-grid">
+                <!-- Session Name -->
+                <div v-if="trainingSession.title" class="summary-card">
+                  <div class="card-icon" style="background: #E3F2FD;">
+                    <i class="pi pi-list" style="color: #1976D2;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Session Name</p>
+                    <p class="card-value">{{ trainingSession.title }}</p>
+                  </div>
+                </div>
+
+                <!-- Date and Time -->
+                <div v-if="trainingSession.start" class="summary-card">
+                  <div class="card-icon" style="background: #F3E5F5;">
+                    <i class="pi pi-calendar" style="color: #7B1FA2;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Date and Time</p>
+                    <p class="card-value">{{ formatSessionDate(trainingSession.start) }}</p>
+                  </div>
+                </div>
+
+                <!-- Max BPM -->
+                <div class="summary-card">
+                  <div class="card-icon" style="background: #FFEBEE;">
+                    <i class="pi pi-heart-fill" style="color: #C62828;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Max BPM</p>
+                    <p class="card-value">{{ summary.max_hr || '—' }}</p>
+                  </div>
+                </div>
+
+                <!-- Avg BPM -->
+                <div class="summary-card">
+                  <div class="card-icon" style="background: #FCE4EC;">
+                    <i class="pi pi-heart" style="color: #E91E63;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Avg BPM</p>
+                    <p class="card-value">{{ summary.avg_hr || '—' }}</p>
+                  </div>
+                </div>
+
+                <!-- Duration -->
+                <div class="summary-card" v-tooltip="'Duration shows only active training time (excluding paused time)'">
+                  <div class="card-icon" style="background: #E0F2F1;">
+                    <i class="pi pi-clock" style="color: #00796B;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Duration</p>
+                    <p class="card-value">
+                      {{ summary.duration_seconds ? Math.floor(summary.duration_seconds / 60) + ' min' : '—' }}
+                      <span v-if="summary.total_paused_seconds && summary.total_paused_seconds > 0" style="font-size: 14px; opacity: 0.7;">
+                        (+ {{ Math.floor(summary.total_paused_seconds / 60) }} min paused)
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Calories -->
+                <div class="summary-card">
+                  <div class="card-icon" style="background: #FFF3E0;">
+                    <i class="pi pi-bolt" style="color: #E65100;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Calories</p>
+                    <p class="card-value">{{ summary.calories || '—' }}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </TabPanel>
@@ -379,5 +474,63 @@ onMounted(async () => {
   opacity: 0.8;
   margin: 8px 0 14px;
   line-height: 1.4;
+}
+
+/* Summary Cards Grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--surface-200);
+  border-radius: 12px;
+  background: var(--surface-50);
+  transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 24px;
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-value {
+  margin: 4px 0 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color);
+  word-break: break-word;
 }
 </style>

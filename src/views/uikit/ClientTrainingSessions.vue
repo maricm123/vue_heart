@@ -63,7 +63,7 @@ onMounted(async () => {
             <Column field="duration" header="Duration" />
             <Column header="Actions" style="min-width: 8rem">
                 <template #body="{ data }">
-                    <Button label="Detail" size="small" icon="pi pi-arrow-right" @click="$router.push({ name: 'trainingSessionDetail', params: { id: data.id } })" />
+                    <Button label="Detail" size="small" icon="pi pi-arrow-right" @click="$router.push({ name: 'trainingSessionDetail', params: { id: data.id }, query: { from: 'client', clientId: props.clientId } })" />
                 </template>
             </Column>
         </DataTable>
