@@ -124,6 +124,7 @@ onMounted(async () => {
       null;
 
     clientLabel.value =
+      response?.client?.name ??
       response?.client_name ??
       response?.client_full_name ??
       null;
@@ -132,11 +133,6 @@ onMounted(async () => {
     const summaryMetrics = response?.summary_metrics ?? {};
     const points = summaryMetrics?.points ?? [];
     const summaryData = summaryMetrics?.summary ?? {};
-
-    console.log("RESPONSE FULL:", response);
-    console.log("TRAINING SESSION OBJ:", data);
-    console.log("TITLE:", data?.title);
-    console.log("START:", data?.start);
 
     summary.value = summaryData;
     trainingSession.value = data;
@@ -254,10 +250,21 @@ onMounted(async () => {
               <h3 class="section-title">Training session summary</h3>
 
               <div class="summary-grid">
+                <!-- Client Name -->
+                <div v-if="clientLabel" class="summary-card">
+                  <div class="card-icon" style="background: #E8F5E9;">
+                    <i class="pi pi-user" style="color: #2E7D32;"></i>
+                  </div>
+                  <div class="card-content">
+                    <p class="card-label">Client</p>
+                    <p class="card-value">{{ clientLabel }}</p>
+                  </div>
+                </div>
+
                 <!-- Session Name -->
                 <div v-if="trainingSession.title" class="summary-card">
                   <div class="card-icon" style="background: #E3F2FD;">
-                    <i class="pi pi-list" style="color: #1976D2;"></i>
+                    <i class="pi pi-bookmark" style="color: #1976D2;"></i>
                   </div>
                   <div class="card-content">
                     <p class="card-label">Session Name</p>
