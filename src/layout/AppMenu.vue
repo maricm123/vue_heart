@@ -19,6 +19,7 @@ const model = ref([
             // { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
             // { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
             { label: 'All training sessions', icon: 'pi pi-fw pi-align-justify', to: '/all-training-sessions' },
+            { label: 'Training calendar', icon: 'pi pi-fw pi-calendar', to: '/training-calendar' },
             // { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
             // { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
             // { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },

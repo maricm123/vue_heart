@@ -67,6 +67,8 @@ function goBack() {
     router.push(`/clientDetail/${qClientId}?tab=sessions`);
   } else if (from === 'allSessions') {
     router.push('/all-training-sessions');
+  } else if (from === 'calendar') {
+    router.push('/training-calendar');
   } else if (clientId.value) {
     router.push(`/clientDetail/${clientId.value}?tab=sessions`);
   } else {

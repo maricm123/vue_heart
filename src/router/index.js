@@ -43,6 +43,11 @@ const router = createRouter({
                     component: () => import('@/views/uikit/AllTrainingSessions.vue')
                 },
                 {
+                    path: '/training-calendar',
+                    name: 'trainingCalendar',
+                    component: () => import('@/views/uikit/TrainingCalendar.vue')
+                },
+                {
                     path: '/formlayout',
                     name: 'formlayout',
                     component: () => import('@/views/uikit/FormLayout.vue')
