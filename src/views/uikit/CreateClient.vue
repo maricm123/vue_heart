@@ -5,6 +5,7 @@ import { NodeService } from '@/service/NodeService';
 import { onMounted } from 'vue';
 import { createClient } from '@/services/userService';
 import MaxHeartRateField from '@/components/MaxHeartRateField.vue';
+import { useToast } from 'primevue/usetoast';
 
 // --- phone prefixes ---
 const selectedPrefix = ref('+381');
@@ -20,7 +21,6 @@ const countryPrefixes = [
 const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
-const description = ref('');
 const phoneNumber = ref('');
 const weightValue = ref(null);
 const heightValue = ref(null);
@@ -32,8 +32,8 @@ const max_heart_rate = ref(null);
 const auto_calculate_max_hr = ref(false);
 
 // other UI state
-const message = ref('');
 const formError = ref(null);
+const toast = useToast();
 
 // touched flags for blur-driven errors
 const touched = {
@@ -156,7 +156,6 @@ onMounted(() => {
 // create client function (validates client-side, formats date, maps fields)
 async function createClientFunction() {
     formError.value = null;
-    message.value = '';
     attemptedSubmit.value = true;
 
     // touch all fields to display errors if any
@@ -173,7 +172,6 @@ async function createClientFunction() {
         lastName: lastName.value,
         email: email.value,
         gender: selectButtonValue.value ? selectButtonValue.value.name : null,
-        description: description.value,
         birthDate: normalizeDateToYYYYMMDD(calendarValue.value),
         phoneNumber: selectedPrefix.value + phoneNumber.value,
         weight: Number(weightValue.value),
@@ -185,14 +183,18 @@ async function createClientFunction() {
     try {
         const response = await createClient(payload);
         // assume backend returns something useful on success
-        message.value = 'Client created successfully!';
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Client created successfully!',
+            life: 3000
+        });
         formError.value = null;
         attemptedSubmit.value = false;
         // clear form
         firstName.value = '';
         lastName.value = '';
         email.value = '';
-        description.value = '';
         phoneNumber.value = '';
         weightValue.value = null;
         heightValue.value = null;
@@ -213,7 +215,6 @@ async function createClientFunction() {
         } else {
             formError.value = error?.response?.data || error.message || 'An unexpected error occurred.';
         }
-        message.value = '';
         throw error;
     }
 }
@@ -226,9 +227,6 @@ function markTouched(name) {
 
 <template>
     <div>
-        <!-- global success -->
-        <div v-if="message" class="mb-4 p-3 bg-green-100 text-green-800 rounded">{{ message }}</div>
-
         <Fluid class="flex flex-col md:flex-row gap-8">
             <div class="md:w-1/2">
                 <div class="card flex flex-col gap-4">
@@ -275,7 +273,7 @@ function markTouched(name) {
 
                     <!-- Birth date -->
                     <label class="mb-1 font-medium mt-4">Birth date</label>
-                    <DatePicker v-model="calendarValue" :showIcon="true" :showButtonBar="true" @blur="markTouched('calendarValue')" />
+                    <DatePicker v-model="calendarValue" dateFormat="dd/mm/yy" :showIcon="true" :showButtonBar="true" @blur="markTouched('calendarValue')" />
                     <div v-if="getFieldError('calendarValue')" class="text-red-600 text-sm">{{ getFieldError('calendarValue') }}</div>
 
                     <!-- Weight -->
@@ -287,9 +285,6 @@ function markTouched(name) {
                     <label class="mb-1 font-medium">Height (cm)</label>
                     <InputNumber v-model="heightValue" showButtons mode="decimal" @blur="markTouched('heightValue')" />
                     <div v-if="getFieldError('heightValue')" class="text-red-600 text-sm">{{ getFieldError('heightValue') }}</div>
-                    <!-- Description -->
-                    <label class="mb-1 font-medium mt-4">Additional Informations</label>
-                    <Textarea placeholder="Informations" v-model="description" :autoResize="true" rows="3" cols="30" />
                 </div>
             </div>
 

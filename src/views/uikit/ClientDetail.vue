@@ -100,7 +100,7 @@ const deleteClientFunction = async () => {
             life: 3000
         });
 
-        router.push('/uikit/ClientListOfCoach');
+        router.push('/ClientListOfCoach');
     } catch (err) {
         // Extract backend error message
         const backendError = err.response?.data?.errors?.[0]?.message || 'An unexpected error occurred.';
