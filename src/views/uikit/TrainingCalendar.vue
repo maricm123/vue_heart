@@ -91,10 +91,7 @@ function isToday(day) {
 }
 
 function isSelected(day) {
-  return (
-    day === selectedDate.value.getDate() &&
-    selectedDate.value.getMonth() === new Date().getMonth()
-  );
+  return day === selectedDate.value.getDate();
 }
 </script>
 
@@ -110,12 +107,12 @@ function isSelected(day) {
   <div v-else>
     <Fluid>
       <!-- Header -->
-      <div class="calendar-header">
+      <!-- <div class="calendar-header">
         <button class="header-back" @click="router.back()" aria-label="Back">
           <i class="pi pi-arrow-left"></i>
         </button>
         <h1 class="header-title">Training Calendar</h1>
-      </div>
+      </div> -->
 
       <!-- Calendar Container -->
       <div class="calendar-container">
@@ -146,7 +143,7 @@ function isSelected(day) {
               v-else
               :class="[
                 'calendar-day',
-                { 'today': isToday(day - getFirstDayOfMonth(selectedDate)), 'has-sessions': getSessionsForDate(day - getFirstDayOfMonth(selectedDate)).length > 0 }
+                { 'today': isToday(day - getFirstDayOfMonth(selectedDate)), 'selected': isSelected(day - getFirstDayOfMonth(selectedDate)), 'has-sessions': getSessionsForDate(day - getFirstDayOfMonth(selectedDate)).length > 0 }
               ]"
               @click="selectDate(day - getFirstDayOfMonth(selectedDate))"
             >
@@ -305,7 +302,19 @@ function isSelected(day) {
   font-weight: 700;
 }
 
-.calendar-day.has-sessions:not(.today) {
+.calendar-day.selected {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  border-color: #1976D2;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.calendar-day.today.selected {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.calendar-day.has-sessions:not(.today):not(.selected) {
   border-color: #FF9800;
   background: #FFF3E0;
 }
