@@ -90,7 +90,13 @@ function goToClientDetail(clientId) {
     <div class="card">
       <div class="font-semibold text-xl">Your client list</div>
 
-      <DataView :value="clients" :layout="layout">
+      <div v-if="clients.length === 0" class="py-12 text-center opacity-60">
+        <i class="pi pi-inbox text-4xl mb-4 block"></i>
+        <p class="text-lg">No clients yet</p>
+        <p class="text-sm mt-2">Add a new client to get started</p>
+      </div>
+
+      <DataView v-else :value="clients" :layout="layout">
         <template #header>
           <div class="flex justify-end mb-4">
             <SelectButton v-model="layout" :options="options" :allowEmpty="false">

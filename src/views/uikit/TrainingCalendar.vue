@@ -303,11 +303,11 @@ function isSelected(day) {
 }
 
 .calendar-day.selected {
-  background: linear-gradient(135deg, #2196F3, #1976D2);
-  border-color: #1976D2;
+  background: linear-gradient(135deg, #F44336, #E53935);
+  border-color: #E53935;
   color: white;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
 }
 
 .calendar-day.today.selected {
