@@ -19,7 +19,7 @@ function parseHeartRate(value) {
   return heartRate;
 }
 
-const hrNotifsRunning = reactive({}); // key: `${clientId}:${deviceId}` -> true/false
+const activeHeartRateNotifications = reactive({}); // key: `${clientId}:${deviceId}` -> true/false
 
 function notifKey(clientId, deviceId) {
   return `${clientId}:${deviceId}`;
@@ -35,9 +35,9 @@ const wsStore = webSocketStore();
 
 async function startHeartRateNotifications(clientId, deviceId) {
   const key = notifKey(clientId, deviceId);
-  if (hrNotifsRunning[key]) return;
+  if (activeHeartRateNotifications[key]) return;
   
-  hrNotifsRunning[key] = true;
+  activeHeartRateNotifications[key] = true;
   
   try {
     await BleClient.startNotifications(
@@ -55,7 +55,7 @@ async function startHeartRateNotifications(clientId, deviceId) {
     );
     console.log("▶️ HR notifications started:", key);
   } catch (e) {
-    hrNotifsRunning[key] = false;
+    activeHeartRateNotifications[key] = false;
     throw e;
   }
 }
@@ -73,7 +73,7 @@ async function stopHeartRateNotificationsSafe(clientId, deviceId) {
   } catch (e) {
     console.warn("Stop notifications failed (often harmless):", e?.message || e);
   } finally {
-    hrNotifsRunning[key] = false;
+    activeHeartRateNotifications[key] = false;
   }
 }
 
@@ -90,7 +90,7 @@ async function safeIsConnected(deviceId) {
   }
 
 function markHrNotifsStopped(clientId, deviceId) {
-  hrNotifsRunning[`${clientId}:${deviceId}`] = false;
+  activeHeartRateNotifications[`${clientId}:${deviceId}`] = false;
 }
 
 export { 

@@ -24,7 +24,7 @@ export const useBleStore = defineStore('ble', {
     },
     getDeviceId: (state) => (clientId) => {
       const id = toClientId(clientId);
-      return id == null ? null : state.connectedDevices[id];
+      return id == null ? null : (state.connectedDevices[id] || null);
     },
   },
 

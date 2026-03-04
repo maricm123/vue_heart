@@ -88,6 +88,7 @@ const { markManualDisconnect, isManualDisconnect, consumeManualDisconnect } = bl
 const _intervals = {};
 const loadingClients = ref(false);
 const connectingDevices = ref({});
+const disconnectingDevices = ref({});
 const togglingSession = ref({});
 const display = ref(false);
 const clients = ref([]);
@@ -265,6 +266,7 @@ async function disconnectDevice(client) {
     const deviceId = bleStore.getDeviceId(clientId);
     if (!deviceId) return;
 
+    disconnectingDevices.value[clientId] = true;
     bleStore.markManualDisconnect(clientId, deviceId); // ← From store now!
 
     try {
@@ -275,6 +277,7 @@ async function disconnectDevice(client) {
     } catch (err) {
         console.warn('Disconnect failed:', err?.message || err);
     } finally {
+        disconnectingDevices.value[clientId] = false;
         bleStore.clearManual(clientId);
         bleStore.setConnection(clientId, 'disconnected');
         bleStore.removeDevice(clientId);
@@ -532,7 +535,14 @@ onUnmounted(() => {
                                     @click="connectDevice(client)"
                                 />
 
-                                <Button v-else label="Disconnect Device" severity="danger" @click="disconnectDevice(client)" />
+                                <Button 
+                                    v-else 
+                                    label="Disconnect Device" 
+                                    severity="danger" 
+                                    :loading="disconnectingDevices[client.id]"
+                                    :disabled="disconnectingDevices[client.id]"
+                                    @click="disconnectDevice(client)" 
+                                />
                             </div>
                         </div>
 
@@ -541,7 +551,17 @@ onUnmounted(() => {
                             <p>BPM: {{ bpmsFromWsCoach[client.id] || '-' }}</p>
 
                             <!-- Show Start Session only if not started -->
-                            <Button v-if="!sessionsStarted[client.id]" label="Start Session" @click="startSession(client)" />
+                            <div v-if="!sessionsStarted[client.id]">
+                                <div v-if="!bpmsFromWsCoach[client.id]" class="flex items-center gap-2">
+                                    <ProgressSpinner style="width: 30px; height: 30px" strokeWidth="4" />
+                                    <span class="text-sm text-gray-500">Waiting for heart rate...</span>
+                                </div>
+                                <Button 
+                                    v-else
+                                    label="Start Session" 
+                                    @click="startSession(client)" 
+                                />
+                            </div>
                         </div>
                         <!-- <Button label="Start Session" @click="startSession(client)" /> -->
                     </div>
