@@ -11,17 +11,13 @@ import BelgradeClock from '@/components/BelgradeClock.vue';
 import { useToast } from 'primevue/usetoast';
 import { useBleStore } from '@/store/useBleStore.js';
 import { useSessionControlStore } from '@/store/sessionControlStore';
-
 const sessionControlStore = useSessionControlStore();
 const bleStore = useBleStore();
 const { connectionStatus, batteryLevel, sessionIds, sessionsStarted, setDevice } = storeToRefs(bleStore);
-
 import { markHrNotifsStopped, BATTERY_SERVICE, BATTERY_CHARACTERISTIC, startHeartRateNotifications, stopHeartRateNotificationsSafe, safeIsConnected } from '@/utils/bluetooth.js';
-
 import { useSessionTimersStore } from '@/store/sessionTimerStore';
 const timersStore = useSessionTimersStore();
 const { timers } = storeToRefs(timersStore);
-// actions directly from store (no storeToRefs)
 const { pauseTimerFor, resumeTimerFor } = timersStore;
 
 // When someone manually disconnects, we set this to true to avoid auto-reconnect (for example on finish session)
@@ -36,45 +32,63 @@ async function toggleSession(session, client) {
     const deviceId = bleStore.getDeviceId(clientId);
     if (!deviceId) return;
 
-    const paused = sessionControlStore.isPaused(clientId);
+    togglingSession.value[sessionId] = true;
 
-    if (paused) {
-        await resumeActiveTrainingSession(sessionId);
-        await startHeartRateNotifications(clientId, deviceId);
-        resumeTimerFor(clientId);
-        sessionControlStore.toggleSession(clientId);
-    } else {
-        pauseTimerFor(clientId);
-        await pauseActiveTrainingSession(sessionId);
-        await stopHeartRateNotificationsSafe(clientId, deviceId);
-        sessionControlStore.toggleSession(clientId);
+    try {
+        const paused = sessionControlStore.isPaused(clientId);
+
+        if (paused) {
+            await resumeActiveTrainingSession(sessionId);
+            await startHeartRateNotifications(clientId, deviceId);
+            resumeTimerFor(clientId);
+            sessionControlStore.toggleSession(clientId);
+        } else {
+            pauseTimerFor(clientId);
+            await pauseActiveTrainingSession(sessionId);
+            await stopHeartRateNotificationsSafe(clientId, deviceId);
+            sessionControlStore.toggleSession(clientId);
+        }
+    } catch (err) {
+        console.error('Toggle session failed:', err);
+        toast.add({
+            severity: 'error',
+            summary: 'Toggle failed',
+            detail: err.message || 'Failed to pause/resume session',
+            life: 3000
+        });
+    } finally {
+        togglingSession.value[sessionId] = false;
     }
 }
 
 // kad ručno diskonektuješ
-function markManualDisconnect(clientId, deviceId) {
-    if (!manualDisconnects[clientId]) {
-        manualDisconnects[clientId] = {};
-    }
-    manualDisconnects[clientId][deviceId] = true;
-}
 
-function isManualDisconnect(clientId, deviceId) {
-    return !!manualDisconnects[clientId]?.[deviceId];
-}
+// function markManualDisconnect(clientId, deviceId) {
+//     if (!manualDisconnects[clientId]) {
+//         manualDisconnects[clientId] = {};
+//     }
+//     manualDisconnects[clientId][deviceId] = true;
+// }
 
-function consumeManualDisconnect(clientId, deviceId) {
-    if (manualDisconnects[clientId]) {
-        delete manualDisconnects[clientId][deviceId];
-        if (Object.keys(manualDisconnects[clientId]).length === 0) {
-            delete manualDisconnects[clientId];
-        }
-    }
-}
+// function isManualDisconnect(clientId, deviceId) {
+//     return !!manualDisconnects[clientId]?.[deviceId];
+// }
+
+// function consumeManualDisconnect(clientId, deviceId) {
+//     if (manualDisconnects[clientId]) {
+//         delete manualDisconnects[clientId][deviceId];
+//         if (Object.keys(manualDisconnects[clientId]).length === 0) {
+//             delete manualDisconnects[clientId];
+//         }
+//     }
+// }
+
+const { markManualDisconnect, isManualDisconnect, consumeManualDisconnect } = bleStore;
 
 const _intervals = {};
 const loadingClients = ref(false);
 const connectingDevices = ref({});
+const togglingSession = ref({});
 const display = ref(false);
 const clients = ref([]);
 const layout = ref('list');
@@ -135,22 +149,24 @@ async function connectDevice(client) {
         const deviceId = device.deviceId;
 
         bleStore.setDevice(client.id, deviceId); // ✅ persistent reference
-        console.log("✅ [AFTER CONNECT] connectedDevices:", bleStore.connectedDevices);
-        console.log("✅ [AFTER CONNECT] stored device:", bleStore.connectedDevices[client.id]);     
+        console.log('✅ [AFTER CONNECT] connectedDevices:', bleStore.connectedDevices);
+        console.log('✅ [AFTER CONNECT] stored device:', bleStore.connectedDevices[client.id]);
 
         console.log('Requested device:', device, device.deviceId);
-        await BleClient.connect(device.deviceId, (deviceId) => {
-            console.warn(`⚠️ Device disconnected:`, deviceId, 'for client', client.id);
+        await BleClient.connect(device.deviceId, (disconnectedDeviceId) => {
+            console.warn(`⚠️ Device disconnected:`, disconnectedDeviceId);
 
-            markHrNotifsStopped(client.id, deviceId);
-            if (isManualDisconnect(client.id, deviceId)) {
-                console.log(`ℹ️ Manual disconnect for client ${client.id}, skipping reconnect.`);
-                consumeManualDisconnect(client.id, deviceId);
+            markHrNotifsStopped(client.id, disconnectedDeviceId);
+
+            // ← Use bleStore methods (persist across unmount)
+            if (bleStore.isManualDisconnect(client.id, disconnectedDeviceId)) {
+                console.log(`ℹ️ Manual disconnect for client ${client.id}.`);
+                bleStore.consumeManualDisconnect(client.id, disconnectedDeviceId);
                 return;
             }
 
-            // Unexpected disconnect → auto-reconnect
-            onDeviceDisconnected(client.id, deviceId);
+            console.warn(`⚠️ Unexpected disconnect, reconnecting...`);
+            onDeviceDisconnected(client.id, disconnectedDeviceId);
         });
 
         bleStore.setConnection(client.id, 'connected');
@@ -243,73 +259,30 @@ async function reconnectDevice(clientId, deviceInfo, retries = 50) {
     }
 }
 
-// async function disconnectDevice(client) {
-//     const clientId = client.id;
-
-//     const deviceId = bleStore.getDeviceId(clientId);
-
-//     console.log('Disconnecting device for client', clientId, 'deviceId:', deviceId);
-
-//     if (!deviceId) {
-//         console.warn('No stored deviceId for client', clientId);
-//         return;
-//     }
-
-//     markManualDisconnect(clientId, deviceId);
-
-//     bleStore.removeDevice(clientId);
-//     bleStore.setConnection(clientId, 'disconnected');
-
-//     try {
-//         await BleClient.stopNotifications(deviceId, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC);
-
-//         await BleClient.disconnect(deviceId);
-
-//         try {
-//             const stillConnected = await safeIsConnected(deviceId);
-//             console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
-//         } catch (e) {
-//             // safeIsConnected may throw — this is OK
-//         }
-//     } catch (err) {
-//         console.warn('Disconnect failed:', err.message);
-//     } finally {
-//         bleStore.clearManual(clientId);
-//         bleStore.setConnection(clientId, 'disconnected');
-//         bleStore.removeDevice?.(clientId);
-//         delete wsStore.bpmsFromWsCoach[clientId];
-//         delete sessionsStarted[clientId];
-//         delete bleStore.connectedDevices[clientId];
-//     }
-// }
-
 
 async function disconnectDevice(client) {
-  const clientId = client.id;
-  const deviceId = bleStore.getDeviceId(clientId);
-  if (!deviceId) return;
+    const clientId = client.id;
+    const deviceId = bleStore.getDeviceId(clientId);
+    if (!deviceId) return;
 
-  markManualDisconnect(clientId, deviceId);
+    bleStore.markManualDisconnect(clientId, deviceId); // ← From store now!
 
-  try {
-    await stopHeartRateNotificationsSafe(clientId, deviceId);
-
-    await BleClient.disconnect(deviceId);
-
-    const stillConnected = await safeIsConnected(deviceId);
-    console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
-  } catch (err) {
-    console.warn('Disconnect failed:', err?.message || err);
-  } finally {
-    bleStore.clearManual(clientId);
-    bleStore.setConnection(clientId, 'disconnected');
-    bleStore.removeDevice?.(clientId);
-    delete wsStore.bpmsFromWsCoach[clientId];
-    delete sessionsStarted[clientId];
-    delete bleStore.connectedDevices[clientId];
-  }
+    try {
+        await stopHeartRateNotificationsSafe(clientId, deviceId);
+        await BleClient.disconnect(deviceId);
+        const stillConnected = await safeIsConnected(deviceId);
+        console.log(`After disconnect isConnected(${deviceId}):`, stillConnected);
+    } catch (err) {
+        console.warn('Disconnect failed:', err?.message || err);
+    } finally {
+        bleStore.clearManual(clientId);
+        bleStore.setConnection(clientId, 'disconnected');
+        bleStore.removeDevice(clientId);
+        delete wsStore.bpmsFromWsCoach[clientId];
+        delete sessionsStarted[clientId];
+        delete bleStore.connectedDevices[clientId];
+    }
 }
-
 
 async function startSession(client) {
     try {
@@ -422,20 +395,34 @@ onMounted(async () => {
     } catch (err) {
         // već je logovano u servisu, ovde možeš prikazati poruku korisniku
     }
-    console.log("🧠 [MOUNT] bleStore.connectedDevices:", bleStore.connectedDevices);
-  console.log("🧠 [MOUNT] keys:", Object.keys(bleStore.connectedDevices));
-  console.log("🧠 [MOUNT] key types:", Object.keys(bleStore.connectedDevices).map(k => [k, typeof k]));
+    console.log('🧠 [MOUNT] bleStore.connectedDevices:', bleStore.connectedDevices);
+    console.log('🧠 [MOUNT] keys:', Object.keys(bleStore.connectedDevices));
+    console.log(
+        '🧠 [MOUNT] key types:',
+        Object.keys(bleStore.connectedDevices).map((k) => [k, typeof k])
+    );
 
-  for (const [clientIdRaw, deviceId] of Object.entries(bleStore.connectedDevices)) {
-    console.log("🔎 [MOUNT] checking", { clientId, clientIdType: typeof clientId, deviceId });
-    const clientId = Number(clientIdRaw); // ✅ sad je number
-    try {
-      const isConnected = await safeIsConnected(deviceId);
-      console.log(`✅ [MOUNT] isConnected(${clientId} -> ${deviceId}):`, isConnected);
-    } catch (e) {
-      console.warn("⚠️ [MOUNT] safeIsConnected threw", { clientId, deviceId, err: e?.message || e });
+    for (const [clientIdRaw, deviceId] of Object.entries(bleStore.connectedDevices)) {
+        console.log('🔎 [MOUNT] checking', { clientId, clientIdType: typeof clientId, deviceId });
+        const clientId = Number(clientIdRaw); // ✅ sad je number
+        try {
+            const isConnected = await safeIsConnected(deviceId);
+            console.log(`✅ [MOUNT] isConnected(${clientId} -> ${deviceId}):`, isConnected);
+        } catch (e) {
+            console.warn('⚠️ [MOUNT] safeIsConnected threw', { clientId, deviceId, err: e?.message || e });
+        }
     }
-  }
+
+    for (const [clientIdRaw] of Object.entries(bleStore.manualDisconnects)) {
+        const clientId = Number(clientIdRaw);
+        const storedDevice = bleStore.getDeviceId(clientId);
+
+        if (!storedDevice) {
+            // Device no longer registered, clear flag
+            bleStore.clearAllManualDisconnects(clientId);
+            console.log(`Cleared orphaned manual disconnect flag for client ${clientId}`);
+        }
+    }
 });
 
 onUnmounted(() => {
@@ -632,6 +619,8 @@ onUnmounted(() => {
                 <Button
                     :label="sessionControlStore.isPaused(session.client.id) ? 'Resume session' : 'Stop session'"
                     :severity="sessionControlStore.isPaused(session.client.id) ? 'success' : 'danger'"
+                    :loading="togglingSession[session.id]"
+                    :disabled="togglingSession[session.id]"
                     outlined
                     size="small"
                     @click="toggleSession(session, session.client)"

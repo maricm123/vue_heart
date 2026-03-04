@@ -9,7 +9,8 @@ export const useBleStore = defineStore('ble', {
     manuallyDisconnecting: {},  // { clientId: true/false }
     sessionsStarted: {},        // { clientId: true/false }
     sessionIds: {},              // { clientId: sessionId }
-    connectedDevices: {} // { [clientId]: deviceId }
+    connectedDevices: {}, // { [clientId]: deviceId }
+    manualDisconnects: {},  // ← Move here! { clientId: { deviceId: true } }
   }),
 
   getters: {
@@ -82,5 +83,35 @@ export const useBleStore = defineStore('ble', {
       if (id == null) return;
       delete this.manuallyDisconnecting[id];
     },
+
+    markManualDisconnect(clientId, deviceId) {
+      const id = toClientId(clientId);
+      if (id == null) return;
+      if (!this.manualDisconnects[id]) this.manualDisconnects[id] = {};
+      this.manualDisconnects[id][deviceId] = true;
+    },
+    
+    isManualDisconnect(clientId, deviceId) {
+      const id = toClientId(clientId);
+      if (id == null) return false;
+      return !!this.manualDisconnects[id]?.[deviceId];
+    },
+    
+    consumeManualDisconnect(clientId, deviceId) {
+      const id = toClientId(clientId);
+      if (id == null) return;
+      if (this.manualDisconnects[id]) {
+        delete this.manualDisconnects[id][deviceId];
+        if (Object.keys(this.manualDisconnects[id]).length === 0) {
+          delete this.manualDisconnects[id];
+        }
+      }
+    },
+    
+    clearAllManualDisconnects(clientId) {
+      const id = toClientId(clientId);
+      if (id == null) return;
+      delete this.manualDisconnects[id];
+    }
   },
 });

@@ -35,13 +35,10 @@ const wsStore = webSocketStore();
 
 async function startHeartRateNotifications(clientId, deviceId) {
   const key = notifKey(clientId, deviceId);
-  if (hrNotifsRunning[key]) {
-    console.log("ℹ️ HR notifications already running, skipping start", key);
-    return;
-  }
-
+  if (hrNotifsRunning[key]) return;
+  
   hrNotifsRunning[key] = true;
-
+  
   try {
     await BleClient.startNotifications(
       deviceId,
@@ -50,14 +47,12 @@ async function startHeartRateNotifications(clientId, deviceId) {
       (value) => {
         const bpm = parseHeartRate(value);
         wsStore.bpmsFromWsCoach[clientId] = bpm;
-
-        // ✅ if you also want pause to stop backend sending:
+        
         if (bleStore.isSessionStarted(clientId) && !sessionControlStore.isPaused(clientId)) {
           sendBpmToBackend({ id: clientId }, bpm, { deviceId }, bleStore.getSessionId(clientId));
         }
       }
     );
-
     console.log("▶️ HR notifications started:", key);
   } catch (e) {
     hrNotifsRunning[key] = false;
