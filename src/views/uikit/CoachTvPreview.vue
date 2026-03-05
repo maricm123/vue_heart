@@ -96,7 +96,7 @@ const layout = ref('list');
 const defaultAvatar = 'https://i.pravatar.cc/150?img=3';
 const selectedClients = ref([]);
 const wsStore = webSocketStore();
-const { caloriesFromWsCoach, bpmsFromWsCoach } = storeToRefs(wsStore);
+const { caloriesFromWsCoach, bpmsFromWsCoach, isUserConnected } = storeToRefs(wsStore);
 const activeSessions = ref([]);
 
 function fmtStart(iso) {
@@ -434,6 +434,14 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <!-- WebSocket Status Bar -->
+    <div class="mb-4 p-3 rounded-lg" :class="isUserConnected ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'">
+        <div class="flex items-center gap-2">
+            <span class="text-lg">{{ isUserConnected ? '🟢' : '🔴' }}</span>
+            <span class="font-semibold">WebSocket: {{ isUserConnected ? 'Connected' : 'Disconnected' }}</span>
+        </div>
+    </div>
+
     <div class="card">
         <div class="font-semibold text-xl mb-4">Add new training session for client</div>
 
