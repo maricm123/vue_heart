@@ -61,30 +61,8 @@ async function toggleSession(session, client) {
     }
 }
 
-// kad ručno diskonektuješ
-
-// function markManualDisconnect(clientId, deviceId) {
-//     if (!manualDisconnects[clientId]) {
-//         manualDisconnects[clientId] = {};
-//     }
-//     manualDisconnects[clientId][deviceId] = true;
-// }
-
-// function isManualDisconnect(clientId, deviceId) {
-//     return !!manualDisconnects[clientId]?.[deviceId];
-// }
-
-// function consumeManualDisconnect(clientId, deviceId) {
-//     if (manualDisconnects[clientId]) {
-//         delete manualDisconnects[clientId][deviceId];
-//         if (Object.keys(manualDisconnects[clientId]).length === 0) {
-//             delete manualDisconnects[clientId];
-//         }
-//     }
-// }
 
 const { markManualDisconnect, isManualDisconnect, consumeManualDisconnect } = bleStore;
-
 const _intervals = {};
 const loadingClients = ref(false);
 const connectingDevices = ref({});
